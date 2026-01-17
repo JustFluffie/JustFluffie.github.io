@@ -530,7 +530,11 @@ const handleToggleNotifications = () => {
 };
 
 const sendTestNotification = () => {
-  alert('测试按钮已点击！');
+  console.log('Test button clicked. Attempting to show visual feedback.');
+  document.body.style.backgroundColor = 'red';
+  setTimeout(() => {
+    document.body.style.backgroundColor = '';
+  }, 500);
 
   // 1. Check if the feature is enabled in settings
   if (!notificationStore.desktopNotificationsEnabled) {
