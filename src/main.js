@@ -41,4 +41,4 @@ app.use(i18n)
 // 延迟挂载以展示首屏加载动画 (2秒)
 setTimeout(() => {
   app.mount('#app')
-}, 1500)
+}, 1000)

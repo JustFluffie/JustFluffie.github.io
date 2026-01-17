@@ -131,7 +131,21 @@
         </div>
       </div>
 
-      <!-- 3. GitHub 云备份 -->
+      <!-- 3. 通知设置 -->
+      <div class="card">
+        <div class="card-title">{{ t('api.notificationSettings') }}</div>
+        <div class="card-content">
+            <div class="api-item-row">
+                <div class="list-item-content">
+                  <div class="list-item-title">{{ t('api.desktopNotifications') }}</div>
+                  <div class="list-item-subtitle">{{ notificationPermissionStatus }}</div>
+                </div>
+                <div class="toggle-switch" :class="{ active: notificationStore.desktopNotificationsEnabled }" @click="handleToggleNotifications"></div>
+            </div>
+        </div>
+      </div>
+
+      <!-- 4. GitHub 云备份 -->
       <div class="card">
         <div class="card-title">{{ t('api.githubBackup') }}</div>
         <div class="card-content">
@@ -160,7 +174,7 @@
         </div>
       </div>
 
-      <!-- 3. 图床设置 -->
+      <!-- 5. 图床设置 -->
       <div class="card">
         <div class="card-title">{{ t('api.imageHost') }}</div>
         <div class="card-content">
@@ -202,7 +216,7 @@
         </div>
       </div>
 
-      <!-- 4. 导出/导入备份 -->
+      <!-- 6. 导出/导入备份 -->
       <div class="card">
         <div class="card-title">{{ t('api.dataBackup') }}</div>
         <div class="card-content">
@@ -317,6 +331,7 @@ import { useBackgroundStore } from '@/stores/backgroundStore';
 import { useBackupStore } from '@/stores/backupStore';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import CustomSelect from '@/components/common/CustomSelect.vue';
 import AppLayout from '@/components/common/AppLayout.vue';
 import Modal from '@/components/common/Modal.vue';
@@ -327,6 +342,7 @@ const backgroundStore = useBackgroundStore();
 const backupStore = useBackupStore();
 const singleStore = useSingleStore();
 const themeStore = useThemeStore();
+const notificationStore = useNotificationStore();
 
 // --- 本地状态 ---
 
@@ -484,6 +500,27 @@ async function fetchModels() {
   };
   await apiStore.fetchModels(tempPreset);
 }
+
+// --- 通知设置 ---
+const notificationPermissionStatus = computed(() => {
+  switch (notificationStore.permission) {
+    case 'granted':
+      return t('api.notificationsGranted');
+    case 'denied':
+      return t('api.notificationsDenied');
+    default:
+      return t('api.notificationsDefault');
+  }
+});
+
+const handleToggleNotifications = () => {
+  if (notificationStore.permission !== 'granted') {
+    notificationStore.requestPermission();
+  } else {
+    // If permission is already granted, the toggle simply turns the feature on/off
+    notificationStore.desktopNotificationsEnabled = !notificationStore.desktopNotificationsEnabled;
+  }
+};
 
 // --- 特殊处理：GitHub 操作 ---
 
