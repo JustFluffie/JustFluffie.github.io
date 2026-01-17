@@ -142,6 +142,13 @@
                 </div>
                 <div class="toggle-switch" :class="{ active: notificationStore.desktopNotificationsEnabled }" @click="handleToggleNotifications"></div>
             </div>
+            <div class="api-item-row">
+                <div class="list-item-content">
+                  <div class="list-item-title">{{ t('api.testNotification') }}</div>
+                  <div class="list-item-subtitle">{{ t('api.testNotificationDesc') }}</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" @click="sendTestNotification">{{ t('api.test') }}</button>
+            </div>
         </div>
       </div>
 
@@ -520,6 +527,17 @@ const handleToggleNotifications = () => {
     // If permission is already granted, the toggle simply turns the feature on/off
     notificationStore.desktopNotificationsEnabled = !notificationStore.desktopNotificationsEnabled;
   }
+};
+
+const sendTestNotification = () => {
+  notificationStore.triggerNotification(
+    '测试通知',
+    '这是一条测试消息，用于验证通知功能是否正常工作。',
+    '/pwa-192x192.png', // Using a public asset as icon
+    () => {
+      console.log('Test notification clicked!');
+    }
+  );
 };
 
 // --- 特殊处理：GitHub 操作 ---
