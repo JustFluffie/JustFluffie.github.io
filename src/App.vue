@@ -14,6 +14,7 @@ import { useBatteryStore } from '@/stores/batteryStore' // 引入新的 battery 
 import { useApiStore } from '@/stores/apiStore' // 引入 api store
 import { useBackgroundService } from '@/composables/useBackgroundService'
 import { useNotifications } from '@/composables/useNotifications'
+import DebugLogger from '@/components/common/DebugLogger.vue'
 
 const router = useRouter()
 const singleStore = useSingleStore()
@@ -88,7 +89,7 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
       </template>
     </Modal>
 
-    <!-- 全局输入弹窗 -->
+      <!-- 全局输入弹窗 -->
     <Modal v-model:visible="themeStore.inputModal.show" :title="themeStore.inputModal.title">
       <div class="input-group">
         <input type="text" v-model="themeStore.inputModal.value" class="base-input" :placeholder="themeStore.inputModal.placeholder" @keyup.enter="themeStore.handleInputConfirm">
@@ -96,6 +97,9 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
         <button v-if="themeStore.inputModal.showUpload" class="modal-btn" @click="themeStore.handleUpload">本地</button>
       </div>
     </Modal>
+
+    <!-- 调试日志记录器 -->
+    <DebugLogger />
   </div>
 </template>
 
