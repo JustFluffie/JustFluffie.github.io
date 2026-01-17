@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Vue Phone App',
-        short_name: 'PhoneApp',
+        name: 'JustFluffie Phone',
+        short_name: 'JustFluffie',
         description: 'A Vue 3 Phone Simulator App',
         theme_color: '#ffffff',
         icons: [
