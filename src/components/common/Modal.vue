@@ -1,6 +1,7 @@
 <template>
   <Teleport :to="teleportTo" :disabled="!appendToBody || !mounted">
     <div 
+      v-if="mounted"
       class="modal-overlay" 
       :class="[{ active: visible }, maskClass]" 
       :style="teleportTo !== 'body' || !appendToBody ? { position: 'absolute' } : {}"

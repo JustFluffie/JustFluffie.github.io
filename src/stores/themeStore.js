@@ -98,6 +98,7 @@ export const useThemeStore = defineStore('theme', () => {
   });
 
   const batteryLevel = ref(getFromStorage('aiPhoneBatteryLevel', 100)); // 新增：电量状态
+  const homeScreen = ref(getFromStorage('aiPhoneHomeScreen', 1)); // 新增：主屏幕选择
 
   // ==================== Actions ====================
 
@@ -166,6 +167,7 @@ export const useThemeStore = defineStore('theme', () => {
     saveToStorage('aiPhoneCssPresets', cssPresets.value)
     saveToStorage('aiPhoneCurrentCssPreset', currentCssPreset.value)
     saveToStorage('aiPhoneBatteryLevel', batteryLevel.value) // 新增
+    saveToStorage('aiPhoneHomeScreen', homeScreen.value) // 新增
   }
 
   // --- 主题预设 Actions ---
@@ -348,9 +350,13 @@ export const useThemeStore = defineStore('theme', () => {
     applyCurrentTheme()
   }
 
+  const setHomeScreen = (screen) => {
+    homeScreen.value = screen;
+  }
+
   // 监听状态变化并自动保存
   watch(
-    [themePresets, currentThemePreset, fontPresets, currentFontPreset, cssPresets, currentCssPreset],
+    [themePresets, currentThemePreset, fontPresets, currentFontPreset, cssPresets, currentCssPreset, homeScreen],
     saveData,
     { deep: true }
   )
@@ -400,5 +406,9 @@ export const useThemeStore = defineStore('theme', () => {
     setBatteryLevel: (level) => {
       batteryLevel.value = Math.max(0, Math.min(100, level));
     },
+
+    // --- 主屏幕控制 ---
+    homeScreen,
+    setHomeScreen,
   }
 })

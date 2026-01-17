@@ -3,10 +3,14 @@
     <!-- 引用消息预览 -->
     <div v-if="quotingMessage" class="quote-preview">
       <div class="quote-content">
-        <div class="quote-sender">{{ quotingMessage.sender === 'user' ? t('chat.self') : t('chat.other') }}:</div>
-        <div class="quote-text">{{ quotingMessage.content }}</div>
+        <span class="quote-sender">{{ quotingMessage.sender === 'user' ? t('chat.self') : t('chat.other') }}: </span>
+        <span class="quote-text">{{ quotingMessage.content }}</span>
       </div>
-      <div class="quote-close" @click="$emit('cancel-quote')">&times;</div>
+      <div class="quote-close" @click="$emit('cancel-quote')">
+        <div class="quote-close-icon">
+          <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12"><path d="M576 512l277.333333 277.333333-64 64-277.333333-277.333333L234.666667 853.333333 170.666667 789.333333l277.333333-277.333333L170.666667 234.666667 234.666667 170.666667l277.333333 277.333333L789.333333 170.666667 853.333333 234.666667 576 512z" fill="currentColor"></path></svg>
+        </div>
+      </div>
     </div>
 
     <!-- 输入行 -->
@@ -158,8 +162,8 @@ const handleSendSticker = (sticker) => {
 
 /* --- 引用预览 --- */
 .quote-preview {
-  padding: 8px 12px;
-  background-color: #eaeaea;
+  padding: 10px 25px;
+  background-color: #E8E8E8; /* 比顶部栏深一点的灰色 */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -171,23 +175,34 @@ const handleSendSticker = (sticker) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-grow: 1;
 }
 
 .quote-sender {
   font-weight: bold;
-  margin-bottom: 2px;
 }
 
 .quote-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* 样式已在 .quote-content 中处理 */
 }
 
 .quote-close {
   cursor: pointer;
-  font-size: 20px;
-  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.quote-close-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #DCDCDC; /* 比引用框颜色再深一点的灰色 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
 }
 
 /* --- 输入行 --- */

@@ -9,6 +9,7 @@ import GlobalPreviewer from '@/components/common/GlobalPreviewer.vue'
 import NotificationBanner from '@/components/common/NotificationBanner.vue'
 import { useSingleStore } from '@/stores/chat/singleStore'
 import { useThemeStore } from '@/stores/themeStore'
+import HomeScreen from '@/views/screen/HomeScreen.vue'
 import { useBatteryStore } from '@/stores/batteryStore' // 引入新的 battery store
 import { useApiStore } from '@/stores/apiStore' // 引入 api store
 import { useBackgroundService } from '@/composables/useBackgroundService'
@@ -53,7 +54,7 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
       <!-- 路由视图 -->
       <router-view v-slot="{ Component, route }">
         <div :class="{ 'app-screen': route.path !== '/', 'active': route.path !== '/' }">
-          <component :is="Component" />
+          <component :is="route.path === '/' ? HomeScreen : Component" />
         </div>
       </router-view>
 

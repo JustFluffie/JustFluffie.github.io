@@ -35,22 +35,35 @@
       <!-- ==================== 2. 壁纸设置模块 ==================== -->
       <div class="card theme-section">
         <div class="card-title">{{ $t('theme.wallpaper') }}</div>
-        <div class="card-content wallpaper-content">
-          <div class="wallpaper-container">
-            <!-- 主屏幕壁纸 -->
-            <div class="wallpaper-col">
-              <div class="section-title-center">{{ $t('theme.homeScreen') }}</div>
-              <div class="wallpaper-preview" :style="pendingThemeSettings.bg ? { backgroundImage: `url('${pendingThemeSettings.bg}')` } : {}" @click="openWallpaperModal('home')">
-                <span v-if="!pendingThemeSettings.bg" class="upload-hint">{{ $t('theme.uploadHint') }}</span>
+        <div class="card-content">
+          <div class="theme-item no-icon">
+            <div class="item-content">
+              <div class="wallpaper-container">
+                <div class="wallpaper-col">
+                  <div class="section-title-center">{{ $t('theme.homeScreen') }}</div>
+                  <div class="wallpaper-preview" :style="pendingThemeSettings.bg ? { backgroundImage: `url('${pendingThemeSettings.bg}')` } : {}" @click="openWallpaperModal('home')">
+                    <span v-if="!pendingThemeSettings.bg" class="upload-hint">{{ $t('theme.uploadHint') }}</span>
+                  </div>
+                </div>
+                <div class="wallpaper-col">
+                  <div class="section-title-center">{{ $t('theme.lockScreen') }}</div>
+                  <div class="wallpaper-preview" :style="pendingThemeSettings.lockbg ? { backgroundImage: `url('${pendingThemeSettings.lockbg}')` } : {}" @click="openWallpaperModal('lock')">
+                    <span v-if="!pendingThemeSettings.lockbg" class="upload-hint">{{ $t('theme.uploadHint') }}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <!-- 锁屏壁纸 -->
-            <div class="wallpaper-col">
-              <div class="section-title-center">{{ $t('theme.lockScreen') }}</div>
-              <div class="wallpaper-preview" :style="pendingThemeSettings.lockbg ? { backgroundImage: `url('${pendingThemeSettings.lockbg}')` } : {}" @click="openWallpaperModal('lock')">
-                <span v-if="!pendingThemeSettings.lockbg" class="upload-hint">{{ $t('theme.uploadHint') }}</span>
-              </div>
+          </div>
+          <div class="theme-item no-icon">
+            <div class="item-content">
+              <div class="item-label">{{ $t('theme.homeScreenStyle') }}</div>
             </div>
+            <CustomSelect
+              :options="homeScreenOptions"
+              :modelValue="homeScreen"
+              @update:modelValue="switchHomeScreen"
+              textAlign="left"
+            />
           </div>
         </div>
       </div>
@@ -59,12 +72,16 @@
       <div class="card theme-section">
         <div class="card-title">{{ $t('theme.appIcons') }}</div>
         <div class="card-content">
-          <div class="app-icons-grid-new">
-            <div v-for="app in apps" :key="app.key" class="app-icon-item" @click="showAppIconOptions(app.key)">
-              <div class="app-icon-box">
-                <img v-if="pendingThemeSettings.appIcons && pendingThemeSettings.appIcons[app.key]" :src="pendingThemeSettings.appIcons[app.key]" />
+          <div class="theme-item no-icon">
+            <div class="item-content">
+              <div class="app-icons-grid-new">
+                <div v-for="app in apps" :key="app.key" class="app-icon-item" @click="showAppIconOptions(app.key)">
+                  <div class="app-icon-box">
+                    <img v-if="pendingThemeSettings.appIcons && pendingThemeSettings.appIcons[app.key]" :src="pendingThemeSettings.appIcons[app.key]" />
+                  </div>
+                  <span class="app-name">{{ app.name }}</span>
+                </div>
               </div>
-              <span class="app-name">{{ app.name }}</span>
             </div>
           </div>
         </div>
@@ -74,9 +91,8 @@
       <div class="card theme-section">
         <div class="card-title">{{ $t('theme.fontSettings') }}</div>
         <div class="card-content">
-          <div class="font-settings-container">
-            <!-- 预设选择与管理 -->
-            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+          <div class="theme-item no-icon">
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
               <CustomSelect
                 :options="fontPresetOptions"
                 :modelValue="currentFontPreset"
@@ -87,25 +103,28 @@
               <button class="btn btn-secondary btn-sm" @click="saveFontPreset">{{ $t('save') }}</button>
               <button class="btn btn-danger btn-sm" @click="deleteFontPreset">{{ $t('delete') }}</button>
             </div>
-            <!-- 字体URL输入 -->
-            <div style="display: flex; gap: 5px; margin-bottom: 10px; align-items: center;">
+          </div>
+          <div class="theme-item no-icon">
+            <div style="display: flex; gap: 5px; align-items: center; flex: 1; width: 100%;">
               <input type="text" class="base-input" style="flex: 1;" v-model="fontUrlInput" :placeholder="t('theme.fontUrlPlaceholder')">
               <button class="btn btn-secondary btn-sm" style="white-space: nowrap;" @click="applyFontUrl">{{ $t('confirm') }}</button>
             </div>
-            <!-- 字体颜色设置 -->
-            <div style="display: flex; gap: 5px; margin-bottom: 10px; align-items: center;">
+          </div>
+          <div class="theme-item no-icon">
+            <div style="display: flex; gap: 5px; align-items: center; flex: 1; width: 100%;">
               <input type="color" class="color-picker-input" :value="pendingThemeSettings.fontColor" @input="updateFontColorFromPicker($event.target.value)">
               <input type="text" class="base-input" style="flex: 1;" :value="pendingThemeSettings.fontColor" @input="updateFontColorFromInput($event.target.value)" :placeholder="t('theme.fontColorPlaceholder')">
               <button class="btn btn-secondary btn-sm" style="white-space: nowrap;" @click="confirmFontColor">{{ $t('confirm') }}</button>
             </div>
-            <!-- 字号调整 -->
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="item-label" style="color: var(--text-primary);">{{ $t('theme.appNameFontSize') }}</span>
-              <div class="number-input">
-                <button @click="adjustAppLabelFontSize(-1)">-</button>
-                <span>{{ pendingThemeSettings.appLabelFontSize || 10 }}px</span>
-                <button @click="adjustAppLabelFontSize(1)">+</button>
-              </div>
+          </div>
+          <div class="theme-item no-icon">
+            <div class="item-content">
+              <div class="item-label">{{ $t('theme.appNameFontSize') }}</div>
+            </div>
+            <div class="number-input">
+              <button @click="adjustAppLabelFontSize(-1)">-</button>
+              <span>{{ pendingThemeSettings.appLabelFontSize || 10 }}px</span>
+              <button @click="adjustAppLabelFontSize(1)">+</button>
             </div>
           </div>
         </div>
@@ -115,9 +134,8 @@
       <div class="card theme-section">
         <div class="card-title">{{ $t('theme.themePresets') }}</div>
         <div class="card-content">
-          <div class="theme-presets-container">
-            <!-- 主题预设 -->
-            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+          <div class="theme-item no-icon">
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
               <CustomSelect
                 :options="themePresetOptions"
                 :modelValue="currentThemePreset"
@@ -128,8 +146,9 @@
               <button class="btn btn-secondary btn-sm" @click="saveThemePreset">{{ $t('save') }}</button>
               <button class="btn btn-danger btn-sm" @click="deleteThemePreset">{{ $t('delete') }}</button>
             </div>
-            <!-- CSS预设 -->
-            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+          </div>
+          <div class="theme-item no-icon">
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
               <CustomSelect
                 :options="cssPresetOptions"
                 :modelValue="currentCssPreset"
@@ -140,13 +159,14 @@
               <button class="btn btn-secondary btn-sm" @click="saveCssPreset">{{ $t('save') }}</button>
               <button class="btn btn-danger btn-sm" @click="deleteCssPreset">{{ $t('delete') }}</button>
             </div>
-            <!-- 全局CSS输入 -->
-            <div class="global-css-container">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="color: var(--text-primary);">{{ $t('theme.globalCss') }}</span>
+          </div>
+          <div class="theme-item no-icon">
+            <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 5px; width: 100%;">
+              <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                <div class="item-label">{{ $t('theme.globalCss') }}</div>
                 <button class="btn btn-secondary btn-sm" style="white-space: nowrap;" @click="applyCssCode">{{ $t('confirm') }}</button>
               </div>
-              <textarea class="base-input" v-model="cssCodeInput" :placeholder="t('theme.cssPlaceholder')"></textarea>
+              <textarea class="base-input" v-model="cssCodeInput" :placeholder="t('theme.cssPlaceholder')" style="width: 100%; margin-top: 10px;"></textarea>
             </div>
           </div>
         </div>
@@ -156,10 +176,12 @@
       <div class="card theme-section">
         <div class="card-title">{{ $t('theme.importExport') }}</div>
         <div class="card-content">
-          <div class="import-export-container flex-distribute-children">
-            <button class="btn btn-secondary" @click="exportThemeData">{{ $t('theme.exportPresets') }}</button>
-            <button class="btn btn-secondary" @click="triggerImport">{{ $t('theme.importPresets') }}</button>
-            <input type="file" ref="importInput" class="hidden-input" accept=".json" @change="handleImport">
+          <div class="theme-item no-icon">
+            <div class="import-export-container" style="flex: 1; justify-content: space-around;">
+              <button class="btn btn-secondary big-btn" @click="exportThemeData">{{ $t('theme.exportPresets') }}</button>
+              <button class="btn btn-secondary big-btn" @click="triggerImport">{{ $t('theme.importPresets') }}</button>
+              <input type="file" ref="importInput" class="hidden-input" accept=".json" @change="handleImport">
+            </div>
           </div>
         </div>
       </div>
@@ -200,7 +222,8 @@ const {
   fontPresets,
   currentFontPreset,
   cssPresets,
-  currentCssPreset
+  currentCssPreset,
+  homeScreen
 } = storeToRefs(themeStore)
 
 // ==========================================
@@ -259,6 +282,15 @@ const themePresetOptions = computed(() => {
 const cssPresetOptions = computed(() => {
   return Object.keys(cssPresets.value || {}).map(name => ({ value: name, label: name }));
 });
+
+const homeScreenOptions = computed(() => [
+  { value: 1, label: '屏幕一' },
+  { value: 2, label: '屏幕二' }
+]);
+
+function switchHomeScreen(value) {
+  themeStore.setHomeScreen(value);
+}
 
 // ==========================================
 // 4. 生命周期与初始化
@@ -660,7 +692,7 @@ function saveCurrentThemeSettings() {
     display: flex;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #f5f5f5;
     cursor: pointer;
     transition: background 0.2s;
     min-height: 54px;
@@ -693,13 +725,8 @@ function saveCurrentThemeSettings() {
 }
 
 /* ==================== 壁纸设置模块样式 ==================== */
-.wallpaper-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
 .wallpaper-container {
+    width: 100%;
     display: flex;
     gap: 15px;
 }
@@ -785,24 +812,6 @@ function saveCurrentThemeSettings() {
 }
 
 /* ==================== 字体与预设模块样式 ==================== */
-.font-settings-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.theme-presets-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.global-css-container {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
 .import-export-container {
     display: flex;
     gap: 15px;

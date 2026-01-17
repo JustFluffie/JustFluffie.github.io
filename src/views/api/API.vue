@@ -530,14 +530,27 @@ const handleToggleNotifications = () => {
 };
 
 const sendTestNotification = () => {
+  // 1. Check if the feature is enabled in settings
+  if (!notificationStore.desktopNotificationsEnabled) {
+    themeStore.showToast('请先开启“桌面通知”开关。', 'warning');
+    return;
+  }
+  // 2. Check if browser permission is granted
+  if (notificationStore.permission !== 'granted') {
+    themeStore.showToast('浏览器通知权限未授予，请点击开关重新授权。', 'warning');
+    return;
+  }
+
+  // 3. If all checks pass, send the notification
   notificationStore.triggerNotification(
     '测试通知',
-    '这是一条测试消息，用于验证通知功能是否正常工作。',
+    '如果看到此消息，说明桌面通知功能正常。',
     '/pwa-192x192.png', // Using a public asset as icon
     () => {
       console.log('Test notification clicked!');
     }
   );
+  themeStore.showToast('测试通知已发送，请检查系统通知。');
 };
 
 // --- 特殊处理：GitHub 操作 ---

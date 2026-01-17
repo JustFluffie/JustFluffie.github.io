@@ -18,6 +18,7 @@ import MusicPlayer from './components/MusicPlayer.vue'
 import PhotoWall from './components/PhotoWall.vue'
 import AppGrid from './components/AppGrid.vue'
 import DockBar from './components/DockBar.vue'
+import HomeScreen2 from './HomeScreen2.vue'
 
 // ==========================================
 // 2. 初始化与状态 (Init & State)
@@ -29,6 +30,8 @@ const { themePresets, currentThemePreset, appIcons } = storeToRefs(themeStore)
 
 // --- 页面控制状态 ---
 const currentPage = ref(1)
+const touchStartX = ref(0)
+const touchEndX = ref(0)
 
 // --- 弹窗与图片选择状态 ---
 const showImageModal = ref(false)
@@ -56,16 +59,16 @@ const weatherText = ref(t('homeScreen.defaultWeather'))
 // 应用列表配置 (响应式)
 const mainApps = computed(() => [
   { id: 'chat', label: t('homeScreen.apps.chat'), route: '/chat' },
-  { id: 'worldbook', label: t('homeScreen.apps.worldbook'), route: '/world-book' },
-  { id: 'preset', label: t('homeScreen.apps.preset'), route: '/preset' },
-  { id: 'calendar', label: t('homeScreen.apps.calendar'), action: () => console.log('Open Calendar') }
+  { id: 'calendar', label: t('homeScreen.apps.calendar'), action: () => console.log('Open Calendar') },
+  { id: 'placeholder-1', label: '', action: () => {} },
+  { id: 'placeholder-2', label: '', action: () => {} }
 ])
 
 const dockApps = computed(() => [
   { id: 'api', label: t('homeScreen.apps.apiSettings'), route: '/api' },
   { id: 'theme', label: t('homeScreen.apps.theme'), route: '/theme' },
-  { id: 'spy', label: t('homeScreen.apps.spy'), action: () => console.log('Open Spy') },
-  { id: 'check', label: t('homeScreen.apps.check'), action: () => console.log('Open Check') }
+  { id: 'worldbook', label: t('homeScreen.apps.worldbook'), route: '/world-book' },
+  { id: 'preset', label: t('homeScreen.apps.preset'), route: '/preset' }
 ])
 
 // 弹窗标题
@@ -126,6 +129,31 @@ const goToPage = (page) => {
   currentPage.value = page
 }
 
+const handleTouchStart = (e) => {
+  touchStartX.value = e.touches[0].clientX;
+}
+
+const handleTouchMove = (e) => {
+  touchEndX.value = e.touches[0].clientX;
+}
+
+const handleTouchEnd = () => {
+  if (touchStartX.value - touchEndX.value > 50) {
+    // Swipe left
+    if (currentPage.value < 2) {
+      currentPage.value++;
+    }
+  } else if (touchEndX.value - touchStartX.value > 50) {
+    // Swipe right
+    if (currentPage.value > 1) {
+      currentPage.value--;
+    }
+  }
+  // Reset values
+  touchStartX.value = 0;
+  touchEndX.value = 0;
+}
+
 const handleAppClick = (app) => {
   if (app.route) {
     router.push(app.route)
@@ -176,7 +204,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="home-screen" id="homeScreen">
+  <div class="home-screen" id="homeScreen" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
     
     <!-- ==================== 页面容器 ==================== -->
     <div class="pages-container">
@@ -213,6 +241,9 @@ onMounted(() => {
             />
           </div>
         </div>
+        
+        <HomeScreen2 />
+
       </div>
     </div>
 
