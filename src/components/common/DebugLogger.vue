@@ -9,10 +9,12 @@
       @mousedown="startDrag"
       @touchstart.prevent="startDrag"
     >
-      <span v-if="!isExpanded">🐞</span>
-      <span v-else>Debug Console</span>
-      <button v-if="isExpanded" @click.stop="clearLogs">Clear</button>
-      <button @click.stop="toggleExpand">{{ isExpanded ? 'Collapse' : 'Expand' }}</button>
+      <span v-if="isExpanded">Debug Console</span>
+      <span v-else>🐞</span>
+    </div>
+    <div class="buttons">
+        <button v-if="isExpanded" @click.stop="clearLogs">Clear</button>
+        <button @click.stop="toggleExpand">{{ isExpanded ? 'Collapse' : 'Expand' }}</button>
     </div>
     <div v-if="isExpanded" class="logs" ref="logsContainer">
       <div v-for="(log, index) in logs" :key="index" :class="['log-item', log.type]">
@@ -30,7 +32,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 const logs = ref([]);
 const logsContainer = ref(null);
 const isExpanded = ref(false);
-const position = ref({ x: 10, y: window.innerHeight - 50 });
+const position = ref({ x: 10, y: window.innerHeight - 80 }); // Start a bit higher
 const isDragging = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
 const initialPos = ref({ x: 0, y: 0 });
@@ -44,11 +46,7 @@ const originalConsole = {
 
 const addLog = (type, args) => {
   const timestamp = new Date().toLocaleTimeString();
-  logs.value.push({
-    type,
-    timestamp,
-    message: [...args],
-  });
+  logs.value.push({ type, timestamp, message: [...args] });
   nextTick(() => {
     if (logsContainer.value) {
       logsContainer.value.scrollTop = logsContainer.value.scrollHeight;
@@ -93,7 +91,7 @@ const formatMessage = (message) => {
 };
 
 const getEventPosition = (event) => {
-  if (event.touches) {
+  if (event.touches && event.touches.length > 0) {
     return { x: event.touches[0].clientX, y: event.touches[0].clientY };
   }
   return { x: event.clientX, y: event.clientY };
@@ -132,49 +130,49 @@ const stopDrag = () => {
   z-index: 9999;
   font-family: monospace;
   font-size: 12px;
-  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 .debug-logger-container:not(.is-expanded) {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
+  width: auto;
+  height: auto;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  cursor: grab;
+  padding: 5px;
+  border-radius: 20px;
 }
 .debug-logger-container.is-expanded {
   width: calc(100% - 20px);
   max-width: 500px;
   height: 200px;
-  display: flex;
-  flex-direction: column;
 }
 .handle {
-  background-color: #333;
   padding: 5px;
   font-weight: bold;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   cursor: grab;
   flex-shrink: 0;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
 }
 .handle:active {
   cursor: grabbing;
 }
-.debug-logger-container:not(.is-expanded) .handle {
-  background: none;
-  padding: 0;
-  border-radius: 50%;
-  width: 100%;
-  height: 100%;
-  justify-content: center;
+.debug-logger-container.is-expanded .handle {
+  background-color: #333;
+  justify-content: flex-start;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
 }
-.debug-logger-container:not(.is-expanded) button {
-  display: none;
+.handle span {
+  margin-right: auto;
+  font-size: 16px;
+}
+.debug-logger-container:not(.is-expanded) .handle {
+    padding: 0 5px;
+}
+.buttons {
+  display: flex;
+  align-items: center;
 }
 .handle button {
   background: #555;
@@ -183,6 +181,10 @@ const stopDrag = () => {
   border-radius: 3px;
   cursor: pointer;
   margin-left: 5px;
+  padding: 2px 6px;
+}
+.debug-logger-container:not(.is-expanded) .buttons button {
+    font-size: 10px;
 }
 .logs {
   flex: 1;
