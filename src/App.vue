@@ -70,10 +70,10 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
 
     <!-- 全局通知弹窗 -->
     <Toast 
-      v-model:visible="themeStore.toast.show"
-      :type="themeStore.toast.type"
-      :message="themeStore.toast.message"
-      :duration="themeStore.toast.duration"
+      v-model:visible="themeStore.toastShow"
+      :type="themeStore.toastType"
+      :message="themeStore.toastMessage"
+      :duration="themeStore.toastDuration"
     />
 
     <!-- 全局确认弹窗 -->

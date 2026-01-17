@@ -18,8 +18,8 @@ const props = defineProps({
   },
   type: {
     type: String,
-    default: 'success', // 'success' | 'error' | 'info'
-    validator: (value) => ['success', 'error', 'info'].includes(value)
+    default: 'success', // 'success' | 'error' | 'info' | 'warning'
+    validator: (value) => ['success', 'error', 'info', 'warning'].includes(value)
   },
   message: {
     type: String,
@@ -61,7 +61,7 @@ watch(() => props.visible, (newVal) => {
   } else {
     clearTimer();
   }
-});
+}, { immediate: true });
 
 onUnmounted(() => {
   clearTimer();

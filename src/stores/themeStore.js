@@ -1,58 +1,43 @@
 import { defineStore } from 'pinia'
 import { ref, watch, computed } from 'vue'
 
-// 辅助函数：从 localStorage 获取数据
+// Helper functions for localStorage
 const getFromStorage = (key, defaultValue) => {
   const storedValue = localStorage.getItem(key);
   if (storedValue) {
     try {
       const parsed = JSON.parse(storedValue);
-      // 确保解析后的值不是 null 或 undefined
       if (parsed !== null && parsed !== undefined) {
         return parsed;
       }
     } catch (e) {
-      // 如果解析失败，它可能是一个未被JSON编码的原始字符串（旧数据）。
-      // 在这种情况下，直接返回该字符串。
-      // 新代码将始终进行JSON编码，因此此 catch 块主要用于向后兼容。
       return storedValue;
     }
   }
   return defaultValue;
 }
 
-// 辅助函数：向 localStorage 保存数据
 const saveToStorage = (key, value) => {
-  // 始终使用 JSON.stringify 以确保存储和检索的一致性。
   localStorage.setItem(key, JSON.stringify(value))
 }
 
 export const useThemeStore = defineStore('theme', () => {
-  // ==================== State ====================
+  // State
   const themePresets = ref(getFromStorage('aiPhoneThemePresets', {
     '默认主题': {
       bg: '',
       lockbg: '',
       appIcons: {},
       showFrame: true,
-      showStatusBar: true, // 新增：状态栏显示控制
+      showStatusBar: true,
       fontColor: '#1f1f1f',
       appLabelFontSize: 10,
     }
   }))
-
   const currentThemePreset = ref(getFromStorage('aiPhoneCurrentThemePreset', '默认主题'))
-
-  const fontPresets = ref(getFromStorage('aiPhoneFontPresets', {
-    '默认字体': ''
-  }))
-
+  const fontPresets = ref(getFromStorage('aiPhoneFontPresets', { '默认字体': '' }))
   const currentFontPreset = ref(getFromStorage('aiPhoneCurrentFontPreset', '默认字体'))
-
-  const cssPresets = ref(getFromStorage('aiPhoneCssPresets', {
-    '默认样式': ''
-  }))
-
+  const cssPresets = ref(getFromStorage('aiPhoneCssPresets', { '默认样式': '' }))
   const currentCssPreset = ref(getFromStorage('aiPhoneCurrentCssPreset', '默认样式'))
 
   const showFrame = computed(() => {
@@ -62,7 +47,6 @@ export const useThemeStore = defineStore('theme', () => {
 
   const showStatusBar = computed(() => {
     const preset = themePresets.value[currentThemePreset.value];
-    // 默认显示状态栏，除非明确设置为 false
     return preset ? preset.showStatusBar !== false : true;
   });
 
@@ -71,20 +55,19 @@ export const useThemeStore = defineStore('theme', () => {
     return preset ? preset.appIcons || {} : {};
   });
 
-  const toast = ref({
-    show: false,
-    message: '',
-    type: 'success', // success | error | info
-    duration: 500,
-  });
+  // Use individual refs for toast state to ensure reactivity
+  const toastShow = ref(false);
+  const toastMessage = ref('');
+  const toastType = ref('success');
+  const toastDuration = ref(1500);
 
   const confirmModal = ref({
     show: false,
     title: '确认',
     message: '确定要执行此操作吗？',
     onConfirm: null,
-    messageStyle: {}, // 新增：自定义消息样式
-    confirmText: 'delete', // 新增：确认按钮文本key
+    messageStyle: {},
+    confirmText: 'delete',
   });
 
   const inputModal = ref({
@@ -93,15 +76,14 @@ export const useThemeStore = defineStore('theme', () => {
     value: '',
     placeholder: '',
     onConfirm: null,
-    showUpload: false, // 新增：是否显示上传按钮
-    onUpload: null,   // 新增：上传按钮的回调
+    showUpload: false,
+    onUpload: null,
   });
 
-  const batteryLevel = ref(getFromStorage('aiPhoneBatteryLevel', 100)); // 新增：电量状态
-  const homeScreen = ref(getFromStorage('aiPhoneHomeScreen', 1)); // 新增：主屏幕选择
+  const batteryLevel = ref(getFromStorage('aiPhoneBatteryLevel', 100));
+  const homeScreen = ref(getFromStorage('aiPhoneHomeScreen', 1));
 
-  // ==================== Actions ====================
-
+  // Actions
   const showConfirm = (title, message, onConfirm, options = {}) => {
     confirmModal.value.title = title;
     confirmModal.value.message = message;
@@ -150,15 +132,13 @@ export const useThemeStore = defineStore('theme', () => {
     hideInput();
   };
 
-  const showToast = (message = '保存成功', type = 'success', duration = 1000) => {
-    toast.value.message = message;
-    toast.value.type = type;
-    toast.value.duration = duration;
-    toast.value.show = true;
-    // 计时器逻辑移交给 Modal 组件处理
+  const showToast = (message = '保存成功', type = 'success', duration = 1500) => {
+    toastMessage.value = message;
+    toastType.value = type;
+    toastDuration.value = duration;
+    toastShow.value = true;
   };
 
-  // --- 通用保存 Action ---
   const saveData = () => {
     saveToStorage('aiPhoneThemePresets', themePresets.value)
     saveToStorage('aiPhoneCurrentThemePreset', currentThemePreset.value)
@@ -166,11 +146,10 @@ export const useThemeStore = defineStore('theme', () => {
     saveToStorage('aiPhoneCurrentFontPreset', currentFontPreset.value)
     saveToStorage('aiPhoneCssPresets', cssPresets.value)
     saveToStorage('aiPhoneCurrentCssPreset', currentCssPreset.value)
-    saveToStorage('aiPhoneBatteryLevel', batteryLevel.value) // 新增
-    saveToStorage('aiPhoneHomeScreen', homeScreen.value) // 新增
+    saveToStorage('aiPhoneBatteryLevel', batteryLevel.value)
+    saveToStorage('aiPhoneHomeScreen', homeScreen.value)
   }
 
-  // --- 主题预设 Actions ---
   const switchThemePreset = (name) => {
     if (themePresets.value[name]) {
       currentThemePreset.value = name
@@ -187,7 +166,6 @@ export const useThemeStore = defineStore('theme', () => {
     const presetName = currentThemePreset.value;
     if (themePresets.value[presetName]) {
       themePresets.value[presetName][key] = value;
-      // 触发 theme a更新
       applyCurrentTheme();
     }
   }
@@ -201,7 +179,6 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
-  // --- 字体预设 Actions ---
   const switchFontPreset = (name) => {
     if (fontPresets.value[name] !== undefined) {
       currentFontPreset.value = name
@@ -223,7 +200,6 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
-  // --- CSS预设 Actions ---
   const switchCssPreset = (name) => {
     if (cssPresets.value[name] !== undefined) {
       currentCssPreset.value = name
@@ -245,7 +221,6 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
   
-  // --- 应用样式 Actions ---
   const applyCss = (css, styleId = 'custom-css-style') => {
     let style = document.getElementById(styleId)
     if (!style) {
@@ -301,7 +276,7 @@ export const useThemeStore = defineStore('theme', () => {
       const url = fontPresets.value[currentFontPreset.value];
       applyFont(url);
     } else {
-      applyFont(null); // Fallback to default font
+      applyFont(null);
     }
   }
 
@@ -310,7 +285,7 @@ export const useThemeStore = defineStore('theme', () => {
       const css = cssPresets.value[currentCssPreset.value];
       applyCss(css);
     } else {
-      applyCss(''); // Fallback to no custom CSS
+      applyCss('');
     }
   }
   
@@ -318,18 +293,14 @@ export const useThemeStore = defineStore('theme', () => {
     const theme = themePresets.value[currentThemePreset.value];
     if (!theme) return;
 
-    // 应用字体颜色到全局变量
     if (theme.fontColor) {
       document.documentElement.style.setProperty('--home-text-color', theme.fontColor);
     } else {
-      // 如果主题中没有颜色，则移除自定义，使其回退到 global.css 中的默认值
       document.documentElement.style.removeProperty('--home-text-color');
     }
 
-    // 应用App名称字体大小
     applyAppLabelFontSize(theme.appLabelFontSize);
 
-    // 应用壁纸
     const homeScreen = document.getElementById('homeScreen');
     if (homeScreen) {
       if (theme.bg) {
@@ -338,12 +309,8 @@ export const useThemeStore = defineStore('theme', () => {
         homeScreen.style.backgroundImage = '';
       }
     }
-
-    // 锁屏壁纸逻辑可以类似地在这里添加
   }
 
-
-  // --- 初始化和监听 ---
   const initTheme = () => {
     applyCurrentFont()
     applyCurrentCss()
@@ -354,7 +321,6 @@ export const useThemeStore = defineStore('theme', () => {
     homeScreen.value = screen;
   }
 
-  // 监听状态变化并自动保存
   watch(
     [themePresets, currentThemePreset, fontPresets, currentFontPreset, cssPresets, currentCssPreset, homeScreen],
     saveData,
@@ -369,7 +335,7 @@ export const useThemeStore = defineStore('theme', () => {
     cssPresets,
     currentCssPreset,
     showFrame,
-    showStatusBar, // 导出
+    showStatusBar,
     appIcons,
     initTheme,
     switchThemePreset,
@@ -389,7 +355,10 @@ export const useThemeStore = defineStore('theme', () => {
     applyCurrentFont,
     applyCurrentCss,
     applyCurrentTheme,
-    toast,
+    toastShow,
+    toastMessage,
+    toastType,
+    toastDuration,
     showToast,
     confirmModal,
     showConfirm,
@@ -400,14 +369,10 @@ export const useThemeStore = defineStore('theme', () => {
     hideInput,
     handleInputConfirm,
     handleUpload,
-
-    // --- 电量控制 ---
     batteryLevel,
     setBatteryLevel: (level) => {
       batteryLevel.value = Math.max(0, Math.min(100, level));
     },
-
-    // --- 主屏幕控制 ---
     homeScreen,
     setHomeScreen,
   }

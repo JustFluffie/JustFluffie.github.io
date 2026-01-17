@@ -530,12 +530,6 @@ const handleToggleNotifications = () => {
 };
 
 const sendTestNotification = () => {
-  console.log('Test button clicked. Attempting to show visual feedback.');
-  document.body.style.backgroundColor = 'red';
-  setTimeout(() => {
-    document.body.style.backgroundColor = '';
-  }, 500);
-
   // 1. Check if the feature is enabled in settings
   if (!notificationStore.desktopNotificationsEnabled) {
     themeStore.showToast('请先开启“桌面通知”开关。', 'warning');
@@ -548,6 +542,7 @@ const sendTestNotification = () => {
   }
 
   // 3. If all checks pass, send the notification
+  themeStore.showToast('测试通知已发送，请检查系统通知。');
   notificationStore.triggerNotification(
     '测试通知',
     '如果看到此消息，说明桌面通知功能正常。',
@@ -556,7 +551,6 @@ const sendTestNotification = () => {
       console.log('Test notification clicked!');
     }
   );
-  themeStore.showToast('测试通知已发送，请检查系统通知。');
 };
 
 // --- 特殊处理：GitHub 操作 ---
