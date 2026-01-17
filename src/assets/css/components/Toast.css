@@ -1,0 +1,67 @@
+﻿/* Toast 轻提示样式 */
+
+.toast-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent; /* 完全透明 */
+    z-index: 2000; /* 高于 Modal */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none; /* 允许点击穿透 */
+}
+
+.toast-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.toast-container {
+    background: rgba(0, 0, 0, 0.7); /* 30% 透明黑色 */
+    border-radius: 8px; /* 圆角 */
+    padding: 10px 20px; /* 调整内边距 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row; /* 水平排列 */
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* 调整间距 */
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.toast-overlay.active .toast-container {
+    transform: scale(1);
+}
+
+.toast-icon {
+    font-size: 20px; /* 减小图标大小 */
+    width: 20px;
+    height: 20px;
+    color: white; /* 白色图标 */
+}
+
+.toast-icon.success {
+    color: white;
+}
+
+.toast-icon.error {
+    color: white;
+}
+
+.toast-icon.info {
+    color: white;
+}
+
+.toast-text {
+    font-size: 14px; /* 减小字体大小 */
+    color: white; /* 白色字体 */
+    font-weight: normal; /* 默认粗细 */
+    line-height: 1.4;
+    text-align: center;
+}

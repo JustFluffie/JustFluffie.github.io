@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI Chat Phone</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI Phone">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="AI Phone">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/pwa-192x192.png">
+  </head>
+  <body>
+    <div id="app">
+      <!-- 首屏加载动画 (Vue 挂载后会自动替换此内容) -->
+      <style>
+        .app-loading-wrapper {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: #ffffff;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+        }
+        /* 如果你想用深色背景，可以修改这里 */
+        @media (prefers-color-scheme: dark) {
+          .app-loading-wrapper {
+            background-color: #ffffff;
+            color: #ffffff;
+          }
+        }
+        .app-loading-image {
+          max-width: 60%;
+          max-height: 60%;
+          object-fit: contain;
+        }
+      </style>
+      <div class="app-loading-wrapper">
+        <!-- 
+          提示：在这里替换你的 GIF 或图片链接 
+          例如：<img src="/logo.gif" class="app-loading-image" alt="Loading...">
+        -->
+        <img src="/loading.gif" class="app-loading-image" alt="Logo"> 
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

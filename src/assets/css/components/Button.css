@@ -1,0 +1,122 @@
+﻿/*
+ * 模块：通用页面按钮 (General Page Buttons)
+ * 范围：应用于页面内容区域的主要操作按钮。
+ * 作用：定义了一组仿 Instagram 风格的通用按钮样式，包括基础样式 (.btn)
+ *      以及不同颜色主题的变体（如 .btn-primary, .btn-secondary, .btn-danger）。
+ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn:hover {
+    opacity: 0.85;
+}
+.btn:active {
+    transform: scale(0.97);
+}
+.btn-primary {
+    background-color: var(--accent-green);
+    color: var(--text-primary);
+}
+.btn-secondary {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+}
+.btn-danger {
+    background-color: var(--danger-bg);
+    color: var(--bg-light);
+}
+
+/*
+ * 模块：通用图标按钮 (General Icon Buttons)
+ * 范围：用于顶部栏、工具栏等位置的纯图标按钮。
+ * 作用：定义了一个透明背景、固定尺寸、内容居中的图标按钮样式。
+ */
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #333;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+.btn-icon:active {
+    opacity: 0.7;
+}
+
+/*
+ * 模块：顶部栏保存按钮 (Header Save Button)
+ * 范围：用于应用顶部导航栏（.app-header）中的保存操作。
+ * 作用：定义了一个紧凑、高亮（绿色）的保存按钮样式，使其在顶部栏中醒目。
+ */
+.header-save-btn {
+    background-color: var(--accent-green);
+    border: none;
+    color: white;
+    padding: 3px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 500;
+    margin: 17px 15px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+.app-header .action-btn:has(.header-save-btn) {
+    width: auto;
+}
+
+/*
+ * 模块：特定主题按钮 (Theme-Specific Buttons)
+ * 范围：从特定主题或页面（如 Theme.vue）中提取的补充按钮样式。
+ * 作用：提供额外的按钮变体，如次要按钮 (.btn-secondary-theme) 和
+ *      浅色危险按钮 (.btn-danger-light)，以及尺寸修饰符（.btn-sm, .big-btn）。
+ */
+.btn-secondary-theme {
+    background: var(--bg-light);
+    border: none;
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-danger-light {
+    background: #FFF0F0;
+    border: none;
+    color: #FF3B30;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.btn-sm {
+    width: auto;
+    padding: 5px 15px;
+    font-size: 14px;
+    margin: 0;
+}
+.big-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin: 0;
+}
+
+

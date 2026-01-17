@@ -1,0 +1,27 @@
+﻿/*
+ * 模块：卡片 (Card)
+ * 范围：作为内容分组的基本容器，广泛用于设置项、列表项等场景。
+ * 作用：定义了卡片组件的基础样式，包括背景、圆角和边距。
+ *      它还为卡片内部的标题 (.card-title) 和内容 (.card-content)
+ *      提供了标准的内边距和文本样式。
+ */
+.card {
+    background: var(--bg-white);
+    border-radius: var(--app-radius);
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.card .card-title {
+    color: #333; 
+    font-weight: 600; 
+    font-size: 16px;
+    padding: 15px 15px 0px;
+    margin-bottom: 10px;
+}
+
+.card .card-content {
+    padding: 5px 15px 10px 25px;
+    color: var(--text-tertiary);
+}
+

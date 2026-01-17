@@ -1,0 +1,65 @@
+﻿/*
+ * 模块：全局滚动条样式 (Global Scrollbar Style)
+ * 范围：全局，影响所有使用 Webkit 内核的浏览器（如 Chrome, Safari）中的滚动条。
+ * 作用：为浏览器定制滚动条的外观，包括宽度、轨道背景、滑块颜色和圆角，
+ *      并定义了鼠标悬停时的交互效果，以提升视觉统一性。
+ */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--text-quaternary, #cccccc);
+    border-radius: 4px;
+    transition: background 0.2s ease-in-out;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary, #888888);
+}
+
+/*
+ * 模块：SVG 图标基础样式 (SVG Icon Base Style)
+ * 范围：应用于所有 class 为 `svg-icon` 的 SVG 元素。
+ * 作用：为项目中的 SVG 图标提供一个统一的基础样式。
+ *      设置了默认的尺寸、填充和描边属性，使其易于通过 `currentColor`
+ *      继承父元素的颜色，方便统一管理和修改。
+ */
+.svg-icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/*
+ * 模块：全局动画 (Global Animations)
+ * 范围：可被任何需要此动画效果的组件按需调用。
+ * 作用：定义可重用的 CSS 动画效果。例如 `modalIn` 动画，
+ *      用于实现模态框弹出时的缩放和淡入效果。
+ */
+@keyframes modalIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/*
+ * 模块：折叠箭头样式 (Collapse Arrow Style)
+ * 范围：应用于所有 class 为 `collapse-arrow` 的元素，通常是图标。
+ * 作用：定义用于可折叠/展开组件的箭头图标样式。
+ *      包含箭头的过渡动画效果，以及在折叠状态（class 为 `collapsed`）下的旋转样式。
+ */
+.collapse-arrow {
+    transition: transform 0.2s ease;
+    color: var(--text-quaternary);
+    width: 16px;
+    height: 16px;
+}
+.collapse-arrow.collapsed {
+    transform: rotate(-90deg);
+}

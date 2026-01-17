@@ -1,0 +1,71 @@
+/*
+ * 模块：全局重置 (Global Reset)
+ * 作用：清除所有 HTML 元素的默认外边距和内边距，并将盒模型设置为 border-box，
+ *      以确保在不同浏览器中获得一致和可预测的布局。
+ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/*
+ * 模块：CSS 变量 (CSS Variables)
+ * 作用：定义整个应用中重复使用的颜色、字体大小、边框圆角等值。
+ *      这使得主题样式的统一管理和快速切换变得简单。
+ */
+:root {
+    /* 背景色（按深浅排序，合并重复值） */
+    --bg-white: #FFFFFF;              /* 白色 */
+    --bg-light: #F5F5F5;              /* 乳白色*/
+  
+    /* 文字色（合并相近深灰色，保留层级） */
+    --text-darkest: #1f1f1f;          /* 黑灰色 */
+    --text-primary: #262626;          /* 深灰色 */
+    --text-secondary: #4A4A4A;        /* 中灰色 */
+    --text-tertiary: #8E8E8E;         /* 浅灰色 */
+    --text-quaternary: #e7e7e7;       /* 灰白色 */
+    --text-white: #FFFFFF;            /* 白色 */
+  
+    /* 强调色/功能色 */
+    --accent-green: #34C759;          /* 绿色 */
+    --danger-color: #ff3030;          /* 红色 */
+    --danger-bg: rgba(255, 58, 48, 0.747); /* 透红色 */
+  
+    /* 边框/阴影/圆角（布局样式） */
+    --border-color: #e0e0e0;
+    --shadow-soft: 0 2px 15px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.12);
+    --border-radius: 20px;
+    --app-radius: 10px;
+}
+
+/*
+ * 模块：全局基础样式 (Global Base Styles)
+ * 作用：为 body 元素设置基础的字体、背景色、最小高度和布局属性。
+ *      这为整个应用提供了一个统一的视觉起点。
+ */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #FFFFFF;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    font-size: 14px;
+}
+
+/*
+ * 模块：通用辅助类 (Utility Classes)
+ * 作用：提供一组可重用的、功能单一的 CSS 类，用于快速实现常见布局和功能，
+ *      例如隐藏元素或平均分配 Flex 子元素的空间。
+ */
+.hidden-input {
+    display: none;
+}
+
+.flex-distribute-children > * {
+    flex-grow: 1;
+    flex-basis: 0;
+}

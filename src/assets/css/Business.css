@@ -1,0 +1,92 @@
+﻿/*
+ * 模块：聊天界面样式 (Chat Styles)
+ * 作用：包含聊天界面的各种 UI 元素样式。例如，聊天内容为空时的占位状态、
+ *      右键上下文菜单、模式选择器以及未读消息角标等。
+ */
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    gap: 15px;
+}
+.empty-state .empty-icon { font-size: 60px; opacity: 0.5; }
+.empty-state .empty-text { font-size: 14px; }
+
+.context-menu {
+    position: absolute;
+    background: #333;
+    border-radius: 6px;
+    padding: 5px 0;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    max-width: 240px;
+}
+.context-menu.active {
+    display: flex;
+    flex-direction: column;
+}
+.context-menu-item {
+    padding: 8px 15px;
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+.context-menu-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+.context-menu::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+.context-menu--align-left {
+    left: 0;
+    right: auto;
+}
+.context-menu--align-right {
+    left: auto;
+    right: 0;
+}
+
+.mode-selector {
+    display: flex;
+    gap: 10px;
+}
+.mode-option {
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    color: #666;
+    background: #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mode-option.active {
+    background: var(--text-secondary);
+    color: white;
+}
+
+.chat-badge {
+    background: #FF3B30;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+

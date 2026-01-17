@@ -1,0 +1,56 @@
+﻿/*
+ * 模块：胶囊式标签页 (Capsule Style Tabs)
+ * 范围：适用于需要水平滚动、外观为胶囊形状的标签页导航。
+ * 作用：定义了标签页容器 (.tab-bar) 和单个标签按钮 (.tab-btn) 的样式。
+ *      通过 `.active` 类来高亮显示当前选中的标签页，并控制对应内容 (.tab-content) 的显示。
+ */
+.tab-bar {
+    display: flex;
+    padding: 10px 15px;
+    gap: 10px;
+    overflow-x: auto;
+}
+.tab-btn {
+    padding: 8px 16px;
+    background: var(--bg-white);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    cursor: pointer;
+}
+.tab-btn.active {
+    background: var(--text-secondary);
+    color: white;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/*
+ * 模块：下划线式标签页 (Underline Style Tabs)
+ * 范围：专用于导入弹窗或其他需要清晰分隔的标签页场景。
+ * 作用：定义了一种通过下划线来指示当前选中项的标签页样式。
+ *      标签项 (.import-tab) 在容器内平均分配空间，通过 `.active` 类显示下划线和高亮文本。
+ */
+.import-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+.import-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+.import-tab.active {
+    color: var(--text-secondary);
+    border-bottom-color: var(--text-secondary);
+    font-weight: 600;
+}
+.import-content { display: none; }
+.import-content.active { display: block; }
+

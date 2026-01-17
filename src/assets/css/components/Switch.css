@@ -1,0 +1,61 @@
+/*
+ * 模块：iOS 风格切换开关 (iOS Style Toggle Switch)
+ * 范围：应用于所有 class 为 `.toggle-switch` 的元素。
+ * 作用：创建了一个类似于 iOS 系统中的滑动开关组件。
+ *      通过添加 `.active` 类来控制其开启和关闭状态，并带有平滑的过渡动画。
+ */
+.toggle-switch {
+    width: 51px; 
+    height: 31px; 
+    background: #E5E5EA;
+    border-radius: 16px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    flex-shrink: 0; 
+}
+.toggle-switch.active { background: var(--accent-green); }
+.toggle-switch::after {
+    content: '';
+    width: 27px;
+    height: 27px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.active::after { transform: translateX(20px); }
+
+/*
+ * 模块：简洁 Emoji 开关 (Simple Emoji Switch)
+ * 范围：应用于所有 class 为 `.simple-switch` 的元素。
+ * 作用：提供一个极简的、使用 Emoji 作为状态指示的开关。
+ *      通过伪元素 `:before` 的 `content` 属性切换 Emoji 来表示开启和关闭状态。
+ */
+.simple-switch {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.simple-switch::before {
+    content: '🔘'; /* 关闭状态 */
+}
+.simple-switch.active::before {
+    content: '🟢'; /* 开启状态 */
+}
+.simple-switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}

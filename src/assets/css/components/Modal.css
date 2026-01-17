@@ -1,0 +1,188 @@
+﻿/* ==========================================================================
+   Modal - 通用弹窗组件样式
+   ========================================================================== */
+
+/* 
+ * 1. 基础布局 (遮罩层与容器)
+ * -------------------------------------------------------------------------- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.modal-container {
+    background: var(--bg-white, #fff);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 320px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-overlay.active .modal-container {
+    transform: scale(1);
+}
+
+/* 
+ * 2. 内容区域 (头部、主体、底部)
+ * -------------------------------------------------------------------------- */
+
+.modal-header {
+    padding: 20px 20px 10px;
+    text-align: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary, #333);
+}
+
+.modal-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border-color, #eee);
+    padding: 0;
+}
+
+/* 
+ * 3. 按钮样式
+ * -------------------------------------------------------------------------- */
+
+/* 基础样式 */
+.modal-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 状态 */
+.modal-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.modal-btn:active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.modal-btn:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* 修饰符 */
+.modal-btn.cancel {
+    color: var(--text-quaternary);
+}
+
+.modal-btn.confirm,
+.modal-btn.confirm-danger {
+    font-weight: bold;
+    border-left: 1px solid var(--border-color, #eee);
+}
+
+.modal-btn.confirm {
+    color: var(--text-primary);
+}
+
+.modal-btn.danger {
+    color: var(--danger-color);
+}
+
+.modal-btn.confirm-danger {
+  background-color: var(--danger-color, #f56c6c);
+  color: white;
+}
+
+.modal-btn.confirm-danger:hover {
+  background-color: var(--danger-color-dark, #d9534f);
+}
+
+.modal-btn.confirm-danger:active {
+  background-color: var(--danger-color-darker, #c9302c);
+}
+
+/* 
+ * 4. 选项列表样式 (用于选择列表的弹窗)
+ * -------------------------------------------------------------------------- */
+
+.modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-options.centered-text {
+    text-align: center;
+}
+
+.modal-option {
+    padding: 15px;
+    background: var(--bg-light, #f5f5f5);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-option:active {
+    background: var(--bg-light, #e0e0e0);
+}
+
+.option-text {
+    font-size: 16px;
+    color: var(--text-primary, #333);
+}
+
+/* 
+ * 5. 补充样式 (如警告文本等)
+ * -------------------------------------------------------------------------- */
+
+.modal-warning-text {
+  font-size: 12px;
+  color: var(--danger-color, #f56c6c);
+  margin-top: 8px;
+  text-align: center;
+}

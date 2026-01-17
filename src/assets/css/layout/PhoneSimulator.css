@@ -1,0 +1,122 @@
+﻿/*
+ * 模块：手机模拟器 (Phone Simulator)
+ * 范围：作为整个应用在桌面端展示的根容器。
+ * 作用：定义了模拟手机的整体视觉样式，包括外框、屏幕和刘海等部分。
+ */
+
+/*
+ * 子模块：手机外框 (Phone Frame)
+ * 范围：`.phone-frame` 类。
+ * 作用：创建手机的物理外框，具有特定的尺寸、背景、圆角和阴影，
+ *      模拟真实手机的质感。
+ */
+.phone-frame {
+    width: 375px;
+    height: 720px;
+    background: #1a1a1a;
+    border-radius: 50px;
+    padding: 8px;
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5), inset 0 0 0 1px #333;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/*
+ * 子模块：无边框模式 (No-Frame Mode)
+ * 范围：当 `.phone-frame` 同时拥有 `.no-frame` 类时激活。
+ * 作用：提供一种全屏、无边框的显示模式，移除了模拟器的物理外框，
+ *      使内容直接铺满整个浏览器视口，适用于沉浸式体验或移动端调试。
+ */
+.phone-frame.no-frame {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    z-index: 9999;
+    transform: none !important;
+}
+.phone-frame.no-frame .phone-screen {
+    border-radius: 0;
+    pointer-events: auto;
+}
+.phone-frame.no-frame .notch {
+    display: none;
+}
+
+/*
+ * 子模块：手机屏幕 (Phone Screen)
+ * 范围：`.phone-screen` 类，位于 `.phone-frame` 内部。
+ * 作用：定义了手机的显示屏区域，是所有应用内容的直接容器。
+ */
+.phone-screen {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-light);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+}
+
+/*
+ * 子模块：状态栏 (Status Bar)
+ * 范围：`.status-bar` 类，通常位于 `.phone-screen` 的顶部。
+ * 作用：模拟手机顶部的状态栏，用于显示时间、信号等图标。
+ */
+.status-bar {
+    height: 20px;
+    padding: 12px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+.status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.status-bar .icons {
+    display: flex;
+    gap: 2px;
+    font-size: 12px;
+    align-items: center;
+}
+
+/*
+ * 子模块：刘海（屏幕凹口） (Notch)
+ * 范围：`.notch` 类，位于 `.phone-frame` 顶部中央。
+ * 作用：模拟现代智能手机屏幕顶部的“刘海”或“挖孔”，用于放置摄像头等传感器。
+ */
+.notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 22px;
+    background: #1a1a1a;
+    border-radius: 0 0 14px 14px;
+}
+
+/*
+ * 子模块：隐藏状态栏模式
+ * 范围：当 `.phone-frame` 同时拥有 `.status-bar-hidden` 类时激活。
+ * 作用：隐藏状态栏。
+ */
+.phone-frame.status-bar-hidden .status-bar {
+    display: none;
+}

@@ -1,0 +1,158 @@
+﻿/*
+ * 模块：表单基础布局 (Form Base Layout)
+ * 范围：用于构建表单结构的基础元素。
+ * 作用：定义了表单组（.form-group）和标签（.form-label）的间距和显示样式。
+ */
+.form-group { margin-bottom: 15px; padding: 0 15px; }
+.form-label { font-size: 13px; color: var(--text-tertiary); margin-bottom: 8px; display: block; }
+
+/*
+ * 模块：统一输入框与文本域 (Unified Inputs & Textareas)
+ * 范围：全局，适用于项目中几乎所有的输入框（input）和文本域（textarea）。
+ * 作用：通过 :is() 伪类和 .base-input 基类，为不同场景下的输入控件提供一个统一、标准化的外观。
+ *      包括基本属性（尺寸、字体、颜色）、边框、间距、占位符和聚焦效果。
+ *      未来新组件可直接使用 .base-input 类。
+ */
+.base-input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit; 
+    font-size: 14px;
+    color: var(--text-primary);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px; 
+    padding: 10px 10px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.base-input::placeholder {
+    color: var(--text-tertiary);
+    opacity: 1;
+}
+
+.base-input:focus {
+    border-color: var(--text-secondary);
+    border-width: 1px;
+    box-shadow: none;
+}
+
+textarea.base-input {
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/*
+ * 模块：特定输入控件 (Specific Input Controls)
+ * 范围：用于特定功能或布局的输入框变体。
+ * 作用：定义了短输入框、颜色选择器、数字输入器等特殊用途的输入控件样式。
+ */
+.base-input-short {
+    width: 100px !important;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.base-input-mini {
+    width: 65px !important;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.label-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+}
+
+.color-picker-input {
+    width: 40px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+}
+
+.number-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.number-input button {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.number-input span {
+    font-size: 14px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/*
+ * 模块：输入框组 (Input Group)
+ * 范围：用于将输入框和按钮组合在一起的场景。
+ * 作用：创建一个紧凑的、由输入框和按钮组成的复合组件，常用于搜索框或需要即时操作的输入场景。
+ */
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-group .base-input {
+  flex-grow: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  min-width: 50px;
+}
+
+.input-group .modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-radius: 0;
+  padding: 8px 12px;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--bg-light);
+  color: var(--text-primary);
+}
+
+.input-group .modal-btn:hover {
+    opacity: 0.85;
+}
+
+.input-group .modal-btn:active {
+    transform: scale(0.97);
+}
+
+.input-group .modal-btn.confirm {
+  background-color: var(--accent-green);
+  color: white;
+}
+
+.input-group .modal-btn:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
