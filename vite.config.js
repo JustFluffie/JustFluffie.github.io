@@ -16,6 +16,7 @@ export default defineConfig({
         short_name: 'JustFluffie',
         description: 'A Vue 3 Phone Simulator App',
         theme_color: '#ffffff',
+        display: 'standalone',
         icons: [
           {
             src: 'pwa-192x192.png',
