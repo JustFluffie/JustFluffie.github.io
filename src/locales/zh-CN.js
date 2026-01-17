@@ -1,3 +1,5 @@
+import { vModelCheckbox } from "vue";
+
 export default {
   // ================================
   // 通用词条
@@ -46,6 +48,8 @@ export default {
       calendar: '日历',
       apiSettings: 'API设置',
       theme: '主题',
+      spy: '待开发',
+      check:'待开发',
     },
     modalTitles: {
       setBg: '设置主页背景',
@@ -150,6 +154,9 @@ export default {
     notificationsGranted: '已授权。应用在后台时将显示系统通知。',
     notificationsDenied: '已拒绝。请在浏览器设置中更改权限。',
     notificationsDefault: '需要您的授权才能显示桌面通知。',
+    testNotification: '通知测试',
+    test:'测试',
+    testNotificationDesc: '发送一条测试消息来验证通知功能',
     scope: '应用范围',
     scopeAll: '全部角色',
     scopeNone: '未选择',
