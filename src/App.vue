@@ -13,6 +13,7 @@ import HomeScreen from '@/views/screen/HomeScreen.vue'
 import { useBatteryStore } from '@/stores/batteryStore' // 引入新的 battery store
 import { useApiStore } from '@/stores/apiStore' // 引入 api store
 import { useBackgroundService } from '@/composables/useBackgroundService'
+import { useNotifications } from '@/composables/useNotifications'
 
 const router = useRouter()
 const singleStore = useSingleStore()
@@ -22,6 +23,7 @@ const apiStore = useApiStore() // 初始化 api store
 const { t } = useI18n() // 初始化 i18n
 const phoneScreenRef = ref(null) // Create a ref for the boundary element
 provide('phoneScreenRef', phoneScreenRef) // Provide the ref to descendant components
+const { requestPermission } = useNotifications()
 
 const videoCall = computed(() => singleStore.videoCall)
 
@@ -32,6 +34,7 @@ onMounted(() => {
   batteryStore.initialize() // 初始化时间和电池监听
   themeStore.initTheme()
   apiStore.autoConnect() // 自动连接API并获取模型
+  requestPermission() // 请求通知权限
 })
 
 // Global watcher to handle navigation when maximizing video call

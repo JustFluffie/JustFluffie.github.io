@@ -185,6 +185,18 @@
           </div>
         </div>
       </div>
+
+      <!-- ==================== 7. 通知测试模块 ==================== -->
+      <div class="card theme-section">
+        <div class="card-title">通知测试</div>
+        <div class="card-content">
+          <div class="theme-item no-icon">
+            <div class="import-export-container" style="flex: 1; justify-content: space-around;">
+              <button class="btn btn-secondary big-btn" @click="sendNotification('测试通知', { body: '这是一条测试通知。', tag: 'test' })">发送测试通知</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ==================== 弹窗组件区域 ==================== -->
@@ -211,10 +223,12 @@ import { storeToRefs } from 'pinia'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import Modal from '@/components/common/Modal.vue'
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
+import { useNotifications } from '@/composables/useNotifications'
 
 const { t } = useI18n()
 const router = useRouter()
 const themeStore = useThemeStore()
+const { sendNotification } = useNotifications()
 
 const {
   themePresets,
