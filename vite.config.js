@@ -18,8 +18,8 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         id: '/',
-        name: 'AI Chat Phone',
-        short_name: 'AI Phone',
+        name: 'JustFluffie Phone',
+        short_name: 'JustFluffie Phone',
         description: 'A Vue 3 Phone Simulator App',
         theme_color: '#ffffff',
         background_color: '#ffffff',
