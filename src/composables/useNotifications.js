@@ -30,14 +30,8 @@ export function useNotifications() {
     }
 
     navigator.serviceWorker.ready.then(registration => {
-      console.log('Service Worker is ready. Registration:', registration);
-      registration.showNotification(title, options)
-        .then(() => {
-          console.log('showNotification promise resolved.');
-        })
-        .catch(err => {
-          console.error('showNotification promise rejected:', err);
-        });
+      console.log('Service Worker is ready. Using registration.showNotification()');
+      registration.showNotification(title, options);
     }).catch(err => {
         console.error('Service Worker not ready:', err);
     });
