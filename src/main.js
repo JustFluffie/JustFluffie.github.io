@@ -12,7 +12,7 @@ import AppLayout from '@/components/common/AppLayout.vue'
 import Modal from '@/components/common/Modal.vue'
 import Toast from '@/components/common/Toast.vue'
 
-import './assets/css/Global.css'
+import './assets/css/global.css'
 import './assets/css/GlobalBase.css'
 import './assets/css/components/Button.css'
 import './assets/css/components/Input.css'
