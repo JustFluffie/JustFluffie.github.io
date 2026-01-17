@@ -182,10 +182,6 @@ const handleSendSticker = (sticker) => {
   font-weight: bold;
 }
 
-.quote-text {
-  /* 样式已在 .quote-content 中处理 */
-}
-
 .quote-close {
   cursor: pointer;
   display: flex;

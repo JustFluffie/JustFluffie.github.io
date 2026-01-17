@@ -530,6 +530,8 @@ const handleToggleNotifications = () => {
 };
 
 const sendTestNotification = () => {
+  alert('测试按钮已点击！');
+
   // 1. Check if the feature is enabled in settings
   if (!notificationStore.desktopNotificationsEnabled) {
     themeStore.showToast('请先开启“桌面通知”开关。', 'warning');
