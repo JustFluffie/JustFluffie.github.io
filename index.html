@@ -33,11 +33,12 @@
           }
         }
         .app-loading-image {
-          max-width: 62%;
-          max-height: 62%;
+          max-width: calc(62%+1px);
+          max-height: calc(62%+1px);
           object-fit: contain;
           position: relative; /* 开启相对定位，才能用 top/left/right/bottom */
-          top: -5px; /* 向下偏移10px，负值则向上 */
+          top: -6px; /* 向下偏移10px，负值则向上 */
+          box-sizing: border-box;
         }
       </style>
       <div class="app-loading-wrapper">

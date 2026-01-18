@@ -38,7 +38,7 @@ const themeStore = useThemeStore()
 app.use(router)
 app.use(i18n)
 
-// 延迟挂载以展示首屏加载动画 (2秒)
+// 延迟挂载以展示首屏加载动画
 setTimeout(() => {
   app.mount('#app')
-}, 1000)
+}, 1500)
