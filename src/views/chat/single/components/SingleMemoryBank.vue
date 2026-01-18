@@ -260,8 +260,8 @@ const doRefine = async () => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px; /* 【可调整】修改此数值可改变两个按钮之间的间距 */
-  padding-right: 4px; /* 【可调整】修改此数值可改变按钮组离右边框的距离 */
+  gap: 10px; 
+  padding-right: 4px; 
 }
 
 .memory-bank-content {

@@ -370,7 +370,6 @@
     </div>
 
     <!-- 弹窗组件 -->
-    <MemoryBank v-model:visible="showMemoryBank" :charId="props.charId" />
     <ImageUploadModal v-model:visible="showImageUploadModal" type="basic" biz-type="avatar" :title="uploadModalTitle" @send-image="handleImageUploadConfirm" />
   </div>
 </template>
@@ -391,7 +390,6 @@ import { useWorldBookStore } from '@/stores/worldBookStore'
 import { usePresetStore } from '@/stores/presetStore'
 import { storeToRefs } from 'pinia'
 // 组件
-import MemoryBank from './SingleMemoryBank.vue'
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import MultiSelect from '@/components/common/MultiSelect.vue'
@@ -401,10 +399,11 @@ import SvgIcon from '@/components/common/SvgIcon.vue'
 // 属性、事件
 // ================================================================================================
 const props = defineProps({
-  visible: Boolean,
-  charId: String
+  id: {
+    type: String,
+    required: true
+  }
 })
-const emit = defineEmits(['update:visible'])
 
 // ================================================================================================
 // 组合式函数
@@ -434,7 +433,6 @@ const collapsedStates = ref({
   advancedSettings: false,
 });
 // 弹窗控制
-const showMemoryBank = ref(false)
 const showImageUploadModal = ref(false)
 const currentUploadTarget = ref('') // 'avatar', 'userPersonaAvatar', 'chatBg', 'videoBg', 'userVideoImg'
 
@@ -496,7 +494,7 @@ const msgCount = ref(0)
 // ================================================================================================
 
 // --- 基础信息 ---
-const character = computed(() => singleStore.getCharacter(props.charId))
+const character = computed(() => singleStore.getCharacter(props.id))
 const charName = computed(() => character.value?.name || t('chat.unknownCharacter'))
 const charAvatar = computed(() => character.value?.avatar)
 
@@ -572,8 +570,8 @@ onMounted(() => {
 
 // --- 6.1 页面交互 (UI Interaction) ---
 const toggleCollapse = (cardKey) => { collapsedStates.value[cardKey] = !collapsedStates.value[cardKey]; };
-const closeSettings = () => { emit('update:visible', false) };
-const openMemoryBank = () => { showMemoryBank.value = true };
+const closeSettings = () => { router.back() };
+const openMemoryBank = () => { router.push({ name: 'memory-bank', params: { charId: props.id } }) };
 const openAvatarModal = () => { currentUploadTarget.value = 'avatar'; showImageUploadModal.value = true; };
 const openUserAvatarModal = () => { currentUploadTarget.value = 'userPersonaAvatar'; showImageUploadModal.value = true; };
 const openChatBgModal = () => { currentUploadTarget.value = 'chatBg'; showImageUploadModal.value = true; };
@@ -628,7 +626,7 @@ const loadSettings = () => {
     apiConfig.value = char.api || 'default';
     npcCount.value = char.npc?.length || 0;
     isBlocked.value = char.isBlocked || false;
-    const messages = singleStore.messages[props.charId] || [];
+    const messages = singleStore.messages[props.id] || [];
     msgCount.value = messages.length;
     tokenCount.value = Math.ceil(messages.reduce((acc, m) => acc + (m.content?.length || 0), 0) * 1.5);
 };
@@ -789,7 +787,6 @@ const triggerManualSummary = () => {
             character.value.memories.unshift({ content: summaryContent, time: Date.now(), charName: charName.value });
             singleStore.saveData();
             themeStore.showToast(t('chat.singleChat.settings.toast.summaryDone'));
-            showMemoryBank.value = true;
         }
     );
 };
@@ -817,7 +814,7 @@ const handleClearHistory = () => {
         t('chat.singleChat.settings.confirmClearTitle'),
         t('chat.singleChat.settings.confirmClearMsg', { name: charName.value }),
         () => {
-            singleStore.clearChatHistory(props.charId);
+            singleStore.clearChatHistory(props.id);
             themeStore.showToast(t('chat.singleChat.settings.toast.historyCleared'));
             msgCount.value = 0;
             tokenCount.value = 0;
@@ -839,7 +836,7 @@ const handleDeleteCharacter = () => {
     t('chat.deleteCharacterTitle'),
     t('chat.deleteCharacterConfirm', { name: charName.value }),
     () => {
-      singleStore.deleteCharacter(props.charId);
+      singleStore.deleteCharacter(props.id);
       themeStore.showToast(t('chat.toast.deleteSuccess'), 'success');
       closeSettings();
       router.push({ name: 'chat-list' });

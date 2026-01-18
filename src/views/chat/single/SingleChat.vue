@@ -263,6 +263,12 @@ const bubbleStyle = computed(() => {
 // ==========================================
 // 5. 监听器 (Watchers)
 // ==========================================
+watch(isSettingsVisible, (newValue) => {
+  if (newValue) {
+    router.push({ name: 'single-chat-settings', params: { id: props.charId } });
+    isSettingsVisible.value = false; // 重置以避免返回时再次触发
+  }
+});
 // 滚动逻辑已下沉到 MessageList 组件
 
 // ==========================================

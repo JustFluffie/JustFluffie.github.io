@@ -25,6 +25,12 @@ const router = createRouter({
           props: route => ({ charId: route.params.id }),
         },
         {
+          path: 'room/:id/settings',
+          name: 'single-chat-settings',
+          component: () => import('../views/chat/single/components/SingleChatSettings.vue'),
+          props: true
+        },
+        {
           path: 'moments',
           name: 'moments',
           component: () => import('../views/chat/moments/Moments.vue')

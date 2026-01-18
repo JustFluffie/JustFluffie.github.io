@@ -67,7 +67,7 @@ const childRef = ref(null);
 const showMomentsCamera = ref(true);
 
 // 判断当前是否为聊天室
-const isChatRoom = computed(() => route.name === 'single-chat');
+const isChatRoom = computed(() => ['single-chat', 'single-chat-settings', 'memory-bank'].includes(route.name));
 
 // --- 以下逻辑从 ChatAppLayout.vue 迁移过来 ---
 
