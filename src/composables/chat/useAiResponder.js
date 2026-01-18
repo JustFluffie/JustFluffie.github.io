@@ -82,9 +82,11 @@ export function useAiResponder(charId, apiStore) {
             });
             singleStore.saveData();
 
-            // 如果当前不在该角色的聊天页面，触发通知 (只通知最后一条，或者每条都通知但可能会刷屏，这里选择每条都通知但带防抖逻辑可能更好，目前简化为每条都通知)
+            // 如果当前不在该角色的聊天页面，增加未读计数并触发通知
             if (route.path !== `/chat/room/${charId.value}`) {
-               notificationStore.triggerNotification(
+              singleStore.incrementUnreadCount(charId.value);
+              
+              notificationStore.triggerNotification(
                 character.nickname || character.name,
                 type === 'text' ? content : `[${type}]`, // 通知内容简略显示类型
                 character.avatar,

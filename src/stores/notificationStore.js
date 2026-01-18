@@ -54,23 +54,21 @@ export const useNotificationStore = defineStore('notification', () => {
       default: break;
     }
 
-    // Check if desktop notifications should be used
+    // Always show in-app notification first
+    showInAppNotification(notifyTitle, formattedContent, notifyIcon, notifyOnClick, notifyDuration);
+
+    // Then, if enabled, also send a desktop notification
     if (desktopNotificationsEnabled.value && permission.value === 'granted' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(registration => {
         registration.showNotification(notifyTitle, {
           body: formattedContent,
-          icon: notifyIcon || '/pwa-192x192.png', // Provide a default icon
+          icon: notifyIcon || '/pwa-192x192.png',
           badge: '/pwa-192x192.png',
-          tag: `chat-message-${Date.now()}` // Unique tag to prevent stacking
+          tag: `chat-message-${Date.now()}`
         });
-        // The 'onclick' logic is now handled in the service worker (sw.js)
       }).catch(err => {
-        console.error('Service Worker not ready for notification, falling back to in-app:', err);
-        showInAppNotification(notifyTitle, formattedContent, notifyIcon, notifyOnClick, notifyDuration);
+        console.error('Service Worker not ready for desktop notification:', err);
       });
-    } else {
-      // Fallback to in-app notification
-      showInAppNotification(notifyTitle, formattedContent, notifyIcon, notifyOnClick, notifyDuration);
     }
   };
 

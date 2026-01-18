@@ -101,6 +101,7 @@ export const useBackupStore = defineStore('backup', () => {
 
   // 一键创建备份仓库
   async function createBackupRepo() {
+    githubToken.value = localStorage.getItem('github_token') || '';
     if (!githubToken.value) {
       alert('请先设置 GitHub Token！');
       return;
@@ -152,6 +153,10 @@ export const useBackupStore = defineStore('backup', () => {
 
   // 备份到 GitHub
   async function backupToGitHub() {
+    // 从 localStorage 加载最新的 token 和 repo
+    githubToken.value = localStorage.getItem('github_token') || '';
+    githubRepo.value = localStorage.getItem('github_repo') || '';
+
     if (!githubToken.value || !githubRepo.value) {
       alert('请先设置 GitHub Token 和仓库地址！');
       return;
@@ -191,7 +196,7 @@ export const useBackupStore = defineStore('backup', () => {
       const commitMessage = `Backup from phone-vue-app: ${new Date().toISOString()}`;
       const body = {
         message: commitMessage,
-        content: btoa(unescape(encodeURIComponent(backupContent))), // Base64 编码
+        content: btoa(backupContent), // 直接对 UTF-8 字符串进行 Base64 编码
         sha: sha, // 如果是更新，则需要提供 sha
       };
 

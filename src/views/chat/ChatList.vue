@@ -49,6 +49,7 @@
         </div>
         <div class="chat-meta">
           <div class="chat-time">{{ getLastTime(session) }}</div>
+          <div class="chat-unread-badge" v-if="session.unreadCount > 0">{{ session.unreadCount }}</div>
         </div>
       </div>
     </div>
@@ -424,6 +425,22 @@ const handlePressLeave = () => {
 .chat-time {
   font-size: 11px;
   color: var(--text-quaternary);
+  margin-bottom: 6px;
+}
+
+.chat-unread-badge {
+  background-color: #FF3B30;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0px 5px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
 }
 
 /* 空状态样式已移至 Business.css */

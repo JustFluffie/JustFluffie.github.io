@@ -61,6 +61,7 @@ export const useChatStore = defineStore('chat', {
                 lastMessage: lastMsg,
                 time: lastMsg ? lastMsg.time : 0,
                 isPinned: state.pinnedSessions.includes(char.id),
+                unreadCount: singleStore.unreadCounts[char.id] || 0,
                 raw: char // 原始数据
             });
         });

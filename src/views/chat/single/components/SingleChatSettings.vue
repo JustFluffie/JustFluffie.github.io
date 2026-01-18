@@ -751,7 +751,7 @@ const handleImageUploadConfirm = (image) => {
     const target = currentUploadTarget.value;
     const updates = {
         avatar: { obj: character.value, key: 'avatar', toast: t('chat.singleChat.settings.toast.avatarUpdated') },
-        userPersonaAvatar: { obj: { value: userPersonaAvatar }, key: 'value', toast: t('chat.singleChat.settings.toast.avatarUrlSet') },
+        userPersonaAvatar: { obj: userPersonaAvatar, key: 'value', toast: t('chat.singleChat.settings.toast.avatarUrlSet') },
         chatBg: { obj: character.value, key: 'chatBackground', toast: t('chat.singleChat.settings.toast.backgroundUpdated'), localRef: chatBackground },
         videoBg: { obj: character.value, key: 'videoBg', toast: t('chat.singleChat.settings.toast.charImageUpdated'), localRef: videoBg },
         userVideoImg: { obj: character.value, key: 'userVideoImg', toast: t('chat.singleChat.settings.toast.userImageUpdated'), localRef: userVideoImg },

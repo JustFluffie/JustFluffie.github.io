@@ -92,6 +92,7 @@
 <script setup>
 import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useSingleStore } from '@/stores/chat/singleStore';
+import { useApiStore } from '@/stores/apiStore';
 import GlobalFloat from '@/components/common/GlobalFloat.vue';
 
 const props = defineProps({
@@ -102,6 +103,7 @@ const props = defineProps({
 });
 
 const singleStore = useSingleStore();
+const apiStore = useApiStore();
 
 // Shared State
 const videoCall = computed(() => singleStore.videoCall);
@@ -158,25 +160,60 @@ const retry = () => {
     // You can add your AI regeneration logic here
 };
 
-const sendVideoChatMessage = () => {
+const sendVideoChatMessage = async () => {
     const text = videoChatInput.value.trim();
     if (!text) return;
+
+    // Add user message to local chat
     videoChatMessages.value.push({ text, type: 'sent' });
+    const currentUserMessage = { role: 'user', content: text };
     videoChatInput.value = '';
-    nextTick(() => {
-        if (videoChatMessagesContainer.value) {
-            videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
-        }
+    await nextTick();
+    if (videoChatMessagesContainer.value) {
+        videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
+    }
+
+    // Temporarily add system and user messages to singleStore for API call
+    const charId = character.value.id;
+    const originalMessages = singleStore.messages[charId] ? [...singleStore.messages[charId]] : [];
+    if (!singleStore.messages[charId]) {
+        singleStore.messages[charId] = [];
+    }
+    singleStore.messages[charId].push({
+        id: Date.now().toString(),
+        sender: 'user',
+        type: 'text',
+        content: text,
+        time: Date.now()
     });
-    
-    setTimeout(() => {
-        videoChatMessages.value.push({ text: '收到~', type: 'received' });
-        nextTick(() => {
+
+    try {
+        // Get AI response
+        const responseText = await apiStore.getChatCompletion(charId);
+
+        if (responseText) {
+            // Add AI response to local chat
+            videoChatMessages.value.push({ text: responseText, type: 'received' });
+            await nextTick();
             if (videoChatMessagesContainer.value) {
                 videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
             }
-        });
-    }, 1000);
+            // Also add to singleStore to maintain context for subsequent calls within the video chat
+            singleStore.messages[charId].push({
+                id: (Date.now() + 1).toString(),
+                sender: 'char',
+                type: 'text',
+                content: responseText,
+                time: Date.now()
+            });
+        }
+    } catch (error) {
+        console.error("Failed to get AI response in video chat:", error);
+        videoChatMessages.value.push({ text: '抱歉，我暂时无法回复...', type: 'received' });
+    } finally {
+        // IMPORTANT: Restore original messages to prevent video chat from polluting main chat history
+        singleStore.messages[charId] = originalMessages;
+    }
 };
 
 // --- Draggable Window Logic ---

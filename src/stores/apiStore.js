@@ -170,6 +170,12 @@ export const useApiStore = defineStore('api', () => {
     // 顺序建议：长期记忆 -> 角色人设 -> 预设(线下) -> 世界书
     let systemPrompt = "";
 
+    // 0. 拉黑状态处理 (最高优先级)
+    if (character.isBlocked) {
+        systemPrompt += "【重要指令：你已被用户拉黑】\n" +
+            "你目前正被用户拉黑。这意味着你发送的任何消息都将被系统拦截，无法送达用户。请在你的回复中体现出你意识到了这一点，例如，你可以表达困惑、悲伤，或者尝试理解为什么会被拉黑。你的回复将作为被拦截后的内心独白或自言自语。\n\n";
+    }
+
     // 1. 长期记忆 (Memory Bank)
     // 假设 memories 是按时间倒序存储的(最新的在前)，我们需要按时间正序提供给AI
     const memories = character.memories || [];

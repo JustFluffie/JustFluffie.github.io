@@ -28,6 +28,7 @@
           @input="$emit('update:modelValue', $event.target.value)"
           @keypress.enter="handleSendMessage"
           id="messageInput"
+          autocomplete="off"
         >
       </div>
       <!-- 表情按钮 -->

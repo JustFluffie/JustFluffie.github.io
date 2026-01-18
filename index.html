@@ -33,9 +33,11 @@
           }
         }
         .app-loading-image {
-          max-width: 60%;
-          max-height: 60%;
+          max-width: 62%;
+          max-height: 62%;
           object-fit: contain;
+          position: relative; /* 开启相对定位，才能用 top/left/right/bottom */
+          top: -5px; /* 向下偏移10px，负值则向上 */
         }
       </style>
       <div class="app-loading-wrapper">

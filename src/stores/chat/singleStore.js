@@ -7,6 +7,7 @@ export const useSingleStore = defineStore('singleChat', {
   state: () => ({
     characters: [],
     messages: {}, // { charId: [message] }
+    unreadCounts: {}, // { charId: count }
     stickers: [],
     userPersonas: [],
     bubblePresets: [], // 气泡样式预设
@@ -40,6 +41,7 @@ export const useSingleStore = defineStore('singleChat', {
           
           this.characters = data.characters || [];
           this.messages = data.messages || {};
+          this.unreadCounts = data.unreadCounts || {};
           // 迁移 emojis -> stickers
           this.stickers = data.stickers || [...defaultStickers];
           this.userPersonas = data.userPersonas || [];
@@ -67,6 +69,7 @@ export const useSingleStore = defineStore('singleChat', {
       const data = {
         characters: this.characters,
         messages: this.messages,
+        unreadCounts: this.unreadCounts,
         stickers: this.stickers,
         userPersonas: this.userPersonas,
         bubblePresets: this.bubblePresets,
@@ -124,6 +127,7 @@ export const useSingleStore = defineStore('singleChat', {
       
       this.characters.unshift(newChar);
       this.messages[newChar.id] = [];
+      this.unreadCounts[newChar.id] = 0;
       this.saveData();
       return newChar.id;
     },
@@ -133,6 +137,7 @@ export const useSingleStore = defineStore('singleChat', {
       if (index !== -1) {
         this.characters.splice(index, 1);
         delete this.messages[id];
+        delete this.unreadCounts[id];
         this.saveData();
       }
     },
@@ -149,6 +154,23 @@ export const useSingleStore = defineStore('singleChat', {
     clearChatHistory(charId) {
       if (this.messages[charId]) {
         this.messages[charId] = [];
+        this.unreadCounts[charId] = 0;
+        this.saveData();
+      }
+    },
+
+    incrementUnreadCount(charId) {
+      if (typeof this.unreadCounts[charId] === 'number') {
+        this.unreadCounts[charId]++;
+      } else {
+        this.unreadCounts[charId] = 1;
+      }
+      this.saveData();
+    },
+
+    clearUnreadCount(charId) {
+      if (this.unreadCounts[charId]) {
+        this.unreadCounts[charId] = 0;
         this.saveData();
       }
     },

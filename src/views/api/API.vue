@@ -26,13 +26,13 @@
             <!-- 第二行：API URL -->
             <div class="api-item-col">
                 <label class="form-label" for="api-url">{{ t('api.apiUrl') }}</label>
-                <input type="text" id="api-url" class="base-input" v-model="currentApiUrl" :placeholder="t('api.apiUrlPlaceholder')" />
+                <input type="text" id="api-url" class="base-input" v-model="currentApiUrl" :placeholder="t('api.apiUrlPlaceholder')" autocomplete="off" />
             </div>
 
             <!-- 第三行：API Key -->
             <div class="api-item-col">
                 <label class="form-label" for="api-key">{{ t('api.apiKey') }}</label>
-                <input type="password" id="api-key" class="base-input" v-model="currentApiKey" :placeholder="t('api.apiKeyPlaceholder')" />
+                <input type="password" id="api-key" class="base-input" v-model="currentApiKey" :placeholder="t('api.apiKeyPlaceholder')" autocomplete="off" />
             </div>
 
             <!-- 第四行：模型选择器、拉取模型按钮 -->
@@ -84,21 +84,21 @@
                   <div class="list-item-content">
                   <div class="list-item-title">{{ t('api.interval') }}</div>
                   </div>
-                  <input type="number" v-model.number="localGlobalProactiveInterval" class="base-input base-input-short" placeholder="5">
+                  <input type="number" v-model.number="localGlobalProactiveInterval" class="base-input base-input-short" placeholder="5" autocomplete="off">
                 </div>
 
                 <div class="api-item-row">
                   <div class="list-item-content">
                   <div class="list-item-title">{{ t('api.cooldown') }}</div>
                   </div>
-                  <input type="number" v-model.number="localGlobalProactiveCooldown" class="base-input base-input-short" placeholder="30">
+                  <input type="number" v-model.number="localGlobalProactiveCooldown" class="base-input base-input-short" placeholder="30" autocomplete="off">
                 </div>
 
                 <div class="api-item-row">
                   <div class="list-item-content">
                   <div class="list-item-title">{{ t('api.dailyLimit') }}</div>
                   </div>
-                  <input type="number" v-model.number="localGlobalProactiveDailyLimit" class="base-input base-input-short" placeholder="10">
+                  <input type="number" v-model.number="localGlobalProactiveDailyLimit" class="base-input base-input-short" placeholder="10" autocomplete="off">
                 </div>
 
                 <div class="api-item-row">
@@ -125,7 +125,7 @@
                   <div class="list-item-title">{{ t('api.idleTime') }}</div>
                     <div class="list-item-subtitle">{{ t('api.idleTimeDesc') }}</div>
                   </div>
-                  <input type="number" v-model.number="localGlobalProactiveIdleTime" class="base-input base-input-short" placeholder="15">
+                  <input type="number" v-model.number="localGlobalProactiveIdleTime" class="base-input base-input-short" placeholder="15" autocomplete="off">
                 </div>
             </template>
         </div>
@@ -160,14 +160,14 @@
                 <label class="form-label" for="github-token">{{ t('api.githubToken') }}</label>
                 <div class="input-hint">{{ t('api.githubTokenHint') }}</div>
                 <div style="display: flex; gap: 10px;">
-                    <input type="password" id="github-token" class="base-input small-placeholder" v-model="localGithubToken" :placeholder="t('api.githubTokenPlaceholder')" style="flex: 1;" />
+                    <input type="password" id="github-token" class="base-input small-placeholder" v-model="localGithubToken" :placeholder="t('api.githubTokenPlaceholder')" style="flex: 1;" autocomplete="off" />
                     <button class="btn btn-secondary btn-sm" @click="openTokenPage">{{ t('api.getToken') }}</button>
                 </div>
             </div>
             <div class="api-item-col">
                 <label class="form-label" for="github-repo">{{ t('api.repoAddress') }}</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="github-repo" class="base-input" v-model="localGithubRepo" :placeholder="t('api.repoAddressPlaceholder')" style="flex: 1;" />
+                    <input type="text" id="github-repo" class="base-input" v-model="localGithubRepo" :placeholder="t('api.repoAddressPlaceholder')" style="flex: 1;" autocomplete="off" />
                     <button v-if="!localGithubRepo" class="btn btn-secondary btn-sm" @click="handleCreateRepo" :disabled="!localGithubToken">{{ t('api.createRepo') }}</button>
                 </div>
             </div>
@@ -206,7 +206,7 @@
                 <label class="form-label" for="imgbb-api-key">{{ t('api.imgbbApiKey') }}</label>
                 <div class="input-hint">{{ t('api.imgbbApiKeyHint') }}</div>
                 <div style="display: flex; gap: 10px;">
-                    <input type="password" id="imgbb-api-key" class="base-input small-placeholder" v-model="localImgbbApiKey" :placeholder="t('api.imgbbApiKeyPlaceholder')" style="flex: 1;" />
+                    <input type="password" id="imgbb-api-key" class="base-input small-placeholder" v-model="localImgbbApiKey" :placeholder="t('api.imgbbApiKeyPlaceholder')" style="flex: 1;" autocomplete="off" />
                     <button class="btn btn-secondary btn-sm" @click="openImgbbPage">{{ t('api.getImgbbApiKey') }}</button>
                 </div>
             </div>
@@ -216,7 +216,7 @@
                 <label class="form-label" for="catbox-hash">{{ t('api.catboxUserHash') }}</label>
                 <div class="input-hint">{{ t('api.catboxUserHashHint') }}</div>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="catbox-hash" class="base-input small-placeholder" v-model="localCatboxUserHash" :placeholder="t('api.catboxUserHashPlaceholder')" style="flex: 1;" />
+                    <input type="text" id="catbox-hash" class="base-input small-placeholder" v-model="localCatboxUserHash" :placeholder="t('api.catboxUserHashPlaceholder')" style="flex: 1;" autocomplete="off" />
                     <button class="btn btn-secondary btn-sm" @click="openCatboxPage">{{ t('api.getCatboxUserHash') }}</button>
                 </div>
             </div>
@@ -392,9 +392,9 @@ onMounted(() => {
     localGlobalTriggerMode.value = backgroundStore.globalTriggerMode;
     localGlobalProactiveIdleTime.value = backgroundStore.globalProactiveIdleTime;
 
-    // Backup
-    localGithubToken.value = backupStore.githubToken;
-    localGithubRepo.value = backupStore.githubRepo;
+    // Backup - 从 localStorage 加载
+    localGithubToken.value = localStorage.getItem('github_token') || '';
+    localGithubRepo.value = localStorage.getItem('github_repo') || '';
 
     // Image Host
     localImageHostProvider.value = apiStore.imageHostProvider;
@@ -452,6 +452,9 @@ watch([
 watch([localGithubToken, localGithubRepo], () => {
     backupStore.githubToken = localGithubToken.value;
     backupStore.githubRepo = localGithubRepo.value;
+    // 持久化到 localStorage
+    localStorage.setItem('github_token', localGithubToken.value);
+    localStorage.setItem('github_repo', localGithubRepo.value);
 });
 
 // 监视图床设置的变化并自动保存

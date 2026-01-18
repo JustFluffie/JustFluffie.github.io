@@ -107,7 +107,7 @@
 // ==========================================
 // 1. 导入 (Imports)
 // ==========================================
-import { ref, computed, watch, onUnmounted, toRef } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSingleStore } from '@/stores/chat/singleStore'
@@ -270,6 +270,10 @@ const bubbleStyle = computed(() => {
 // ==========================================
 // 6. 生命周期 (Lifecycle)
 // ==========================================
+onMounted(() => {
+  singleStore.clearUnreadCount(props.charId)
+})
+
 // 滚动逻辑已下沉到 MessageList 组件
 
 // ==========================================

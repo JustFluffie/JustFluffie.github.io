@@ -45,15 +45,18 @@ const handleImageError = (e) => {
   top: 10px;
   left: 10px;
   right: 10px;
-  background: rgba(255, 255, 255, 0.95);
+  background: white;
   backdrop-filter: blur(10px);
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 12px 12px;
+  min-height: 60px; /* 增加最小高度 */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 9999;
   cursor: pointer;
   user-select: none;
   overflow: hidden;
+  display: flex; /* 使用 flex 布局使内容垂直居中 */
+  align-items: center; /* 垂直居中 */
 }
 
 .notification-content-wrapper {
@@ -110,7 +113,8 @@ const handleImageError = (e) => {
   text-overflow: ellipsis;
 }
 
-/* Dark mode support */
+/* Dark mode support (temporarily disabled) */
+/*
 @media (prefers-color-scheme: dark) {
   .notification-banner {
     background: rgba(40, 40, 40, 0.95);
@@ -125,6 +129,7 @@ const handleImageError = (e) => {
     color: #ddd;
   }
 }
+*/
 
 /* Animation */
 .notification-slide-enter-active,

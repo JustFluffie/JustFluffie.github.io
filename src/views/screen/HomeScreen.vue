@@ -131,6 +131,8 @@ const goToPage = (page) => {
 
 const handleTouchStart = (e) => {
   touchStartX.value = e.touches[0].clientX;
+  // 重置结束点，以区分点击和滑动
+  touchEndX.value = 0;
 }
 
 const handleTouchMove = (e) => {
@@ -138,18 +140,26 @@ const handleTouchMove = (e) => {
 }
 
 const handleTouchEnd = () => {
-  if (touchStartX.value - touchEndX.value > 50) {
-    // Swipe left
+  // 如果 touchEndX 仍为0，说明没有发生滑动（touchmove），直接返回
+  if (touchEndX.value === 0) {
+    touchStartX.value = 0;
+    return;
+  }
+
+  const distance = touchStartX.value - touchEndX.value;
+
+  if (distance > 50) {
+    // 向左滑动
     if (currentPage.value < 2) {
       currentPage.value++;
     }
-  } else if (touchEndX.value - touchStartX.value > 50) {
-    // Swipe right
+  } else if (distance < -50) {
+    // 向右滑动
     if (currentPage.value > 1) {
       currentPage.value--;
     }
   }
-  // Reset values
+  // 重置值
   touchStartX.value = 0;
   touchEndX.value = 0;
 }
@@ -204,7 +214,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="home-screen" id="homeScreen" @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
+<div 
+  class="home-screen" 
+  id="homeScreen" 
+  :style="homeData.bg ? { backgroundImage: `url(${homeData.bg})` } : {}"
+  @touchstart="handleTouchStart" 
+  @touchmove="handleTouchMove" 
+  @touchend="handleTouchEnd"
+>
     
     <!-- ==================== 页面容器 ==================== -->
     <div class="pages-container">
