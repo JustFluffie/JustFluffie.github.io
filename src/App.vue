@@ -14,7 +14,6 @@ import { useBatteryStore } from '@/stores/batteryStore' // 引入新的 battery 
 import { useApiStore } from '@/stores/apiStore' // 引入 api store
 import { useBackgroundService } from '@/composables/useBackgroundService'
 import { useNotificationStore } from '@/stores/notificationStore'
-import DebugLogger from '@/components/common/DebugLogger.vue'
 
 const router = useRouter()
 const singleStore = useSingleStore()
@@ -99,7 +98,6 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
     </Modal>
 
     <!-- 调试日志记录器 -->
-    <DebugLogger />
   </div>
 </template>
 
