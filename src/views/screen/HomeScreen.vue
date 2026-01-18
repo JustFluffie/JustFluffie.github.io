@@ -423,11 +423,11 @@ onMounted(() => {
    使用 transform 避免影响上方 PhotoWall 的居中位置
 */
 .right-column .app-grid {
-  transform: translateY(-40px);
+  transform: translateY(-50px);
 }
 
 .left-column .app-grid {
-  transform: translateY(10px);
+  transform: translateY(15px);
 }
 
 .spacer {

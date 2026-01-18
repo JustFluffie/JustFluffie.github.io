@@ -22,6 +22,14 @@
             </div>
             <div class="toggle-switch" :class="{ active: pendingThemeSettings.showFrame !== false }" @click="toggleSetting('showFrame')"></div>
           </div>
+          <div class="theme-item no-icon" v-if="pendingThemeSettings.showFrame !== false">
+            <div style="display: flex; gap: 5px; align-items: center; flex: 1; width: 100%;">
+              <div class="item-label" style="white-space: nowrap; margin-right: 10px;">{{ $t('theme.frameColor') }}</div>
+              <input type="color" class="color-picker-input" :value="pickerFrameColor" @input="updateFrameColorFromPicker($event.target.value)">
+              <input type="text" class="base-input" style="flex: 1;" :value="pendingThemeSettings.frameColor" @input="updateFrameColorFromInput($event.target.value)" :placeholder="t('theme.frameColorPlaceholder')">
+              <button class="btn btn-secondary btn-sm" style="white-space: nowrap;" @click="confirmFrameColor">{{ $t('confirm') }}</button>
+            </div>
+          </div>
           <div class="theme-item no-icon">
             <div class="item-content">
               <div class="item-label" style="font-weight: 600;">{{ $t('theme.showStatusBar') }}</div>
@@ -308,6 +316,22 @@ const pickerColor = computed(() => {
   return '#000000';
 });
 
+const pickerFrameColor = computed(() => {
+  const color = pendingThemeSettings.frameColor;
+  if (!color) return '#f3f3f3';
+  if (/^#[0-9A-F]{6}$/i.test(color)) return color;
+  
+  // 尝试转换 RGB/RGBA 到 Hex
+  const rgbMatch = color.match(/^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+    const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+  }
+  return '#f3f3f3';
+});
+
 const fontPresetOptions = computed(() => {
   return Object.keys(fontPresets.value || {}).map(name => ({ value: name, label: name }));
 });
@@ -342,7 +366,7 @@ function loadThemeSettings() {
 
   if (!themePresets.value) {
     themePresets.value = {
-      [defaultThemeName]: { bg: '', lockbg: '', appIcons: {}, showFrame: true, fontColor: '#1f1f1f', appLabelFontSize: 10 }
+      [defaultThemeName]: { bg: '', lockbg: '', appIcons: {}, showFrame: true, frameColor: '#f3f3f3', fontColor: '#1f1f1f', appLabelFontSize: 10 }
     };
   }
   
@@ -360,6 +384,9 @@ function loadThemeSettings() {
   }
   if (!pendingThemeSettings.appLabelFontSize) {
     pendingThemeSettings.appLabelFontSize = 10;
+  }
+  if (!pendingThemeSettings.frameColor) {
+    pendingThemeSettings.frameColor = '#f3f3f3';
   }
   
   if (!cssPresets.value) {
@@ -520,6 +547,29 @@ function confirmFontColor() {
   themeStore.showToast(t('theme.toast.colorApplied'), 'info');
 }
 
+function updateFrameColorFromPicker(color) {
+  if (/^#[0-9A-F]{6}$/i.test(color)) {
+    pendingThemeSettings.frameColor = color;
+    themeStore.applyFrameColor(color);
+  }
+}
+
+function updateFrameColorFromInput(color) {
+  const isHex = /^#([0-9A-F]{3}){1,2}$/i.test(color) || /^#([0-9A-F]{4}){1,2}$/i.test(color);
+  const isRgb = /^rgb\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i.test(color);
+  const isRgba = /^rgba\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d\.]+\s*\)$/i.test(color);
+
+  if (isHex || isRgb || isRgba) {
+    pendingThemeSettings.frameColor = color;
+    themeStore.applyFrameColor(color);
+  }
+}
+
+function confirmFrameColor() {
+  themeStore.applyFrameColor(pendingThemeSettings.frameColor);
+  themeStore.showToast(t('theme.toast.colorApplied'), 'info');
+}
+
 function adjustAppLabelFontSize(amount) {
   let currentSize = pendingThemeSettings.appLabelFontSize || 10;
   currentSize += amount;
@@ -550,6 +600,7 @@ function saveThemePreset() {
     themeToSave.lockbg = themeToSave.lockbg || '';
     themeToSave.appIcons = themeToSave.appIcons || {};
     themeToSave.fontColor = themeToSave.fontColor || '#1f1f1f';
+    themeToSave.frameColor = themeToSave.frameColor || '#f3f3f3';
     themeToSave.appLabelFontSize = themeToSave.appLabelFontSize || 10;
 
     themeStore.saveThemePreset(name, themeToSave);
@@ -702,6 +753,7 @@ function saveCurrentThemeSettings() {
     lockbg: pendingThemeSettings.lockbg || '',
     appIcons: pendingThemeSettings.appIcons || {},
     showFrame: pendingThemeSettings.showFrame !== false,
+    frameColor: pendingThemeSettings.frameColor || '#f3f3f3',
     showStatusBar: pendingThemeSettings.showStatusBar !== false,
     fontColor: pendingThemeSettings.fontColor || '#1f1f1f',
     appLabelFontSize: pendingThemeSettings.appLabelFontSize || 10,

@@ -55,7 +55,7 @@ const showSourceSelect = (type) => {
    ========================================================= */
 .polaroid-container {
     /* 1. 整体大小 (Zoom) */
-    font-size: 10.5px; 
+    font-size: 11px; 
 
     /* 2. 散布范围 (Spread) */
     width: 16em;  

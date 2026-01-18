@@ -29,6 +29,7 @@ export const useThemeStore = defineStore('theme', () => {
       lockbg: '',
       appIcons: {},
       showFrame: true,
+      frameColor: '#f3f3f3',
       showStatusBar: true,
       fontColor: '#1f1f1f',
       appLabelFontSize: 10,
@@ -249,6 +250,17 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
+  const applyFrameColor = (color) => {
+    const phoneFrame = document.querySelector('.phone-frame');
+    if (phoneFrame) {
+      if (color) {
+        phoneFrame.style.setProperty('--case-color', color);
+      } else {
+        phoneFrame.style.removeProperty('--case-color');
+      }
+    }
+  }
+
   const applyAppLabelFontSize = (size) => {
     if (size) {
       document.documentElement.style.setProperty('--app-label-font-size', `${size}px`);
@@ -309,6 +321,7 @@ export const useThemeStore = defineStore('theme', () => {
       document.documentElement.style.removeProperty('--home-text-color');
     }
 
+    applyFrameColor(theme.frameColor);
     applyAppLabelFontSize(theme.appLabelFontSize);
 
     const homeScreen = document.getElementById('homeScreen');
@@ -361,6 +374,7 @@ export const useThemeStore = defineStore('theme', () => {
     applyCss,
     applyFont,
     applyFontColor,
+    applyFrameColor,
     applyAppLabelFontSize,
     applyCurrentFont,
     applyCurrentCss,
