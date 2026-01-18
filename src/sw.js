@@ -1,4 +1,8 @@
 import { precacheAndRoute } from 'workbox-precaching'
+import { clientsClaim } from 'workbox-core'
+
+self.skipWaiting()
+clientsClaim()
 
 // The self.__WB_MANIFEST is injected by the vite-plugin-pwa
 precacheAndRoute(self.__WB_MANIFEST || [])
