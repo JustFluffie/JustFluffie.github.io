@@ -218,93 +218,67 @@ export const useSingleStore = defineStore('singleChat', {
         }, 1000);
     },
 
-    async _summarizeVideoCallAndReply(charId, videoChatMessages) {
-        if (!videoChatMessages || videoChatMessages.length === 0) return;
-
-        const apiStore = useApiStore();
-        const character = this.getCharacter(charId);
-        if (!character) return;
-
-        // 1. Format chat log
-        const chatLog = videoChatMessages.map(msg => {
-            return `${msg.type === 'sent' ? '用户' : character.name}：${msg.text}`;
-        }).join('\n');
-
-        // 2. Build prompt for summarization
-        const prompt = `你是一个对话总结助手。请根据以下视频通话记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。
----
-通话记录：
-${chatLog}
----
-请生成核心记忆：`;
-
-        try {
-            // 3. Get summary from API
-            const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
-
-            if (summary) {
-                // 4. Add to long-term memory
-                if (!character.memories) {
-                    character.memories = [];
-                }
-                character.memories.push({
-                    id: Date.now(),
-                    content: summary.trim()
-                });
-                console.log(`[VideoCall Summary] Added to ${character.name}'s memory: ${summary}`);
-            }
-
-            // 5. Trigger auto-reply after summary
-            // We need a ref for charId to use the composable
-            const charIdRef = ref(charId);
-            const { triggerAiResponse } = useAiResponder(charIdRef, apiStore);
-            await triggerAiResponse();
-
-        } catch (error) {
-            console.error('[VideoCall Summary] Failed to summarize or reply:', error);
-        }
-    },
-
-    endVideoCall(videoChatMessages = []) {
+    async endVideoCall() {
       const wasConnected = this.videoCall.status === 'connected';
       const callDuration = this.videoCall.duration;
       const charId = this.videoCall.characterId;
+      const character = this.getCharacter(charId);
 
       this._clearVideoTimers();
-      
-      // 如果通话已连接且有通话时长，则发送通话总结消息
-      if (wasConnected && callDuration > 0) {
-        const duration = this.videoCall.duration;
-        const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
-        const seconds = (duration % 60).toString().padStart(2, '0');
+
+      if (wasConnected && charId && this.messages[charId]) {
+        const callMessages = this.messages[charId].filter(m => m.inVideoCall);
+        this.messages[charId] = this.messages[charId].filter(m => !m.inVideoCall);
+
+        const minutes = Math.floor(callDuration / 60).toString().padStart(2, '0');
+        const seconds = (callDuration % 60).toString().padStart(2, '0');
         const timeStr = `${minutes}:${seconds}`;
-        
-        const charId = this.videoCall.characterId;
-        if (charId && this.messages[charId]) {
-            this.messages[charId].push({
-                id: Date.now().toString(),
-                sender: 'user', // or system
-                type: 'call_summary',
-                content: `通话时长 ${timeStr}`,
-                time: Date.now()
-            });
-            this.saveData();
+
+        // 仅在聊天界面显示通话时长
+        this.messages[charId].push({
+            id: Date.now().toString(),
+            sender: 'system',
+            type: 'call_summary',
+            content: `通话时长 ${timeStr}`,
+            time: Date.now()
+        });
+
+        // 如果有聊天内容，则生成摘要并存入长期记忆
+        if (callMessages.length > 0 && character) {
+          const chatLog = callMessages.map(msg => {
+            const senderName = msg.sender === 'user' ? '用户' : character.name;
+            return `${senderName}: ${msg.content}`;
+          }).join('\n');
+
+          const prompt = `你是一个对话总结助手。请根据以下视频通话记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。\n\n通话记录：\n${chatLog}\n\n核心记忆：`;
+          
+          try {
+            const apiStore = useApiStore();
+            const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
+            if (summary) {
+              if (!character.memories) {
+                character.memories = [];
+              }
+              character.memories.push({
+                id: Date.now(),
+                content: summary.trim()
+              });
+              console.log(`[VideoCall Summary] Added to ${character.name}'s memory: ${summary}`);
+            }
+          } catch (error) {
+            console.error('[VideoCall Summary] Failed to generate memory:', error);
+          }
         }
+        
+        this.saveData();
       }
 
       // 重置状态
-      const shouldSummarize = wasConnected && callDuration > 0 && videoChatMessages.length > 0;
-      
       this.videoCall.isActive = false;
       this.videoCall.isMinimized = false;
       this.videoCall.status = 'idle';
       this.videoCall.characterId = null;
       this.videoCall.duration = 0;
-
-      // 异步执行总结和回复，不阻塞UI
-      if (shouldSummarize) {
-        this._summarizeVideoCallAndReply(charId, videoChatMessages);
-      }
     },
 
     minimizeVideoCall() {

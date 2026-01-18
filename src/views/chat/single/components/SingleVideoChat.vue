@@ -188,43 +188,47 @@ const sendVideoChatMessage = async () => {
     const text = videoChatInput.value.trim();
     if (!text) return;
 
-    // 将用户消息添加到本地聊天
+    // 1. 将用户消息添加到本地UI
     videoChatMessages.value.push({ text, type: 'sent' });
+    const userMessageId = Date.now().toString();
     videoChatInput.value = '';
+
+    // 2. 将用户消息添加到主store以维持上下文，并标记为通话中消息
+    const charId = character.value.id;
+    if (!singleStore.messages[charId]) {
+        singleStore.messages[charId] = [];
+    }
+    singleStore.messages[charId].push({
+        id: userMessageId,
+        sender: 'user',
+        type: 'text',
+        content: text,
+        time: Date.now(),
+        inVideoCall: true // 添加标记
+    });
+
     await nextTick();
     if (videoChatMessagesContainer.value) {
         videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
     }
 
-    // 临时将消息添加到 singleStore 以进行 API 调用
-    const charId = character.value.id;
-    const originalMessages = singleStore.messages[charId] ? [...singleStore.messages[charId]] : [];
-    if (!singleStore.messages[charId]) {
-        singleStore.messages[charId] = [];
-    }
-    singleStore.messages[charId].push({
-        id: Date.now().toString(),
-        sender: 'user',
-        type: 'text',
-        content: text,
-        time: Date.now()
-    });
-
+    // 3. 获取AI回复
     isAiReplying.value = true;
     try {
-        // 获取 AI 回复
         const responseText = await apiStore.getChatCompletion(charId);
 
         if (responseText) {
-            // 将 AI 回复添加到本地聊天
+            // 4. 将AI回复添加到本地UI
             videoChatMessages.value.push({ text: responseText, type: 'received' });
-            // 同时添加到 singleStore 以在视频聊天中保持上下文
+            
+            // 5. 将AI回复添加到主store
             singleStore.messages[charId].push({
                 id: (Date.now() + 1).toString(),
                 sender: 'char',
                 type: 'text',
                 content: responseText,
-                time: Date.now()
+                time: Date.now(),
+                inVideoCall: true // 添加标记
             });
         }
     } catch (error) {
@@ -232,8 +236,6 @@ const sendVideoChatMessage = async () => {
         videoChatMessages.value.push({ text: '抱歉，我暂时无法回复...', type: 'received' });
     } finally {
         isAiReplying.value = false;
-        // 重要：恢复原始消息，以防止视频聊天污染主聊天记录
-        singleStore.messages[charId] = originalMessages;
         await nextTick();
         if (videoChatMessagesContainer.value) {
             videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
@@ -469,7 +471,6 @@ onBeforeUnmount(() => {
     width: 6px;
     height: 6px;
     margin: 0 2px;
-    background-color: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
     animation: typing-bounce 1.2s infinite ease-in-out;
 }

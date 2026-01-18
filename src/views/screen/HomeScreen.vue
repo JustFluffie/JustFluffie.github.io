@@ -40,7 +40,6 @@ const fileInput = ref(null) // (保留引用，虽然主要使用 Modal)
 
 // --- 主页核心数据 ---
 let homeData = reactive({
-  bg: '',
   headerBg: '',
   avatar: '',
   text: t('homeScreen.greeting'),
@@ -75,7 +74,6 @@ const dockApps = computed(() => [
 // 弹窗标题
 const modalTitle = computed(() => {
   const titleMap = {
-    bg: t('homeScreen.modalTitles.setBg'),
     headerBg: '设置顶部背景',
     avatar: t('homeScreen.modalTitles.setAvatar'),
     cdCover: t('homeScreen.modalTitles.setCdCover'),
@@ -83,6 +81,11 @@ const modalTitle = computed(() => {
     photo2: t('homeScreen.modalTitles.setPhoto2'),
   };
   return titleMap[currentSourceType.value] || t('homeScreen.modalTitles.default');
+});
+
+const wallpaper = computed(() => {
+  const preset = themePresets.value[currentThemePreset.value];
+  return preset?.bg ? `url(${preset.bg})` : '';
 });
 
 // ==========================================
@@ -212,6 +215,7 @@ const updateHomeImage = async (url) => {
 onMounted(() => {
   loadHomeData()
   updateTime()
+  themeStore.initTheme()
 })
 </script>
 
@@ -219,7 +223,7 @@ onMounted(() => {
 <div 
   class="home-screen" 
   id="homeScreen" 
-  :style="homeData.bg ? { backgroundImage: `url(${homeData.bg})` } : {}"
+  :style="{ backgroundImage: wallpaper }"
   @touchstart="handleTouchStart" 
   @touchmove="handleTouchMove" 
   @touchend="handleTouchEnd"
