@@ -159,11 +159,12 @@ const confirmLocation = () => {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 20px;
+    padding: 25px;
     position: relative;
     overflow: hidden;
     background-size: cover;
     background-position: center;
+    margin-top: 7px;
     transition: background-image 0.3s ease;
 }
 

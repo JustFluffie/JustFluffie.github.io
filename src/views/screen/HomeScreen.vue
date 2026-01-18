@@ -426,6 +426,10 @@ onMounted(() => {
   transform: translateY(-40px);
 }
 
+.left-column .app-grid {
+  transform: translateY(10px);
+}
+
 .spacer {
   display: none; /* 不再需要 spacer */
 }

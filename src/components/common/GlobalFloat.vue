@@ -53,7 +53,7 @@ onMounted(() => {
   const parent = getBoundaryElement();
   if (parent) {
     const xPos = props.initialPosition.x === 'auto' 
-      ? parent.offsetWidth - 80 
+      ? parent.clientWidth - 80 
       : props.initialPosition.x;
     position.value = { x: xPos, y: props.initialPosition.y };
   }
@@ -62,7 +62,7 @@ onMounted(() => {
 watch(() => props.boundaryRef, (newParent) => {
   if (newParent) {
     const xPos = props.initialPosition.x === 'auto' 
-      ? newParent.offsetWidth - 80 
+      ? newParent.clientWidth - 80 
       : props.initialPosition.x;
     position.value = { x: xPos, y: props.initialPosition.y };
   }
@@ -114,8 +114,8 @@ const onDrag = (event) => {
     const elHeight = floatEl.value?.offsetHeight || 70;
 
     if (elWidth > 0 && elHeight > 0) {
-      position.value.x = Math.max(0, Math.min(parent.offsetWidth - elWidth, newX));
-      position.value.y = Math.max(0, Math.min(parent.offsetHeight - elHeight, newY));
+      position.value.x = Math.max(0, Math.min(parent.clientWidth - elWidth, newX));
+      position.value.y = Math.max(0, Math.min(parent.clientHeight - elHeight, newY));
     }
   }
 };

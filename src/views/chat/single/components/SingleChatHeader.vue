@@ -208,7 +208,7 @@ const openMemoryBank = () => {
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 26px;
+    height: 27px;
 }
 
 .chat-room-title {
@@ -218,13 +218,15 @@ const openMemoryBank = () => {
     font-weight: normal;
     white-space: nowrap;
     text-overflow: ellipsis;
+    margin-top: 9px; 
 }
 
 .chat-room-status {
     display: flex;
     gap: 2px;
     align-items: center;
-    font-size: 10px;
+    font-size: 9px;
+    margin-top: 2px;
     color: #999;
     cursor: pointer;
 }
