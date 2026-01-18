@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useWorldBookStore } from '@/stores/worldBookStore';
@@ -39,6 +39,13 @@ export const useApiStore = defineStore('api', () => {
     localStorage.setItem('api_imgbbApiKey', imgbbApiKey.value);
     localStorage.setItem('api_catboxUserHash', catboxUserHash.value);
   }
+
+  // 监听状态变化并自动保存
+  watch(
+    [presets, activePresetName, imageHostProvider, imgbbApiKey, catboxUserHash],
+    saveState,
+    { deep: true }
+  );
 
   // 获取当前激活的预设对象
   const getActivePreset = () => {

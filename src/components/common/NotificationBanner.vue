@@ -36,13 +36,13 @@ const handleImageError = (e) => {
 <style scoped>
 .notification-banner {
   position: absolute;
-  top: 32px;
+  top: 30px;
   left: 10px;
   right: 10px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 14px;
-  padding: 15px 20px;
+  padding: 15px;
   min-height: 80px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 9999;
