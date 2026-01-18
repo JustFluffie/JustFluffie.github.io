@@ -200,24 +200,28 @@
                 <div class="label-col"><div class="label-main">实时天气</div></div>
                 <div class="toggle-switch" :class="{ active: realtimeWeatherEnabled }" @click="realtimeWeatherEnabled = !realtimeWeatherEnabled"></div>
               </div>
-              <div class="form-item-vertical">
-                <div class="label-main" style="margin-bottom:5px;">角色所在地</div>
-                <div class="location-input-group">
-                  <input type="text" v-model="charLocationReal" class="base-input" placeholder="真实地名">
-                  <input type="text" v-model="charLocationVirtual" class="base-input" placeholder="虚拟地名 (可选)">
-                  <button class="btn btn-secondary btn-sm" @click="mapLocation('char')">确定</button>
+              <transition name="collapse">
+                <div v-if="realtimeWeatherEnabled">
+                  <div class="form-item-vertical">
+                    <div class="label-main" style="margin-bottom:5px;">角色所在地</div>
+                    <div class="location-input-group">
+                      <input type="text" v-model="charLocationReal" class="base-input" placeholder="真实地名">
+                      <input type="text" v-model="charLocationVirtual" class="base-input" placeholder="虚拟地名 (可选)">
+                      <button class="btn btn-secondary btn-sm" @click="mapLocation('char')">确定</button>
+                    </div>
+                    <div class="location-display">{{ charLocationDisplay }}</div>
+                  </div>
+                  <div class="form-item-vertical">
+                    <div class="label-main" style="margin-bottom:5px;">用户所在地</div>
+                    <div class="location-input-group">
+                      <input type="text" v-model="userLocationReal" class="base-input" placeholder="真实地名">
+                      <input type="text" v-model="userLocationVirtual" class="base-input" placeholder="虚拟地名 (可选)">
+                      <button class="btn btn-secondary btn-sm" @click="mapLocation('user')">确定</button>
+                    </div>
+                    <div class="location-display">{{ userLocationDisplay }}</div>
+                  </div>
                 </div>
-                <div class="location-display">{{ charLocationDisplay }}</div>
-              </div>
-              <div class="form-item-vertical">
-                <div class="label-main" style="margin-bottom:5px;">用户所在地</div>
-                <div class="location-input-group">
-                  <input type="text" v-model="userLocationReal" class="base-input" placeholder="真实地名">
-                  <input type="text" v-model="userLocationVirtual" class="base-input" placeholder="虚拟地名 (可选)">
-                  <button class="btn btn-secondary btn-sm" @click="mapLocation('user')">确定</button>
-                </div>
-                <div class="location-display">{{ userLocationDisplay }}</div>
-              </div>
+              </transition>
             </div>
           </div>
         </transition>
@@ -471,6 +475,7 @@ import CustomSelect from '@/components/common/CustomSelect.vue'
 import MultiSelect from '@/components/common/MultiSelect.vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import Modal from '@/components/common/Modal.vue'
+import { useWeather } from '@/composables/useWeather'
 
 // ================================================================================================
 // 属性、事件
@@ -495,6 +500,7 @@ const { sortedWorldBooks } = storeToRefs(worldBookStore)
 const presetStore = usePresetStore()
 const { sortedPresets } = storeToRefs(presetStore)
 const apiStore = useApiStore()
+const { fetchLocationWeather } = useWeather()
 
 // ================================================================================================
 // 1. UI 状态 (UI State)
@@ -554,6 +560,8 @@ const charLocationDisplay = ref('')
 const userLocationReal = ref('')
 const userLocationVirtual = ref('')
 const userLocationDisplay = ref('')
+const charLocationData = ref({})
+const userLocationData = ref({})
 
 // --- 2.5 总结设置 (Summary Settings) ---
 const summaryRange = ref(20)
@@ -702,12 +710,14 @@ const loadSettings = () => {
     const rts = char.realtimeSettings || { timeEnabled: false, weatherEnabled: false, charLocation: {}, userLocation: {} };
     realtimeTimeEnabled.value = rts.timeEnabled;
     realtimeWeatherEnabled.value = rts.weatherEnabled;
-    charLocationReal.value = rts.charLocation?.real || '';
-    charLocationVirtual.value = rts.charLocation?.virtual || '';
-    charLocationDisplay.value = rts.charLocation?.display || '';
-    userLocationReal.value = rts.userLocation?.real || '';
-    userLocationVirtual.value = rts.userLocation?.virtual || '';
-    userLocationDisplay.value = rts.userLocation?.display || '';
+    charLocationData.value = rts.charLocation || {};
+    userLocationData.value = rts.userLocation || {};
+    charLocationReal.value = charLocationData.value.real || '';
+    charLocationVirtual.value = charLocationData.value.virtual || '';
+    charLocationDisplay.value = charLocationData.value.shortDisplay || ''; // Use shortDisplay for UI
+    userLocationReal.value = userLocationData.value.real || '';
+    userLocationVirtual.value = userLocationData.value.virtual || '';
+    userLocationDisplay.value = userLocationData.value.shortDisplay || ''; // Use shortDisplay for UI
     
     // 5. Summary Settings
     summaryRange.value = char.summaryRange || 20;
@@ -758,6 +768,12 @@ const saveSettings = () => {
         persona.videoImg = userVideoImg.value;
     }
 
+    // Sync location input values back to data objects before saving
+    charLocationData.value.real = charLocationReal.value;
+    charLocationData.value.virtual = charLocationVirtual.value;
+    userLocationData.value.real = userLocationReal.value;
+    userLocationData.value.virtual = userLocationVirtual.value;
+
     Object.assign(char, {
         // 1. Role Info
         name: charNameInput.value.trim() || char.name,
@@ -781,8 +797,8 @@ const saveSettings = () => {
         realtimeSettings: {
             timeEnabled: realtimeTimeEnabled.value,
             weatherEnabled: realtimeWeatherEnabled.value,
-            charLocation: { real: charLocationReal.value, virtual: charLocationVirtual.value, display: charLocationDisplay.value },
-            userLocation: { real: userLocationReal.value, virtual: userLocationVirtual.value, display: userLocationDisplay.value }
+            charLocation: charLocationData.value,
+            userLocation: userLocationData.value
         },
         // 5. Summary Settings
         summaryRange: summaryRange.value,
@@ -964,55 +980,20 @@ const handleSummarizeVideo = async () => {
 const mapLocation = async (type) => {
   const real = type === 'char' ? charLocationReal.value : userLocationReal.value;
   const virtual = type === 'char' ? charLocationVirtual.value : userLocationVirtual.value;
-
-  if (!real) {
-    themeStore.showToast('请输入真实地名', 'error');
-    return;
-  }
-
-  const activePreset = apiStore.getActivePreset();
-  if (!activePreset || !activePreset.apiUrl) {
-    themeStore.showToast('请先在API设置中配置有效的URL', 'error');
-    return;
-  }
-  const baseUrl = activePreset.apiUrl.replace(/\/+$/, '');
-
-  themeStore.showLoading();
-  try {
-    // Step 1: Geocode location name to get lat/lon and address details
-    const geoResponse = await fetch(`${baseUrl}/nominatim/search?q=${encodeURIComponent(real)}&format=json&addressdetails=1&limit=1`);
-    if (!geoResponse.ok) throw new Error('Geocoding API request failed');
-    const geoData = await geoResponse.json();
-    if (geoData.length === 0) {
-      themeStore.showToast('找不到该位置', 'error');
-      return;
-    }
-    const { lat, lon, address } = geoData[0];
-    const city = address.city || address.town || address.village || address.county || '';
-    const country = address.country || '';
-
-    // Step 2: Use lat/lon to get timezone
-    const tzResponse = await fetch(`${baseUrl}/geonames/timezoneJSON?lat=${lat}&lng=${lon}&username=demo`);
-    if (!tzResponse.ok) throw new Error('Timezone API request failed');
-    const tzData = await tzResponse.json();
-    const timezone = tzData.timezoneId || 'N/A';
-
-    const display = `${virtual || real} (市: ${city}, 国家: ${country}, 时区: ${timezone})`;
-
+  
+  const data = await fetchLocationWeather(real, virtual);
+  if (data) {
     if (type === 'char') {
-      charLocationDisplay.value = display;
+      charLocationData.value = data;
+      charLocationDisplay.value = data.shortDisplay;
     } else {
-      userLocationDisplay.value = display;
+      userLocationData.value = data;
+      userLocationDisplay.value = data.shortDisplay;
     }
-    themeStore.showToast('位置信息已更新', 'success');
-
-  } catch (error) {
-    console.error('Failed to map location:', error);
-    themeStore.showToast('获取位置信息失败', 'error');
-  } finally {
-    themeStore.hideLoading();
+    themeStore.showToast('位置和天气信息已更新', 'success');
   }
 };
+
 
 // --- 6.7 危险区域逻辑 (Danger Zone Logic) ---
 const handleBlockBtnClick = () => {
@@ -1202,5 +1183,8 @@ const handleDeleteCharacter = () => {
   font-size: 11px;
   color: #888;
   margin-top: 5px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
 }
 </style>

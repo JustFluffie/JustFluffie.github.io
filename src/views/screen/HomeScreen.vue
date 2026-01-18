@@ -10,6 +10,8 @@ import localforage from 'localforage'
 
 // Store
 import { useThemeStore } from '@/stores/themeStore'
+import { useSingleStore } from '@/stores/chat/singleStore'
+import { useWeatherStore } from '@/stores/weatherStore'
 
 // 组件
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
@@ -26,7 +28,10 @@ import HomeScreen2 from './HomeScreen2.vue'
 const { t } = useI18n()
 const router = useRouter()
 const themeStore = useThemeStore()
+const singleStore = useSingleStore()
+const weatherStore = useWeatherStore()
 const { themePresets, currentThemePreset, appIcons } = storeToRefs(themeStore)
+const { homeScreenWeather } = storeToRefs(weatherStore)
 
 // --- 页面控制状态 ---
 const currentPage = ref(1)
@@ -51,7 +56,6 @@ let homeData = reactive({
 
 // --- 时间与天气状态 ---
 const currentDate = ref('--/--/--  --')
-const weatherText = ref(t('homeScreen.defaultWeather'))
 
 // ==========================================
 // 3. 计算属性 (Computed)
@@ -81,6 +85,14 @@ const modalTitle = computed(() => {
     photo2: t('homeScreen.modalTitles.setPhoto2'),
   };
   return titleMap[currentSourceType.value] || t('homeScreen.modalTitles.default');
+});
+
+const weatherText = computed(() => {
+  const { city, temperature, weatherDescription } = homeScreenWeather.value;
+  if (city && temperature !== '--') {
+    return `${city} ${temperature}°C ${weatherDescription}`;
+  }
+  return city; // '点击获取'
 });
 
 const wallpaper = computed(() => {
@@ -214,8 +226,8 @@ const updateHomeImage = async (url) => {
 // ==========================================
 onMounted(() => {
   loadHomeData()
-  updateTime()
   themeStore.initTheme()
+  weatherStore.autoUpdateWeather()
 })
 </script>
 

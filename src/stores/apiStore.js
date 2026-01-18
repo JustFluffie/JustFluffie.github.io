@@ -194,8 +194,44 @@ export const useApiStore = defineStore('api', () => {
 
     // 2. 角色人设
     systemPrompt += "【角色人设】:\n" + (character.charPersona || '你是一个友好的人工智能助手。') + "\n\n";
+
+    // 2.1. 实时环境信息 (Real-time Sense)
+    const rts = character.realtimeSettings;
+    if (rts) {
+        const buildEnvString = (locationData, type, timeEnabled, weatherEnabled) => {
+            if (!locationData || !locationData.shortDisplay) return '';
+
+            const header = type === 'user' ? '【用户环境】' : '【角色环境】';
+            const locationName = locationData.virtual || locationData.real || '';
+            
+            let timeStr = '';
+            if (timeEnabled && locationData.timezone) {
+                const localTime = new Date().toLocaleString("en-US", { timeZone: locationData.timezone });
+                const formattedTime = new Date(localTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                timeStr = `当地时间：${formattedTime}`;
+            }
+
+            let weatherStr = '';
+            if (weatherEnabled && locationData.lastWeather) {
+                weatherStr = `天气：${locationData.lastWeather}`;
+            }
+
+            const parts = [`位置：${locationName}`, timeStr, weatherStr].filter(Boolean);
+            if (parts.length <= 1) return ''; // 如果只有位置信息，则不显示
+
+            return `${header}\n${parts.join('\n')}\n\n`;
+        };
+
+        let envPrompts = '';
+        envPrompts += buildEnvString(rts.userLocation, 'user', rts.timeEnabled, rts.weatherEnabled);
+        envPrompts += buildEnvString(rts.charLocation, 'char', rts.timeEnabled, rts.weatherEnabled);
+
+        if (envPrompts) {
+            systemPrompt += envPrompts;
+        }
+    }
     
-    // 2.1 格式指令
+    // 2.2 格式指令
     const availableStickers = singleStore.stickers.map(e => e.name).filter(Boolean);
     const stickerInstruction = availableStickers.length > 0 
         ? `2. 如果你想发送表情包，请使用格式：[表情包：表情名称]。\n   可用表情包：${availableStickers.join(', ')}。\n   注意：只能使用上述列表中的表情包，严禁编造不存在的表情包。\n`

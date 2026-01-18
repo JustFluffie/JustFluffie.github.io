@@ -2,12 +2,22 @@
 // =======================
 // ** 模块导入 **
 // =======================
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useWeatherStore } from '@/stores/weatherStore'
+import Modal from '@/components/common/Modal.vue'
 
 // =======================
 // ** i18n 初始化 **
 // =======================
 const { t } = useI18n()
+const weatherStore = useWeatherStore()
+
+// =======================
+// ** 本地状态 **
+// =======================
+const showLocationModal = ref(false)
+const locationInput = ref('')
 
 // =======================
 // ** 组件属性定义 **
@@ -48,6 +58,26 @@ const showSourceSelect = (type) => {
  */
 const saveHomeData = () => {
   emit('save-home-data')
+}
+
+/**
+ * 处理天气组件点击事件
+ */
+const handleWeatherClick = () => {
+  locationInput.value = localStorage.getItem('lastKnownLocation') || '';
+  showLocationModal.value = true;
+}
+
+/**
+ * 确认并更新地点
+ */
+const confirmLocation = () => {
+  const location = locationInput.value.trim();
+  if (location) {
+    weatherStore.updateHomeScreenWeather(location);
+    localStorage.setItem('lastKnownLocation', location);
+  }
+  showLocationModal.value = false;
 }
 </script>
 
@@ -91,11 +121,26 @@ const saveHomeData = () => {
       <div class="mini-widget-capsule">
         <span>{{ currentDate }}</span>
       </div>
-      <div class="mini-widget-capsule">
+      <div class="mini-widget-capsule" @click="handleWeatherClick">
         <span>{{ weatherText }}</span>
       </div>
     </div>
   </div>
+
+  <!-- 地点输入弹窗 -->
+  <Modal v-model:visible="showLocationModal" :title="t('homeScreen.enterLocation')">
+    <input 
+      type="text" 
+      class="base-input" 
+      v-model="locationInput" 
+      :placeholder="t('homeScreen.enterLocation')"
+      @keyup.enter="confirmLocation"
+    >
+    <template #footer>
+      <button class="modal-btn cancel" @click="showLocationModal = false">{{ t('cancel') }}</button>
+      <button class="modal-btn confirm" @click="confirmLocation">{{ t('confirm') }}</button>
+    </template>
+  </Modal>
 </template>
 
 <style scoped>
@@ -234,7 +279,7 @@ const saveHomeData = () => {
 
 .mini-widget-capsule {
     background: transparent;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 20px;
     border: none;
     color: var(--text-darkest);

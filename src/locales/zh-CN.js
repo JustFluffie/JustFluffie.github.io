@@ -41,6 +41,7 @@ export default {
     greeting: '祝你早安、午安和晚安。',
     inputPlaceholder: '点击输入文字',
     defaultWeather: '地名 温度℃',
+    enterLocation: '请输入地名',
     apps: {
       chat: '聊天',
       worldbook: '世界书',
