@@ -29,7 +29,7 @@ export function useMessageSender(chatStore, charId, themeStore, activePanel) {
       sender: 'user',
       type: type,
       content: content,
-      time: Date.now(),
+      timestamp: Date.now(),
       ...newExtra
     });
     chatStore.saveData();

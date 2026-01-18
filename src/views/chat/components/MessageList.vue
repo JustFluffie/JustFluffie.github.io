@@ -7,27 +7,31 @@
     </div>
     
     <!-- 消息项 -->
-    <MessageItem
-      v-for="msg in messages"
-      :key="msg.id"
-      :msg="msg"
-      :charName="charName"
-      :charAvatar="charAvatar"
-      :userAvatar="userAvatar"
-      :bubbleStyle="bubbleStyle"
-      :isSelectionMode="isSelectionMode"
-      :isSelected="selectedMessageIds.has(msg.id)"
-      :editingMessageId="editingMessageId"
-      @save-edit="(payload) => $emit('save-edit', payload)"
-      @cancel-edit="$emit('cancel-edit')"
-      @toggle-selection="$emit('toggle-selection', $event)"
-      @long-press="(e, id) => $emit('long-press', e, id)"
-      @cancel-long-press="$emit('cancel-long-press')"
-      @touch-move="$emit('touch-move', $event)"
-      @click-msg="(e, id) => $emit('click-msg', e, id)"
-      @show-text-content="(content) => $emit('show-text-content', content)"
-      @show-thought="(msgId) => $emit('show-thought', msgId)"
-    />
+    <template v-for="(msg, index) in messages" :key="msg.id">
+      <!-- 时间戳 -->
+      <div v-if="shouldShowTimestamp(index)" class="timestamp">
+        {{ formatTimestamp(msg.timestamp) }}
+      </div>
+      <MessageItem
+        :msg="msg"
+        :charName="charName"
+        :charAvatar="charAvatar"
+        :userAvatar="userAvatar"
+        :bubbleStyle="bubbleStyle"
+        :isSelectionMode="isSelectionMode"
+        :isSelected="selectedMessageIds.has(msg.id)"
+        :editingMessageId="editingMessageId"
+        @save-edit="(payload) => $emit('save-edit', payload)"
+        @cancel-edit="$emit('cancel-edit')"
+        @toggle-selection="$emit('toggle-selection', $event)"
+        @long-press="(e, id) => $emit('long-press', e, id)"
+        @cancel-long-press="$emit('cancel-long-press')"
+        @touch-move="$emit('touch-move', $event)"
+        @click-msg="(e, id) => $emit('click-msg', e, id)"
+        @show-text-content="(content) => $emit('show-text-content', content)"
+        @show-thought="(msgId) => $emit('show-thought', msgId)"
+      />
+    </template>
   </div>
 
   <!-- 拉黑遮罩层 -->
@@ -78,6 +82,67 @@ const messagesContainer = ref(null)
 // ================================================================================================
 // 方法
 // ================================================================================================
+const TIME_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * @description 判断是否应该显示时间戳
+ * @param {number} index - 当前消息的索引
+ */
+const shouldShowTimestamp = (index) => {
+  if (index === 0) return true;
+  
+  const currentMsg = props.messages[index];
+  const prevMsg = props.messages[index - 1];
+  
+  if (!currentMsg.timestamp || !prevMsg.timestamp) return false;
+
+  const currentTime = new Date(currentMsg.timestamp).getTime();
+  const prevTime = new Date(prevMsg.timestamp).getTime();
+
+  return (currentTime - prevTime) > TIME_THRESHOLD;
+};
+
+/**
+ * @description 格式化时间戳
+ * @param {number | string} timestamp - 时间戳
+ */
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  const now = new Date();
+  
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+  // 在中国，一周从周一开始。 getDay() 周日是0。
+  const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+  const weekStart = new Date(todayStart.getTime() - (dayOfWeek - 1) * 86400000);
+
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+
+  if (date.getTime() >= todayStart.getTime()) {
+    // 今天
+    return timeStr;
+  } else if (date.getTime() >= yesterdayStart.getTime()) {
+    // 昨天
+    return `昨天 ${timeStr}`;
+  } else if (date.getTime() >= weekStart.getTime()) {
+    // 本周
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    return `${weekdays[date.getDay()]} ${timeStr}`;
+  } else {
+    // 更早
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString();
+    const day = date.getDate().toString();
+    if (year === now.getFullYear()) {
+      return `${month}月${day}日 ${timeStr}`;
+    }
+    return `${year}年${month}月${day}日 ${timeStr}`;
+  }
+};
+
 /**
  * @description 滚动到消息列表底部
  */
@@ -189,5 +254,13 @@ defineExpose({
     border-radius: 4px;
     font-size: 12px;
     cursor: pointer;
+}
+
+/* --- 时间戳 --- */
+.timestamp {
+  text-align: center;
+  color: #999;
+  font-size: 11px;
+  padding: 10px 0;
 }
 </style>

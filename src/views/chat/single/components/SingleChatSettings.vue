@@ -181,6 +181,48 @@
         </transition>
       </div>
 
+      <!-- NEW: 实时感知 (Real-time Sense) -->
+      <div class="card">
+        <div class="card-title" @click="toggleCollapse('realtimeSense')">
+          <span>实时感知</span>
+          <div class="collapse-arrow" :class="{ collapsed: collapsedStates.realtimeSense }">
+            <svg-icon name="chevron-down" />
+          </div>
+        </div>
+        <transition name="collapse">
+          <div v-if="!collapsedStates.realtimeSense" key="realtimeSense">
+            <div class="card-content">
+              <div class="settings-item-input">
+                <div class="label-col"><div class="label-main">实时时间</div></div>
+                <div class="toggle-switch" :class="{ active: realtimeTimeEnabled }" @click="realtimeTimeEnabled = !realtimeTimeEnabled"></div>
+              </div>
+              <div class="settings-item-input">
+                <div class="label-col"><div class="label-main">实时天气</div></div>
+                <div class="toggle-switch" :class="{ active: realtimeWeatherEnabled }" @click="realtimeWeatherEnabled = !realtimeWeatherEnabled"></div>
+              </div>
+              <div class="form-item-vertical">
+                <div class="label-main" style="margin-bottom:5px;">角色所在地</div>
+                <div class="location-input-group">
+                  <input type="text" v-model="charLocationReal" class="base-input" placeholder="真实地名">
+                  <input type="text" v-model="charLocationVirtual" class="base-input" placeholder="虚拟地名 (可选)">
+                  <button class="btn btn-secondary btn-sm" @click="mapLocation('char')">确定</button>
+                </div>
+                <div class="location-display">{{ charLocationDisplay }}</div>
+              </div>
+              <div class="form-item-vertical">
+                <div class="label-main" style="margin-bottom:5px;">用户所在地</div>
+                <div class="location-input-group">
+                  <input type="text" v-model="userLocationReal" class="base-input" placeholder="真实地名">
+                  <input type="text" v-model="userLocationVirtual" class="base-input" placeholder="虚拟地名 (可选)">
+                  <button class="btn btn-secondary btn-sm" @click="mapLocation('user')">确定</button>
+                </div>
+                <div class="location-display">{{ userLocationDisplay }}</div>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+
       <!-- 5. 总结设置 (Summary Settings) -->
       <div class="card">
         <div class="card-title" @click="toggleCollapse('summarySettings')">
@@ -421,6 +463,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import { useBackgroundStore } from '@/stores/backgroundStore'
 import { useWorldBookStore } from '@/stores/worldBookStore'
 import { usePresetStore } from '@/stores/presetStore'
+import { useApiStore } from '@/stores/apiStore'
 import { storeToRefs } from 'pinia'
 // 组件
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
@@ -451,6 +494,7 @@ const worldBookStore = useWorldBookStore()
 const { sortedWorldBooks } = storeToRefs(worldBookStore)
 const presetStore = usePresetStore()
 const { sortedPresets } = storeToRefs(presetStore)
+const apiStore = useApiStore()
 
 // ================================================================================================
 // 1. UI 状态 (UI State)
@@ -461,6 +505,7 @@ const collapsedStates = ref({
   userInfo: false, 
   backgroundActivity: false, 
   modeSettings: false,
+  realtimeSense: false,
   summarySettings: false, 
   bubbleSettings: false, 
   videoSettings: false, 
@@ -499,6 +544,16 @@ const preset = ref([])
 const worldbook = ref([])
 const replyLengthMin = ref('')
 const replyLengthMax = ref('')
+
+// --- NEW: Real-time Sense ---
+const realtimeTimeEnabled = ref(false)
+const realtimeWeatherEnabled = ref(false)
+const charLocationReal = ref('')
+const charLocationVirtual = ref('')
+const charLocationDisplay = ref('')
+const userLocationReal = ref('')
+const userLocationVirtual = ref('')
+const userLocationDisplay = ref('')
 
 // --- 2.5 总结设置 (Summary Settings) ---
 const summaryRange = ref(20)
@@ -642,6 +697,17 @@ const loadSettings = () => {
     const [min, max] = (char.replyLength || (isOnline.value ? '10-50' : '200-500')).split('-');
     replyLengthMin.value = min || '';
     replyLengthMax.value = max || '';
+
+    // NEW: Real-time Sense
+    const rts = char.realtimeSettings || { timeEnabled: false, weatherEnabled: false, charLocation: {}, userLocation: {} };
+    realtimeTimeEnabled.value = rts.timeEnabled;
+    realtimeWeatherEnabled.value = rts.weatherEnabled;
+    charLocationReal.value = rts.charLocation?.real || '';
+    charLocationVirtual.value = rts.charLocation?.virtual || '';
+    charLocationDisplay.value = rts.charLocation?.display || '';
+    userLocationReal.value = rts.userLocation?.real || '';
+    userLocationVirtual.value = rts.userLocation?.virtual || '';
+    userLocationDisplay.value = rts.userLocation?.display || '';
     
     // 5. Summary Settings
     summaryRange.value = char.summaryRange || 20;
@@ -711,6 +777,13 @@ const saveSettings = () => {
         preset: preset.value,
         worldbook: worldbook.value,
         replyLength: `${replyLengthMin.value}-${replyLengthMax.value}`,
+        // NEW: Real-time Sense
+        realtimeSettings: {
+            timeEnabled: realtimeTimeEnabled.value,
+            weatherEnabled: realtimeWeatherEnabled.value,
+            charLocation: { real: charLocationReal.value, virtual: charLocationVirtual.value, display: charLocationDisplay.value },
+            userLocation: { real: userLocationReal.value, virtual: userLocationVirtual.value, display: userLocationDisplay.value }
+        },
         // 5. Summary Settings
         summaryRange: summaryRange.value,
         summaryPrompt: summaryPrompt.value,
@@ -885,6 +958,60 @@ const handleSummarizeVideo = async () => {
   showSummaryModal.value = false;
   const result = await singleStore.summarizeMessages(props.id, { type: 'video' });
   themeStore.showToast(result.message, result.success ? 'success' : 'error');
+};
+
+// --- NEW: Real-time Sense Logic ---
+const mapLocation = async (type) => {
+  const real = type === 'char' ? charLocationReal.value : userLocationReal.value;
+  const virtual = type === 'char' ? charLocationVirtual.value : userLocationVirtual.value;
+
+  if (!real) {
+    themeStore.showToast('请输入真实地名', 'error');
+    return;
+  }
+
+  const activePreset = apiStore.getActivePreset();
+  if (!activePreset || !activePreset.apiUrl) {
+    themeStore.showToast('请先在API设置中配置有效的URL', 'error');
+    return;
+  }
+  const baseUrl = activePreset.apiUrl.replace(/\/+$/, '');
+
+  themeStore.showLoading();
+  try {
+    // Step 1: Geocode location name to get lat/lon and address details
+    const geoResponse = await fetch(`${baseUrl}/nominatim/search?q=${encodeURIComponent(real)}&format=json&addressdetails=1&limit=1`);
+    if (!geoResponse.ok) throw new Error('Geocoding API request failed');
+    const geoData = await geoResponse.json();
+    if (geoData.length === 0) {
+      themeStore.showToast('找不到该位置', 'error');
+      return;
+    }
+    const { lat, lon, address } = geoData[0];
+    const city = address.city || address.town || address.village || address.county || '';
+    const country = address.country || '';
+
+    // Step 2: Use lat/lon to get timezone
+    const tzResponse = await fetch(`${baseUrl}/geonames/timezoneJSON?lat=${lat}&lng=${lon}&username=demo`);
+    if (!tzResponse.ok) throw new Error('Timezone API request failed');
+    const tzData = await tzResponse.json();
+    const timezone = tzData.timezoneId || 'N/A';
+
+    const display = `${virtual || real} (市: ${city}, 国家: ${country}, 时区: ${timezone})`;
+
+    if (type === 'char') {
+      charLocationDisplay.value = display;
+    } else {
+      userLocationDisplay.value = display;
+    }
+    themeStore.showToast('位置信息已更新', 'success');
+
+  } catch (error) {
+    console.error('Failed to map location:', error);
+    themeStore.showToast('获取位置信息失败', 'error');
+  } finally {
+    themeStore.hideLoading();
+  }
 };
 
 // --- 6.7 危险区域逻辑 (Danger Zone Logic) ---
@@ -1062,5 +1189,18 @@ const handleDeleteCharacter = () => {
   font-size: 12px;
   opacity: 0.85;
   font-weight: normal;
+}
+
+/* Location Input Group */
+.location-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.location-display {
+  font-size: 11px;
+  color: #888;
+  margin-top: 5px;
 }
 </style>

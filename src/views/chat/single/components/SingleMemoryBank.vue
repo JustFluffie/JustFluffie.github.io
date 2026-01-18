@@ -21,23 +21,15 @@
           <div v-for="(mem, index) in displayMemories" :key="mem.id || index" class="card memory-card">
             <div class="card-header-row">
               <div class="header-left">
-                <div class="sort-buttons">
-                  <button class="icon-btn sort-btn" @click="moveMemory(getOriginalIndex(mem), -1)" :disabled="getOriginalIndex(mem) === 0 || showFavoritesOnly" title="上移">
-                    <SvgIcon name="arrow-up" />
-                  </button>
-                  <button class="icon-btn sort-btn" @click="moveMemory(getOriginalIndex(mem), 1)" :disabled="getOriginalIndex(mem) === memories.length - 1 || showFavoritesOnly" title="下移">
-                    <SvgIcon name="arrow-down" />
-                  </button>
-                </div>
-                <div class="char-info">
+                <div class="char-info" style="padding-left: 8px;">
                   <span class="char-name">{{ mem.charName || charName }}</span>
                   <span class="save-time">{{ formatTime(mem.time) }}</span>
                 </div>
               </div>
               <div class="header-right">
-                <button class="icon-btn" @click="editMemory(getOriginalIndex(mem))" title="编辑"><SvgIcon name="pencil" /></button>
-                <button class="icon-btn danger" @click="confirmDelete(getOriginalIndex(mem))" title="删除"><SvgIcon name="trash" /></button>
-                <button class="icon-btn favorite-btn" @click="toggleFavorite(getOriginalIndex(mem))" :title="mem.isFavorite ? '取消收藏' : '收藏'">
+                <button class="icon-btn" @click="editMemory(mem)" title="编辑"><SvgIcon name="pencil" /></button>
+                <button class="icon-btn danger" @click="confirmDelete(mem)" title="删除"><SvgIcon name="trash" /></button>
+                <button class="icon-btn favorite-btn" @click="toggleFavorite(mem)" :title="mem.isFavorite ? '取消收藏' : '收藏'">
                   <SvgIcon :name="mem.isFavorite ? 'heart-solid' : 'heart'" :class="{ 'is-favorite': mem.isFavorite }" />
                 </button>
               </div>
@@ -134,7 +126,14 @@ const refineEnd = ref(0)
 const character = computed(() => singleStore.getCharacter(charId.value))
 const memories = computed(() => character.value?.memories || [])
 const charName = computed(() => character.value?.name || '角色')
-const displayMemories = computed(() => showFavoritesOnly.value ? memories.value.filter(m => m.isFavorite) : memories.value)
+const displayMemories = computed(() => {
+  const source = showFavoritesOnly.value 
+    ? memories.value.filter(m => m.isFavorite) 
+    : memories.value;
+  
+  // Create a shallow copy and sort by time, descending (newest first)
+  return [...source].sort((a, b) => (b.time || 0) - (a.time || 0));
+});
 
 // ================================================================================================
 // 方法 - UI
@@ -151,7 +150,6 @@ const formatTime = (timestamp) => {
   const d = new Date(timestamp);
   return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
-const getOriginalIndex = (mem) => memories.value.indexOf(mem)
 
 // ================================================================================================
 // 方法 - CRUD
@@ -162,10 +160,11 @@ const addMemory = () => {
   showInputModal.value = true
 }
 
-const editMemory = (index) => {
+const editMemory = (mem) => {
+  const index = memories.value.findIndex(m => m.id === mem.id);
+  if (index === -1) return;
   editingIndex.value = index
-  const mem = memories.value[index]
-  inputText.value = typeof mem === 'string' ? mem : mem.content
+  inputText.value = mem.content
   showInputModal.value = true
 }
 
@@ -189,7 +188,9 @@ const saveMemory = () => {
   closeInputModal()
 }
 
-const confirmDelete = (index) => {
+const confirmDelete = (mem) => {
+  const index = memories.value.findIndex(m => m.id === mem.id);
+  if (index === -1) return;
   deletingIndex.value = index
   showDeleteModal.value = true
 }
@@ -203,24 +204,18 @@ const deleteMemory = () => {
 }
 
 // ================================================================================================
-// 方法 - 排序、收藏、总结
+// 方法 - 收藏、总结
 // ================================================================================================
-const moveMemory = (index, direction) => {
-  const newIndex = index + direction
-  if (newIndex < 0 || newIndex >= memories.value.length) return
-  
-  const temp = character.value.memories[index]
-  character.value.memories[index] = character.value.memories[newIndex]
-  character.value.memories[newIndex] = temp
-  singleStore.saveData()
-}
+const toggleFavorite = (mem) => {
+  const memory = memories.value.find(m => m.id === mem.id);
+  if (!memory) return;
 
-const toggleFavorite = (index) => {
-  const mem = memories.value[index]
-  if (typeof mem === 'string') {
-    memories.value[index] = { content: mem, time: Date.now(), charName: charName.value, isFavorite: true }
+  if (typeof memory === 'string') {
+    // This case should ideally not happen if memories are objects, but as a fallback:
+    const index = memories.value.indexOf(memory);
+    memories.value[index] = { content: memory, time: Date.now(), charName: charName.value, isFavorite: true }
   } else {
-    mem.isFavorite = !mem.isFavorite
+    memory.isFavorite = !memory.isFavorite
   }
   singleStore.saveData()
 }
@@ -321,7 +316,7 @@ const doRefine = async () => {
 .char-name { font-weight: 700; font-size: 16px; color: #333; line-height: 1.2; }
 .save-time { font-size: 10px; color: #999; margin-top: 2px; }
 .header-right { display: flex; align-items: center; gap: 8px; padding-top: 5px; }
-.card-content-row { font-size: 14px; line-height: 1.5; color: #555; white-space: pre-wrap; padding-left: 28px; }
+.card-content-row { font-size: 14px; line-height: 1.5; color: #555; white-space: pre-wrap; padding-left: 8px; }
 
 /* --- 按钮 --- */
 .icon-btn {
@@ -344,7 +339,6 @@ const doRefine = async () => {
   height: 18px;
 }
 
-.sort-buttons { display: flex; flex-direction: column; }
 .sort-btn { height: auto; width: auto; }
 .favorite-btn { color: #ccc; }
 .favorite-btn:active { color: #FF2D55; background: transparent; }

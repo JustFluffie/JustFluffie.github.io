@@ -5,9 +5,13 @@ import { RouterView, useRouter } from 'vue-router'
 import StatusBar from '@/components/common/StatusBar.vue' // 引入新的状态栏组件
 import VideoChat from './views/chat/single/components/SingleVideoChat.vue'
 import Modal from '@/components/common/Modal.vue'
+import Loading from '@/components/common/Loading.vue'
 import GlobalPreviewer from '@/components/common/GlobalPreviewer.vue'
 import NotificationBanner from '@/components/common/NotificationBanner.vue'
+import DebugConsole from '@/components/common/DebugConsole.vue'
+import DebugToggle from '@/components/common/DebugToggle.vue'
 import { useSingleStore } from '@/stores/chat/singleStore'
+import { useDebugStore } from '@/stores/debugStore'
 import { useThemeStore } from '@/stores/themeStore'
 import HomeScreen from '@/views/screen/HomeScreen.vue'
 import { useBatteryStore } from '@/stores/batteryStore' // 引入新的 battery store
@@ -21,6 +25,7 @@ const themeStore = useThemeStore()
 const batteryStore = useBatteryStore() // 初始化 battery store
 const apiStore = useApiStore() // 初始化 api store
 const notificationStore = useNotificationStore()
+const debugStore = useDebugStore()
 const { t } = useI18n() // 初始化 i18n
 const phoneScreenRef = ref(null) // Create a ref for the boundary element
 provide('phoneScreenRef', phoneScreenRef) // Provide the ref to descendant components
@@ -35,6 +40,50 @@ onMounted(() => {
   themeStore.initTheme()
   apiStore.autoConnect() // 自动连接API并获取模型
   notificationStore.requestPermission() // 请求通知权限
+
+  // --- 调试控制台初始化 ---
+  // 备份原始 console 方法
+  const originalConsole = {
+    log: console.log,
+    warn: console.warn,
+    error: console.error,
+    info: console.info,
+  };
+
+  // 重写 console 方法
+  console.log = (...args) => {
+    originalConsole.log(...args);
+    debugStore.addMessage('log', args.map(arg => JSON.stringify(arg, null, 2)).join(' '));
+  };
+  console.warn = (...args) => {
+    originalConsole.warn(...args);
+    debugStore.addMessage('warn', args.map(arg => JSON.stringify(arg, null, 2)).join(' '));
+  };
+  console.error = (...args) => {
+    originalConsole.error(...args);
+    debugStore.addMessage('error', args.map(arg => JSON.stringify(arg, null, 2)).join(' '));
+  };
+  console.info = (...args) => {
+    originalConsole.info(...args);
+    debugStore.addMessage('info', args.map(arg => JSON.stringify(arg, null, 2)).join(' '));
+  };
+
+  // 全局错误捕获
+  window.addEventListener('error', (event) => {
+    console.error('Unhandled error:', event.message, event.filename, event.lineno, event.colno, event.error);
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+  });
+
+  // 清理
+  onUnmounted(() => {
+    console.log = originalConsole.log;
+    console.warn = originalConsole.warn;
+    console.error = originalConsole.error;
+    console.info = originalConsole.info;
+    // 注意：这里不再需要移除 touchstart 监听器
+  });
 })
 
 // Global watcher to handle navigation when maximizing video call
@@ -97,7 +146,12 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
       </div>
     </Modal>
 
+    <!-- 全局加载指示器 -->
+    <Loading />
+
     <!-- 调试日志记录器 -->
+    <DebugToggle />
+    <DebugConsole />
   </div>
 </template>
 

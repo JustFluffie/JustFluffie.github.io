@@ -61,6 +61,8 @@ export const useThemeStore = defineStore('theme', () => {
   const toastType = ref('success');
   const toastDuration = ref(1500);
 
+  const loading = ref(false);
+
   const confirmModal = ref({
     show: false,
     title: '确认',
@@ -130,6 +132,14 @@ export const useThemeStore = defineStore('theme', () => {
       inputModal.value.onUpload();
     }
     hideInput();
+  };
+
+  const showLoading = () => {
+    loading.value = true;
+  };
+
+  const hideLoading = () => {
+    loading.value = false;
   };
 
   const showToast = (message = '保存成功', type = 'success', duration = 1500) => {
@@ -360,6 +370,9 @@ export const useThemeStore = defineStore('theme', () => {
     toastType,
     toastDuration,
     showToast,
+    loading,
+    showLoading,
+    hideLoading,
     confirmModal,
     showConfirm,
     hideConfirm,

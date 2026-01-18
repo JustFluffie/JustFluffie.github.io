@@ -145,6 +145,12 @@ export const useSingleStore = defineStore('singleChat', {
         bubbleSettings: {
             css: '',
             fontSize: 14
+        },
+        realtimeSettings: {
+            timeEnabled: false,
+            weatherEnabled: false,
+            charLocation: { real: '', virtual: '', display: '' },
+            userLocation: { real: '', virtual: '', display: '' }
         }
       };
       
@@ -327,7 +333,7 @@ export const useSingleStore = defineStore('singleChat', {
             sender: 'system',
             type: 'call_summary',
             content: summaryContent,
-            time: Date.now()
+            timestamp: Date.now()
         });
         
         this.saveData();
@@ -489,7 +495,7 @@ export const useSingleStore = defineStore('singleChat', {
                       content: content,
                       isTextGenerated: isTextGenerated,
                       ...extraData,
-                      time: Date.now(),
+                      timestamp: Date.now(),
                       blocked: isCharBlocked
                   });
               }
