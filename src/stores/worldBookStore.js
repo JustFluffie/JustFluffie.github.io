@@ -25,8 +25,10 @@ export const useWorldBookStore = defineStore('worldBook', {
   },
   actions: {
     _saveToLocalStorage() {
-      localStorage.setItem('worldBooks', JSON.stringify(this.worldBooks));
-      localStorage.setItem('worldBookNextId', this.nextId.toString());
+      setTimeout(() => {
+        localStorage.setItem('worldBooks', JSON.stringify(this.worldBooks));
+        localStorage.setItem('worldBookNextId', this.nextId.toString());
+      }, 0);
     },
     // Helper to find the real book from a sorted index
     _findBookBySortedIndex(sortedIndex) {

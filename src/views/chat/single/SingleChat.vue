@@ -34,6 +34,7 @@
       @touch-move="handleTouchMove"
       @click-msg="handleClick"
       @unblock="unblockCharacter"
+      @show-thought="showCharacterThought"
     />
 
     <!-- 底部输入与工具栏 (非多选模式下显示) -->
@@ -41,6 +42,7 @@
       v-if="!isSelectionMode"
       v-model="inputText"
       v-model:activePanel="activePanel"
+      :charId="props.charId"
       :quotingMessage="quotingMessage"
       @cancel-quote="quotingMessage = null"
       @send-message="sendMessage"
@@ -97,6 +99,15 @@
       @close="isForwarding = false"
       @confirm="handleConfirmForward"
     />
+
+    <!-- 角色内心想法弹窗 -->
+    <SingleCharStatus
+      :visible="isStatusModalVisible"
+      :name="charRealName"
+      :avatar="charAvatar"
+      :charId="props.charId"
+      @close="isStatusModalVisible = false"
+    />
   </div>
 </template>
 
@@ -127,6 +138,7 @@ import VoiceInputModal from '../components/VoiceInput.vue'
 import LocationInputModal from '../components/LocationInput.vue'
 import Modal from '@/components/common/Modal.vue'
 import ForwardSelectionModal from '../components/ForwardSelection.vue'
+import SingleCharStatus from './components/SingleCharStatus.vue'
 
 // ==========================================
 // 2. 路由与状态管理 (Router & Stores)
@@ -166,6 +178,8 @@ const messageMenu = ref({
 const showImageUploadModal = ref(false)
 const showVoiceInputModal = ref(false)
 const showLocationInput = ref(false)
+const isStatusModalVisible = ref(false)
+const statusThoughtText = ref('')
 
 // ==========================================
 // 4. 计算属性 (Computed)
@@ -174,19 +188,18 @@ const showLocationInput = ref(false)
 const character = computed(() => singleStore.getCharacter(props.charId))
 const isBlocked = computed(() => character.value?.isBlocked || false)
 const charName = computed(() => character.value?.nickname || character.value?.name || t('chat.unknownCharacter'))
+const charRealName = computed(() => character.value?.name || t('chat.unknownCharacter'))
 const charAvatar = computed(() => character.value?.avatar)
 const charStatus = computed(() => character.value?.status || {})
 const chatBackground = computed(() => character.value?.chatBackground || '')
 
 // 用户相关
 const userAvatar = computed(() => {
-    // 确保 userPersonas 是响应式的
-    const personas = singleStore.userPersonas;
-    if (character.value?.userPersona && character.value.userPersona !== 'default') {
-        const persona = personas.find(p => p.id === character.value.userPersona);
-        if (persona && persona.avatar) return persona.avatar;
-    }
-    return localStorage.getItem('homeAvatar') || '';
+    const char = character.value;
+    if (!char || !char.userPersona) return '';
+
+    const persona = singleStore.userPersonas.find(p => p.id === char.userPersona);
+    return persona?.avatar || '';
 });
 
 // 消息列表
@@ -386,9 +399,13 @@ const confirmSendLocation = ({ name, detail }) => {
 
 // 视频通话
 const startVideoCall = () => {
-    singleStore.startVideoCall(props.charId)
+    singleStore.startVideoCall(props.charId, 'user')
 }
 
+// 显示角色内心想法
+const showCharacterThought = () => {
+  isStatusModalVisible.value = true;
+};
 </script>
 
 <style scoped>

@@ -33,7 +33,7 @@
     <!-- 正常消息 -->
     <template v-else>
       <!-- 头像 -->
-      <div class="msg-avatar">
+      <div class="msg-avatar" @click="handleAvatarClick">
         <img v-if="msg.sender === 'user' ? userAvatar : charAvatar" :src="msg.sender === 'user' ? userAvatar : charAvatar" alt="avatar">
         <div v-else class="default-avatar" :class="{ user: msg.sender === 'user' }"></div>
       </div>
@@ -151,7 +151,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'save-edit', 'cancel-edit', 'toggle-selection',
-  'long-press', 'cancel-long-press', 'touch-move', 'click-msg'
+  'long-press', 'cancel-long-press', 'touch-move', 'click-msg', 'show-thought'
 ])
 
 const previewStore = usePreviewStore();
@@ -199,6 +199,12 @@ const handleClick = (event) => {
   }
   emit('click-msg', event, props.msg.id);
 }
+
+const handleAvatarClick = () => {
+  if (props.msg.sender !== 'user') {
+    emit('show-thought', props.msg.id);
+  }
+};
 
 // ================================================================================================
 // 方法 - 功能

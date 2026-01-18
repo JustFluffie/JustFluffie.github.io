@@ -400,6 +400,10 @@ export default {
         confirmSummaryTitle: '确认总结',
         confirmSummaryMsg: '确定要对最近 {count} 条消息进行总结吗？',
         confirm: '确认',
+        summarizeRecent: '总结最近消息',
+        summarizeRange: '总结指定范围',
+        summarizeVideo: '总结最新通话',
+        rangePlaceholder: '例如: 1-10 (共 {total} 条)',
         toast: {
           personaNameRequired: '请输入用户名称',
           personaSaved: '已保存为新预设',
@@ -428,6 +432,7 @@ export default {
           confirmApplyBgToAll: '确定将此背景应用到所有聊天框吗？',
           appliedToAll: '已应用到所有聊天框',
           summaryDone: '总结已完成',
+          invalidRange: '无效的范围',
           unblocked: '已解除拉黑',
           blocked: '已拉黑',
           historyCleared: '聊天记录已清空',

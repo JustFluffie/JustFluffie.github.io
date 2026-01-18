@@ -3,7 +3,7 @@
     <!-- 引用消息预览 -->
     <div v-if="quotingMessage" class="quote-preview">
       <div class="quote-content">
-        <span class="quote-sender">{{ quotingMessage.sender === 'user' ? t('chat.self') : t('chat.other') }}: </span>
+<span class="quote-sender">{{ quoteSenderName }}: </span>
         <span class="quote-text">{{ quotingMessage.content }}</span>
       </div>
       <div class="quote-close" @click="$emit('cancel-quote')">
@@ -21,15 +21,15 @@
       </div>
       <!-- 输入框 -->
       <div class="chat-input-wrapper">
-        <input 
-          type="text" 
-          class="chat-input" 
+        <textarea
+          class="chat-input"
           :value="modelValue"
           @input="$emit('update:modelValue', $event.target.value)"
-          @keypress.enter="handleSendMessage"
+          @keydown.enter.exact.prevent="handleSendMessage"
           id="messageInput"
-          autocomplete="new-password"
-        >
+          autocomplete="off"
+          rows="1"
+        ></textarea>
       </div>
       <!-- 表情按钮 -->
       <div class="chat-tool-btn" @click="togglePanel('sticker')">
@@ -63,13 +63,15 @@
 // 模块导入
 // ================================================================================================
 // 组件
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useSingleStore } from '@/stores/chat/singleStore'
 import StickersPanel from './StickersPanel.vue'
 import MorePanel from './MorePanel.vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const { t } = useI18n()
+const singleStore = useSingleStore()
 
 // ================================================================================================
 // 属性、事件和插槽
@@ -86,6 +88,10 @@ const props = defineProps({
   quotingMessage: {
     type: Object,
     default: null
+  },
+  charId: {
+    type: String,
+    required: true
   }
 })
 
@@ -113,6 +119,19 @@ watch(() => props.activePanel, (newVal) => {
 // 监听内部状态变化通知父组件
 watch(localActivePanel, (newVal) => {
   emit('update:activePanel', newVal)
+})
+
+// 计算引用的发送者名称
+const quoteSenderName = computed(() => {
+  if (!props.quotingMessage) return ''
+  if (props.quotingMessage.sender === 'user') {
+    // 这里可以根据需求获取用户的昵称，暂时用 "我"
+    return t('chat.self')
+  } else {
+    const character = singleStore.getCharacter(props.charId)
+    // 优先使用备注名，如果没有则使用角色名
+    return character?.nickname || character?.name || t('chat.other')
+  }
 })
 
 // ================================================================================================
@@ -221,12 +240,23 @@ const handleSendSticker = (sticker) => {
 }
 
 .chat-input {
-    flex: 1; 
-    padding: 8px 10px; 
-    border: none; 
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
     background: transparent;
-    font-size: 16px; 
+    font-size: 16px;
     outline: none;
+    resize: none; /* 隐藏右下角的大小调整手柄 */
+    overflow-y: auto; /* 允许垂直滚动 */
+    line-height: 1.4;
+    box-sizing: border-box;
+    /* 隐藏滚动条 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE 10+ */
+}
+
+.chat-input::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera*/
 }
 
 /* --- 按钮 --- */

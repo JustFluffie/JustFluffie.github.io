@@ -371,6 +371,39 @@
 
     <!-- 弹窗组件 -->
     <ImageUploadModal v-model:visible="showImageUploadModal" type="basic" biz-type="avatar" :title="uploadModalTitle" @send-image="handleImageUploadConfirm" />
+
+    <!-- 手动总结选项弹窗 -->
+    <Modal v-model:visible="showSummaryModal" :title="t('chat.singleChat.settings.manualSummary')">
+      <div class="modal-options centered-text">
+        <div class="modal-option" @click="handleSummarizeRecent">
+          <span class="option-text">{{ t('chat.singleChat.settings.summarizeRecent') }}</span>
+        </div>
+        <div class="modal-option" @click="openRangeInputModal">
+          <span class="option-text">{{ t('chat.singleChat.settings.summarizeRange') }}</span>
+        </div>
+        <div class="modal-option" @click="handleSummarizeVideo">
+          <span class="option-text">{{ t('chat.singleChat.settings.summarizeVideo') }}</span>
+        </div>
+      </div>
+      <template #footer>
+        <button class="modal-btn cancel" @click="showSummaryModal = false">{{ t('cancel') }}</button>
+      </template>
+    </Modal>
+
+    <!-- 范围总结输入弹窗 -->
+    <Modal v-model:visible="showRangeInputModal" :title="t('chat.singleChat.settings.summarizeRange')">
+      <input 
+        type="text" 
+        class="base-input" 
+        v-model="summaryRangeInput" 
+        :placeholder="t('chat.singleChat.settings.rangePlaceholder', { total: msgCount })"
+      >
+      <template #footer>
+        <button class="modal-btn cancel" @click="showRangeInputModal = false">{{ t('cancel') }}</button>
+        <button class="modal-btn confirm" @click="handleSummarizeRange">{{ t('confirm') }}</button>
+      </template>
+    </Modal>
+
   </div>
 </template>
 
@@ -394,6 +427,7 @@ import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import MultiSelect from '@/components/common/MultiSelect.vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
+import Modal from '@/components/common/Modal.vue'
 
 // ================================================================================================
 // 属性、事件
@@ -471,6 +505,9 @@ const summaryRange = ref(20)
 const summaryPrompt = ref('')
 const autoSummary = ref(false)
 const memoryCount = ref(10)
+const showSummaryModal = ref(false)
+const showRangeInputModal = ref(false)
+const summaryRangeInput = ref('')
 
 // --- 2.6 聊天美化 (Beautification) ---
 const currentBubblePresetId = ref('')
@@ -634,6 +671,27 @@ const loadSettings = () => {
 const saveSettings = () => {
     const char = character.value;
     if (!char) return;
+
+    // --- User Persona Save Logic ---
+    const personaId = currentUserPersonaId.value;
+    let persona = singleStore.userPersonas.find(p => p.id === personaId);
+
+    if (personaId === 'default') {
+        if (!persona) {
+            persona = { id: 'default', name: t('chat.singleChat.settings.defaultUserPersona'), avatar: '', description: '', videoImg: '' };
+            singleStore.userPersonas.unshift(persona);
+        }
+    }
+    
+    if (persona) {
+        if (persona.id !== 'default' && userPersonaNameInput.value.trim()) {
+            persona.name = userPersonaNameInput.value.trim();
+        }
+        persona.description = userPersonaDescInput.value;
+        persona.avatar = userPersonaAvatar.value;
+        persona.videoImg = userVideoImg.value;
+    }
+
     Object.assign(char, {
         // 1. Role Info
         name: charNameInput.value.trim() || char.name,
@@ -663,7 +721,7 @@ const saveSettings = () => {
         chatBackground: chatBackground.value,
         // 7. Video Call
         videoBg: videoBg.value,
-        userVideoImg: userVideoImg.value,
+        // userVideoImg is now saved with the persona object
         // 8. Advanced
         isBlocked: isBlocked.value,
     });
@@ -747,19 +805,32 @@ const deleteBubblePreset = () => {
 const handleImageUploadConfirm = (image) => {
     const url = typeof image === 'string' ? image : image.content;
     const target = currentUploadTarget.value;
-    const updates = {
-        avatar: { obj: character.value, key: 'avatar', toast: t('chat.singleChat.settings.toast.avatarUpdated') },
-        userPersonaAvatar: { obj: userPersonaAvatar, key: 'value', toast: t('chat.singleChat.settings.toast.avatarUrlSet') },
-        chatBg: { obj: character.value, key: 'chatBackground', toast: t('chat.singleChat.settings.toast.backgroundUpdated'), localRef: chatBackground },
-        videoBg: { obj: character.value, key: 'videoBg', toast: t('chat.singleChat.settings.toast.charImageUpdated'), localRef: videoBg },
-        userVideoImg: { obj: character.value, key: 'userVideoImg', toast: t('chat.singleChat.settings.toast.userImageUpdated'), localRef: userVideoImg },
-    };
-    if (updates[target]) {
-        updates[target].obj[updates[target].key] = url;
-        if (updates[target].localRef) updates[target].localRef.value = url;
-        if (target !== 'userPersonaAvatar') singleStore.saveData();
-        themeStore.showToast(updates[target].toast);
+
+    // Logic for things that save immediately (character avatar, backgrounds)
+    if (target === 'avatar' || target === 'chatBg' || target === 'videoBg') {
+        const updates = {
+            avatar: { obj: character.value, key: 'avatar', toast: t('chat.singleChat.settings.toast.avatarUpdated') },
+            chatBg: { obj: character.value, key: 'chatBackground', toast: t('chat.singleChat.settings.toast.backgroundUpdated'), localRef: chatBackground },
+            videoBg: { obj: character.value, key: 'videoBg', toast: t('chat.singleChat.settings.toast.charImageUpdated'), localRef: videoBg },
+        };
+        if (updates[target]) {
+            updates[target].obj[updates[target].key] = url;
+            if (updates[target].localRef) updates[target].localRef.value = url;
+            singleStore.saveData();
+            themeStore.showToast(updates[target].toast);
+        }
     }
+    // Logic for things that are just previews and saved with the main save button
+    else if (target === 'userPersonaAvatar' || target === 'userVideoImg') {
+        if (target === 'userPersonaAvatar') {
+            userPersonaAvatar.value = url;
+        }
+        if (target === 'userVideoImg') {
+            userVideoImg.value = url;
+        }
+        themeStore.showToast(t('chat.singleChat.settings.toast.avatarUpdated'));
+    }
+    
     showImageUploadModal.value = false;
 };
 
@@ -778,17 +849,42 @@ const setMode = (online) => {
 };
 
 const triggerManualSummary = () => {
-    themeStore.showConfirm(
-        t('chat.singleChat.settings.confirmSummaryTitle'),
-        t('chat.singleChat.settings.confirmSummaryMsg', { count: summaryRange.value }),
-        () => {
-            const summaryContent = `[${t('chat.singleChat.settings.autoSummary')}] 与${charName.value}进行了愉快的对话...`;
-            if (!character.value.memories) character.value.memories = [];
-            character.value.memories.unshift({ content: summaryContent, time: Date.now(), charName: charName.value });
-            singleStore.saveData();
-            themeStore.showToast(t('chat.singleChat.settings.toast.summaryDone'));
-        }
-    );
+  showSummaryModal.value = true;
+};
+
+const openRangeInputModal = () => {
+  showSummaryModal.value = false;
+  showRangeInputModal.value = true;
+};
+
+const handleSummarizeRecent = async () => {
+  showSummaryModal.value = false;
+  const result = await singleStore.summarizeMessages(props.id, { type: 'recent' });
+  themeStore.showToast(result.message, result.success ? 'success' : 'error');
+};
+
+const handleSummarizeRange = async () => {
+  const [startStr, endStr] = summaryRangeInput.value.split('-').map(s => s.trim());
+  const start = parseInt(startStr, 10);
+  const end = parseInt(endStr, 10);
+
+  if (isNaN(start) || isNaN(end) || start <= 0 || end <= 0 || start > end) {
+    themeStore.showToast(t('chat.singleChat.settings.toast.invalidRange'), 'error');
+    return;
+  }
+
+  const result = await singleStore.summarizeMessages(props.id, { type: 'range', start, end });
+  themeStore.showToast(result.message, result.success ? 'success' : 'error');
+  if (result.success) {
+    showRangeInputModal.value = false;
+    summaryRangeInput.value = '';
+  }
+};
+
+const handleSummarizeVideo = async () => {
+  showSummaryModal.value = false;
+  const result = await singleStore.summarizeMessages(props.id, { type: 'video' });
+  themeStore.showToast(result.message, result.success ? 'success' : 'error');
 };
 
 // --- 6.7 危险区域逻辑 (Danger Zone Logic) ---

@@ -1,8 +1,45 @@
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useSingleStore } from '@/stores/chat/singleStore';
+import { useApiStore } from '@/stores/apiStore'; // 确保 apiStore 被正确使用
 import { useNotificationStore } from '@/stores/notificationStore';
 import { parseAiResponse } from '@/utils/messageParser';
+
+// 心声生成的Prompt
+const getInnerVoicePrompt = (char, chatHistory) => {
+  const historyText = chatHistory.map(msg => `${msg.role === 'user' ? '用户' : char.name}: ${msg.content}`).join('\n');
+
+  return `
+你正在扮演角色“${char.name}”，你需要根据以下设定和最近的对话，生成一段角色的实时“心声”。
+心声由多个部分组成，请严格按照下面的JSON格式返回，不要添加任何额外的解释或文字。
+
+**角色人设:**
+${char.charPersona}
+
+**最近对话:**
+${historyText}
+
+**你的任务:**
+生成符合当前情境和角色性格的内心活动。
+- **情绪 (emotion)**: 描述角色当前的主要情绪，应在一定时间内保持稳定，5字以内。
+- **穿着 (outfit)**: 描述角色当前的穿着，应在一定时间内保持稳定，10字以内。
+- **姿态 (posture)**: 描述角色当前的姿态或小动作，应在一定时间内保持稳定，15字以内。
+- **内心独白 (innerVoice)**: 角色此刻具体的内心想法，50字以内。
+- **没说出口的话 (unspokenWords)**: 一句角色想说但没说出口的话，风格可以多变（如阴暗、腹黑、酸涩、色情等），必须符合人设，15字以内。
+- **标题 (title)**: 为这次心声生成一个简短的小标题，例如“#01 初次见面”。
+
+**输出格式 (必须是可被解析的JSON):**
+{
+  "emotion": "...",
+  "outfit": "...",
+  "posture": "...",
+  "innerVoice": "...",
+  "unspokenWords": "...",
+  "title": "..."
+}
+`;
+};
+
 
 export function useAiResponder(charId, apiStore) {
   const singleStore = useSingleStore();
@@ -103,6 +140,38 @@ export function useAiResponder(charId, apiStore) {
       console.error("[useAiResponder] triggerAiResponse failed:", error);
     } finally {
       isTyping.value = false;
+      // 在主回复流程结束后，异步生成心声，不阻塞UI
+      generateAndSaveInnerVoice();
+    }
+  };
+
+  const generateAndSaveInnerVoice = async () => {
+    try {
+      const character = singleStore.getCharacter(charId.value);
+      if (!character) return;
+
+      // 获取最近的对话用于生成心声
+      const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 10);
+      const prompt = getInnerVoicePrompt(character, recentMessages);
+
+      // 使用通用API调用
+      const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
+
+      if (voiceResponse) {
+        // 尝试解析JSON
+        const startIndex = voiceResponse.indexOf('{');
+        const endIndex = voiceResponse.lastIndexOf('}');
+        if (startIndex !== -1 && endIndex !== -1) {
+          const jsonString = voiceResponse.substring(startIndex, endIndex + 1);
+          const voiceData = JSON.parse(jsonString);
+          singleStore.addInnerVoice(charId.value, voiceData);
+          console.log('[useAiResponder] Inner voice generated and saved:', voiceData);
+        } else {
+          console.warn('[useAiResponder] Failed to find JSON in inner voice response.');
+        }
+      }
+    } catch (error) {
+      console.error('[useAiResponder] Failed to generate inner voice:', error);
     }
   };
 

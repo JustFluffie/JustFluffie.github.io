@@ -66,7 +66,17 @@
       </template>
     </Modal>
     <Modal v-model:visible="showRefineSettingsModal" title="记忆提炼" class="nested">
-      <p class="summary-tip">将对现有长期记忆进行再总结。</p>
+      <div class="refine-range-info">
+        当前共有 {{ memories.length }} 条记忆。
+      </div>
+      <div class="refine-range-inputs">
+        <label for="refine-start">从第</label>
+        <input id="refine-start" type="number" v-model.number="refineStart" class="base-input range-input">
+        <label for="refine-end">条 到 第</label>
+        <input id="refine-end" type="number" v-model.number="refineEnd" class="base-input range-input">
+        <label>条</label>
+      </div>
+      <p class="summary-tip">将对选定范围内的长期记忆进行再总结。</p>
       <textarea class="base-input modal-textarea" v-model="summaryPrompt" placeholder="输入总结提示词..." style="height: 100px;"></textarea>
       <template #footer>
         <button class="modal-btn cancel" @click="closeRefineModal">取消</button>
@@ -115,6 +125,8 @@ const deletingIndex = ref(-1)
 // 提炼弹窗
 const showRefineSettingsModal = ref(false)
 const summaryPrompt = ref('')
+const refineStart = ref(1)
+const refineEnd = ref(0)
 
 // ================================================================================================
 // 计算属性
@@ -215,6 +227,8 @@ const toggleFavorite = (index) => {
 
 const showRefineModal = () => {
   summaryPrompt.value = character.value.memorySummaryPrompt || ''
+  refineStart.value = 1
+  refineEnd.value = memories.value.length
   showRefineSettingsModal.value = true
 }
 
@@ -222,11 +236,29 @@ const doRefine = async () => {
   const char = character.value;
   if (!char) return;
 
+  // Validate range
+  const max = memories.value.length;
+  const start = Math.max(1, refineStart.value);
+  const end = Math.min(max, refineEnd.value);
+
+  if (start > end) {
+    themeStore.showToast('起始范围不能大于结束范围', 'error');
+    return;
+  }
+
   char.memorySummaryPrompt = summaryPrompt.value;
   themeStore.showToast('正在提炼记忆...', 'info');
   closeRefineModal();
 
-  const existingMemories = memories.value.map(mem => mem.content).join('\n---\n');
+  // Slice memories based on 1-based index from user
+  const memoriesToRefine = memories.value.slice(start - 1, end);
+  
+  if (memoriesToRefine.length === 0) {
+    themeStore.showToast('选定范围内没有记忆可供提炼', 'warn');
+    return;
+  }
+
+  const existingMemories = memoriesToRefine.map(mem => mem.content).join('\n---\n');
   const prompt = summaryPrompt.value || '请总结以下内容，提取关键信息。';
   const messages = [
     { role: 'system', content: '你是一个记忆总结助手。' },
@@ -245,6 +277,7 @@ const doRefine = async () => {
     }
   } catch (error) {
     console.error('记忆提炼失败:', error);
+    themeStore.showToast(`提炼失败: ${error.message}`, 'error');
   }
 }
 </script>
@@ -301,9 +334,18 @@ const doRefine = async () => {
 .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .icon-btn.danger { color: #FF3B30; }
 .icon-btn.danger:hover { color: #FF3B30; background: rgba(255, 59, 48, 0.1); }
+
+/* 卡片内的按钮使用更小的尺寸 */
+.memory-card .icon-btn {
+  padding: 2px;
+}
+.memory-card .icon-btn :deep(svg) {
+  width: 18px;
+  height: 18px;
+}
+
 .sort-buttons { display: flex; flex-direction: column; }
-.sort-btn { height: 18px; width: 23px; display: flex; align-items: center; justify-content: center; }
-.sort-btn .svg-icon { width: 16px; height: 16px; }
+.sort-btn { height: auto; width: auto; }
 .favorite-btn { color: #ccc; }
 .favorite-btn:active { color: #FF2D55; background: transparent; }
 .is-favorite { color: #FF2D55; }
@@ -312,4 +354,30 @@ const doRefine = async () => {
 .nested { z-index: 1100; }
 .confirm-text { text-align: center; color: #888; font-size: 14px; }
 .summary-tip { font-size: 12px; color: #666; margin-bottom: 10px; }
+
+/* --- 提炼范围 --- */
+.refine-range-info {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.refine-range-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+.refine-range-inputs label {
+  font-size: 13px;
+  color: #333;
+  flex-shrink: 0;
+}
+.range-input {
+  width: 60px;
+  text-align: center;
+  padding: 4px 8px;
+  font-size: 14px;
+}
 </style>

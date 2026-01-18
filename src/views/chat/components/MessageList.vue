@@ -26,6 +26,7 @@
       @touch-move="$emit('touch-move', $event)"
       @click-msg="(e, id) => $emit('click-msg', e, id)"
       @show-text-content="(content) => $emit('show-text-content', content)"
+      @show-thought="(msgId) => $emit('show-thought', msgId)"
     />
   </div>
 
@@ -66,7 +67,7 @@ const props = defineProps({
 defineEmits([
   'save-edit', 'cancel-edit', 'toggle-selection',
   'long-press', 'cancel-long-press', 'touch-move', 'click-msg',
-  'unblock', 'show-text-content'
+  'unblock', 'show-text-content', 'show-thought'
 ])
 
 // ================================================================================================

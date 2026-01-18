@@ -168,12 +168,14 @@ const handleAction = (action) => {
     quote: () => emit('quote-message', msgId),
     retry: () => {
       if (msg.sender !== 'user') {
+        // 如果是AI消息，删除当前消息并重新生成
         singleStore.messages[props.charId].splice(msgIndex, 1);
-        singleStore.saveData();
-        emit('trigger-ai-response');
       } else {
-        themeStore.showToast(t('chat.messageMenu.toast.retryAiOnly'), 'info');
+        // 如果是用户消息，删除此条消息之后的所有消息
+        singleStore.retryFromMessage(props.charId, msgId);
       }
+      singleStore.saveData();
+      emit('trigger-ai-response');
     },
     edit: () => {
        if (msg.type === 'text') {

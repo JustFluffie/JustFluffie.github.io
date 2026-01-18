@@ -9,94 +9,87 @@ export const useBackupStore = defineStore('backup', () => {
   const isBackingUp = ref(false);
   const lastBackupTime = ref(null);
 
-  // 核心：创建备份数据
+  // 核心：创建备份数据（异步）
   function createBackupData(options = { chat: true, characters: true, settings: true, appearance: true, worldbook: true }) {
-    const backupData = {};
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const backupData = {};
 
-    // 1. 处理 SingleChatData (Chat, Characters, Appearance-part)
-    const singleChatDataRaw = localStorage.getItem('aiPhoneSingleChatData');
-    if (singleChatDataRaw) {
-        try {
-            const decompressed = LZString.decompressFromUTF16(singleChatDataRaw);
-            const data = decompressed ? JSON.parse(decompressed) : JSON.parse(singleChatDataRaw);
-            
-            const newData = {};
-            let hasData = false;
+        // 1. 处理 SingleChatData
+        const singleChatDataRaw = localStorage.getItem('aiPhoneSingleChatData');
+        if (singleChatDataRaw) {
+            try {
+                const decompressed = LZString.decompressFromUTF16(singleChatDataRaw);
+                const data = decompressed ? JSON.parse(decompressed) : JSON.parse(singleChatDataRaw);
+                
+                const newData = {};
+                let hasData = false;
 
-            if (options.chat) {
-                newData.messages = data.messages;
-                hasData = true;
-            }
-            if (options.characters) {
-                newData.characters = data.characters;
-                newData.userPersonas = data.userPersonas;
-                newData.favorites = data.favorites;
-                hasData = true;
-            }
-            if (options.appearance) {
-                newData.bubblePresets = data.bubblePresets;
-                newData.stickers = data.stickers;
-                hasData = true; 
-            }
+                if (options.chat) { newData.messages = data.messages; hasData = true; }
+                if (options.characters) {
+                    newData.characters = data.characters;
+                    newData.userPersonas = data.userPersonas;
+                    newData.favorites = data.favorites;
+                    hasData = true;
+                }
+                if (options.appearance) {
+                    newData.bubblePresets = data.bubblePresets;
+                    newData.stickers = data.stickers;
+                    hasData = true; 
+                }
 
-            if (hasData) {
-                // 重新压缩
-                const jsonString = JSON.stringify(newData);
-                const compressed = LZString.compressToUTF16(jsonString);
-                backupData['aiPhoneSingleChatData'] = compressed;
-            }
-        } catch (e) {
-            console.error('Error processing single chat data for backup', e);
+                if (hasData) {
+                    const jsonString = JSON.stringify(newData);
+                    const compressed = LZString.compressToUTF16(jsonString);
+                    backupData['aiPhoneSingleChatData'] = compressed;
+                }
+            } catch (e) { console.error('Error processing single chat data for backup', e); }
         }
-    }
 
-    // 2. Moments (Chat Data)
-    if (options.chat) {
-        const momentsData = localStorage.getItem('aiPhoneMomentsData');
-        if (momentsData) {
-            backupData['aiPhoneMomentsData'] = momentsData;
+        // 2. Moments
+        if (options.chat) {
+            const momentsData = localStorage.getItem('aiPhoneMomentsData');
+            if (momentsData) backupData['aiPhoneMomentsData'] = momentsData;
         }
-    }
 
-    // 3. Settings (API, Background, ImageHost)
-    if (options.settings) {
-        const keys = [
-            'api_presets', 'api_activePresetName', // API Presets
-            'api_imageHostProvider', 'api_imgbbApiKey', 'api_catboxUserHash', // Image Host
-            'aiPhoneGlobalBackgroundActivity', 'aiPhoneGlobalProactiveScope', // Background
-            'aiPhoneGlobalProactiveInterval', 'aiPhoneGlobalProactiveCooldown', 
-            'aiPhoneGlobalProactiveDailyLimit', 'aiPhoneGlobalTriggerMode', 
-            'aiPhoneGlobalProactiveIdleTime'
-        ];
-        keys.forEach(key => {
-            const val = localStorage.getItem(key);
-            if (val !== null) backupData[key] = val;
-        });
-    }
+        // 3. Settings
+        if (options.settings) {
+            const keys = [
+                'api_presets', 'api_activePresetName', 'api_imageHostProvider', 'api_imgbbApiKey', 'api_catboxUserHash',
+                'aiPhoneGlobalBackgroundActivity', 'aiPhoneGlobalProactiveScope', 'aiPhoneGlobalProactiveInterval', 
+                'aiPhoneGlobalProactiveCooldown', 'aiPhoneGlobalProactiveDailyLimit', 'aiPhoneGlobalTriggerMode', 
+                'aiPhoneGlobalProactiveIdleTime'
+            ];
+            keys.forEach(key => {
+                const val = localStorage.getItem(key);
+                if (val !== null) backupData[key] = val;
+            });
+        }
 
-    // 4. Appearance (ThemeStore)
-    if (options.appearance) {
-        const keys = [
-            'aiPhoneThemePresets', 'aiPhoneCurrentThemePreset',
-            'aiPhoneFontPresets', 'aiPhoneCurrentFontPreset',
-            'aiPhoneCssPresets', 'aiPhoneCurrentCssPreset'
-        ];
-        keys.forEach(key => {
-            const val = localStorage.getItem(key);
-            if (val !== null) backupData[key] = val;
-        });
-    }
+        // 4. Appearance
+        if (options.appearance) {
+            const keys = [
+                'aiPhoneThemePresets', 'aiPhoneCurrentThemePreset', 'aiPhoneFontPresets', 'aiPhoneCurrentFontPreset',
+                'aiPhoneCssPresets', 'aiPhoneCurrentCssPreset'
+            ];
+            keys.forEach(key => {
+                const val = localStorage.getItem(key);
+                if (val !== null) backupData[key] = val;
+            });
+        }
 
-    // 5. Worldbook
-    if (options.worldbook) {
-        const keys = ['worldBooks', 'worldBookNextId'];
-        keys.forEach(key => {
-            const val = localStorage.getItem(key);
-            if (val !== null) backupData[key] = val;
-        });
-    }
+        // 5. Worldbook
+        if (options.worldbook) {
+            const keys = ['worldBooks', 'worldBookNextId'];
+            keys.forEach(key => {
+                const val = localStorage.getItem(key);
+                if (val !== null) backupData[key] = val;
+            });
+        }
 
-    return JSON.stringify(backupData, null, 2);
+        resolve(JSON.stringify(backupData, null, 2));
+      }, 0);
+    });
   }
 
   // 一键创建备份仓库
@@ -167,10 +160,11 @@ export const useBackupStore = defineStore('backup', () => {
     }
 
     isBackingUp.value = true;
-    alert('开始备份...');
+    alert('正在准备备份数据...');
 
     try {
-      const backupContent = createBackupData();
+      const backupContent = await createBackupData();
+      alert('数据准备完成，开始上传...');
       const fileName = 'phone_backup.json';
       const [owner, repo] = githubRepo.value.split('/');
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
@@ -233,9 +227,10 @@ export const useBackupStore = defineStore('backup', () => {
   }
 
   // 导出备份文件
-  function exportBackupFile(options) {
+  async function exportBackupFile(options) {
     try {
-      const backupContent = createBackupData(options);
+      alert('正在生成备份文件...');
+      const backupContent = await createBackupData(options);
       const blob = new Blob([backupContent], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
