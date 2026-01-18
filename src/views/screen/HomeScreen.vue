@@ -1,8 +1,8 @@
 ﻿<script setup>
 // ==========================================
-// 1. 导入模块 (Imports)
+// 模块导入
 // ==========================================
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -10,40 +10,37 @@ import localforage from 'localforage'
 
 // Store
 import { useThemeStore } from '@/stores/themeStore'
-import { useSingleStore } from '@/stores/chat/singleStore'
 import { useWeatherStore } from '@/stores/weatherStore'
 
 // 组件
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
 import HomeHeader from './components/HomeHeader.vue'
-import MusicPlayer from './components/MusicPlayer.vue'
 import PhotoWall from './components/PhotoWall.vue'
 import AppGrid from './components/AppGrid.vue'
 import DockBar from './components/DockBar.vue'
 import HomeScreen2 from './HomeScreen2.vue'
 
 // ==========================================
-// 2. 初始化与状态 (Init & State)
+// 初始化与状态管理
 // ==========================================
 const { t } = useI18n()
 const router = useRouter()
 const themeStore = useThemeStore()
-const singleStore = useSingleStore()
 const weatherStore = useWeatherStore()
 const { themePresets, currentThemePreset, appIcons } = storeToRefs(themeStore)
 const { homeScreenWeather } = storeToRefs(weatherStore)
 
-// --- 页面控制状态 ---
+// 页面控制状态
 const currentPage = ref(1)
 const touchStartX = ref(0)
 const touchEndX = ref(0)
 
-// --- 弹窗与图片选择状态 ---
+// 弹窗与图片选择状态
 const showImageModal = ref(false)
 const currentSourceType = ref('') // 当前正在修改图片的类型 (bg, avatar, cdCover, etc.)
 const fileInput = ref(null) // (保留引用，虽然主要使用 Modal)
 
-// --- 主页核心数据 ---
+// 主页核心数据
 let homeData = reactive({
   headerBg: '',
   avatar: '',
@@ -54,18 +51,23 @@ let homeData = reactive({
   photo2: ''
 })
 
-// --- 时间与天气状态 ---
+// 时间与天气状态
 const currentDate = ref('--/--/--  --')
 
 // ==========================================
-// 3. 计算属性 (Computed)
+// 计算属性 (Computed)
 // ==========================================
-// 应用列表配置 (响应式)
-const mainApps = computed(() => [
-  { id: 'chat', label: t('homeScreen.apps.chat'), route: '/chat' },
-  { id: 'calendar', label: t('homeScreen.apps.calendar'), action: () => console.log('Open Calendar') },
+// 应用列表配置
+// [提示] 修改下方的 leftApps 和 rightApps 数组来调整 App 的位置
+// leftApps 显示在左侧（Header下方），rightApps 显示在右侧（PhotoWall下方）
+const leftApps = computed(() => [
   { id: 'placeholder-1', label: '', action: () => {} },
   { id: 'placeholder-2', label: '', action: () => {} }
+])
+
+const rightApps = computed(() => [
+  { id: 'chat', label: t('homeScreen.apps.chat'), route: '/chat' },
+  { id: 'calendar', label: t('homeScreen.apps.calendar'), action: () => console.log('Open Calendar') }
 ])
 
 const dockApps = computed(() => [
@@ -87,6 +89,7 @@ const modalTitle = computed(() => {
   return titleMap[currentSourceType.value] || t('homeScreen.modalTitles.default');
 });
 
+// 天气文本
 const weatherText = computed(() => {
   const { city, temperature, weatherDescription } = homeScreenWeather.value;
   if (city && temperature !== '--') {
@@ -95,13 +98,14 @@ const weatherText = computed(() => {
   return city; // '点击获取'
 });
 
+// 壁纸
 const wallpaper = computed(() => {
   const preset = themePresets.value[currentThemePreset.value];
   return preset?.bg ? `url(${preset.bg})` : '';
 });
 
 // ==========================================
-// 4. 方法定义 (Methods)
+// 方法定义 (Methods)
 // ==========================================
 
 // --- 数据加载与保存 ---
@@ -222,7 +226,7 @@ const updateHomeImage = async (url) => {
 }
 
 // ==========================================
-// 5. 生命周期与监听 (Lifecycle & Watch)
+// 生命周期与监听 (Lifecycle & Watch)
 // ==========================================
 onMounted(() => {
   loadHomeData()
@@ -241,60 +245,80 @@ onMounted(() => {
   @touchend="handleTouchEnd"
 >
     
-    <!-- ==================== 页面容器 ==================== -->
+    <!-- ==========================================
+         页面容器
+         ========================================== -->
     <div class="pages-container">
       <div class="pages-wrapper" :class="{ 'page-2': currentPage === 2 }">
         
         <!-- ========== 第一页 ========== -->
         <div class="page page-1">
           
-          <HomeHeader
-            v-model:homeData="homeData"
-            :current-date="currentDate"
-            :weather-text="weatherText"
-            @show-source-select="showSourceSelect"
-            @save-home-data="saveHomeData"
-          />
-
-          <MusicPlayer
-            v-model:homeData="homeData"
-            @show-source-select="showSourceSelect"
-            @save-home-data="saveHomeData"
-          />
-
-          <!-- 3. 底部组件 (照片墙 & 应用网格) -->
-          <div class="section-bottom">
-            <PhotoWall
-              :home-data="homeData"
+          <!-- 顶部容器模块 -->
+          <div class="header-container">
+            <HomeHeader
+              v-model:homeData="homeData"
+              :current-date="currentDate"
+              :weather-text="weatherText"
               @show-source-select="showSourceSelect"
-            />
-
-            <AppGrid
-              :apps="mainApps"
-              :app-icons="appIcons"
-              @app-click="handleAppClick"
+              @save-home-data="saveHomeData"
             />
           </div>
+
+          <!-- 内容区域模块 -->
+          <div class="content-row">
+            <div class="left-column">
+              <AppGrid
+                :apps="leftApps"
+                :app-icons="appIcons"
+                @app-click="handleAppClick"
+              />
+            </div>
+            <div class="right-column">
+              <PhotoWall
+                :home-data="homeData"
+                @show-source-select="showSourceSelect"
+              />
+              <AppGrid
+                :apps="rightApps"
+                :app-icons="appIcons"
+                @app-click="handleAppClick"
+              />
+            </div>
+          </div>
+
         </div>
         
-        <HomeScreen2 />
+        <!-- ========== 第二页 ========== -->
+        <HomeScreen2 
+          v-model:homeData="homeData"
+          @show-source-select="showSourceSelect"
+          @save-home-data="saveHomeData"
+        />
 
       </div>
     </div>
 
-    <!-- ==================== 页面指示器 ==================== -->
+    <!-- ==========================================
+         页面指示器
+         ========================================== -->
     <div class="page-indicator">
       <div class="dot" :class="{ active: currentPage === 1 }" @click="goToPage(1)"></div>
       <div class="dot" :class="{ active: currentPage === 2 }" @click="goToPage(2)"></div>
     </div>
 
+    <!-- ==========================================
+         Dock 栏
+         ========================================== -->
     <DockBar
       :apps="dockApps"
       :app-icons="appIcons"
       @app-click="handleAppClick"
     />
 
-    <!-- ==================== 辅助组件 ==================== -->
+    <!-- ==========================================
+         辅助组件
+         ========================================== -->
     <!-- 隐藏的文件输入 (保留) -->
     <input type="file" ref="fileInput" class="hidden-input" accept="image/*" @change="handleHomeUpload">
 
@@ -326,7 +350,7 @@ onMounted(() => {
     background-position: center;
     background-repeat: no-repeat;
     background-color: var(--bg-white);
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
 }
 
 .home-screen.hidden {
@@ -338,7 +362,7 @@ onMounted(() => {
 .pages-container {
     height: 100%;
     padding-top: 21px;
-    padding-bottom: 150px;
+    padding-bottom: 120px;
     overflow: hidden;
     position: relative;
 }
@@ -357,17 +381,55 @@ onMounted(() => {
 .page {
     width: 50%;
     height: 100%;
-    padding: 15px 20px;
+    padding: 15px 20px 5px 20px; /* 减少底部 padding 从 15px 到 5px */
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.section-bottom {
-    flex: 1;
-    display: flex;
-    gap: 15px;
+.header-container {
+  flex-shrink: 0; /* 防止顶部容器被压缩 */
+  min-height: 38%; /* 强制占据至少三分之一的高度 */
 }
+
+.content-row {
+  display: flex;
+  width: 100%;
+  flex: 1; /* 让中间区域占据剩余空间 */
+  min-height: 0; /* 防止内容溢出导致容器被撑大 */
+}
+
+.left-column {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 10px 10px 0 0;
+}
+
+.right-column {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 20px;
+  gap: 20px;
+}
+
+/* 
+   [位置调整] 
+   控制右侧 App (聊天、日历) 的垂直位置
+   修改 translateY 的数值：负数越小越往上
+   使用 transform 避免影响上方 PhotoWall 的居中位置
+*/
+.right-column .app-grid {
+  transform: translateY(-40px);
+}
+
+.spacer {
+  display: none; /* 不再需要 spacer */
+}
+
 
 /* ==========================================
    2. 页面指示器 (Page Indicator)

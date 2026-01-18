@@ -112,7 +112,7 @@
           </div>
           <div class="theme-item no-icon">
             <div style="display: flex; gap: 5px; align-items: center; flex: 1; width: 100%;">
-              <input type="color" class="color-picker-input" :value="pendingThemeSettings.fontColor" @input="updateFontColorFromPicker($event.target.value)">
+              <input type="color" class="color-picker-input" :value="pickerColor" @input="updateFontColorFromPicker($event.target.value)">
               <input type="text" class="base-input" style="flex: 1;" :value="pendingThemeSettings.fontColor" @input="updateFontColorFromInput($event.target.value)" :placeholder="t('theme.fontColorPlaceholder')">
               <button class="btn btn-secondary btn-sm" style="white-space: nowrap;" @click="confirmFontColor">{{ $t('confirm') }}</button>
             </div>
@@ -291,6 +291,22 @@ const wallpaperModalTitle = computed(() => {
   const type = currentWallpaperType.value === 'home' ? t('theme.homeScreen') : t('theme.lockScreen');
   return t('theme.setWallpaper', { type });
 })
+
+const pickerColor = computed(() => {
+  const color = pendingThemeSettings.fontColor;
+  if (!color) return '#000000';
+  if (/^#[0-9A-F]{6}$/i.test(color)) return color;
+  
+  // 尝试转换 RGB/RGBA 到 Hex
+  const rgbMatch = color.match(/^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+    const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+  }
+  return '#000000';
+});
 
 const fontPresetOptions = computed(() => {
   return Object.keys(fontPresets.value || {}).map(name => ({ value: name, label: name }));
@@ -489,7 +505,11 @@ function updateFontColorFromPicker(color) {
 }
 
 function updateFontColorFromInput(color) {
-  if (/^#([0-9A-F]{3}){1,2}$/i.test(color) || /^#([0-9A-F]{4}){1,2}$/i.test(color)) {
+  const isHex = /^#([0-9A-F]{3}){1,2}$/i.test(color) || /^#([0-9A-F]{4}){1,2}$/i.test(color);
+  const isRgb = /^rgb\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i.test(color);
+  const isRgba = /^rgba\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d\.]+\s*\)$/i.test(color);
+
+  if (isHex || isRgb || isRgba) {
     pendingThemeSettings.fontColor = color;
     themeStore.applyFontColor(color);
   }

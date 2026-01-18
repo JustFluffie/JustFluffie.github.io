@@ -80,7 +80,7 @@ const handleAppClick = (app) => {
 
 .app-icon .label {
     font-size: 10px;
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
     text-align: center;
 }
 

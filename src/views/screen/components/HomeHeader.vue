@@ -1,27 +1,15 @@
 <script setup>
-// =======================
-// ** 模块导入 **
-// =======================
+// ==========================================
+// 模块导入
+// ==========================================
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useWeatherStore } from '@/stores/weatherStore'
 import Modal from '@/components/common/Modal.vue'
 
-// =======================
-// ** i18n 初始化 **
-// =======================
-const { t } = useI18n()
-const weatherStore = useWeatherStore()
-
-// =======================
-// ** 本地状态 **
-// =======================
-const showLocationModal = ref(false)
-const locationInput = ref('')
-
-// =======================
-// ** 组件属性定义 **
-// =======================
+// ==========================================
+// Props & Emits 定义
+// ==========================================
 defineProps({
   homeData: {
     type: Object,
@@ -37,14 +25,21 @@ defineProps({
   }
 })
 
-// =======================
-// ** 组件事件定义 **
-// =======================
 const emit = defineEmits(['show-source-select', 'save-home-data', 'update:homeData'])
 
-// =======================
-// ** 事件处理方法 **
-// =======================
+// ==========================================
+// 初始化与状态管理
+// ==========================================
+const { t } = useI18n()
+const weatherStore = useWeatherStore()
+
+// 本地状态
+const showLocationModal = ref(false)
+const locationInput = ref('')
+
+// ==========================================
+// 事件处理方法
+// ==========================================
 /**
  * 显示资源选择器
  * @param {string} type - 资源类型 ('bg' 或 'avatar')
@@ -62,6 +57,7 @@ const saveHomeData = () => {
 
 /**
  * 处理天气组件点击事件
+ * 打开地点输入弹窗并回填上次位置
  */
 const handleWeatherClick = () => {
   locationInput.value = localStorage.getItem('lastKnownLocation') || '';
@@ -70,6 +66,7 @@ const handleWeatherClick = () => {
 
 /**
  * 确认并更新地点
+ * 更新 Store 中的天气信息并保存到本地存储
  */
 const confirmLocation = () => {
   const location = locationInput.value.trim();
@@ -82,9 +79,9 @@ const confirmLocation = () => {
 </script>
 
 <template>
-  <!-- =======================
-       ** 顶部区域容器 **
-       ======================= -->
+  <!-- ==========================================
+       顶部区域容器
+       ========================================== -->
   <div class="section-top" id="topComponent" :style="homeData.headerBg ? { backgroundImage: `url('${homeData.headerBg}')` } : {}">
     <!-- 背景点击触发器 -->
     <div class="section-top-bg-trigger" @click="showSourceSelect('headerBg')"></div>
@@ -92,9 +89,9 @@ const confirmLocation = () => {
     <!-- 磨砂玻璃遮罩 -->
     <div class="glass-mask"></div>
     
-    <!-- =======================
-         ** 用户头像 **
-         ======================= -->
+    <!-- ==========================================
+         用户头像
+         ========================================== -->
     <div 
       class="profile-avatar" 
       id="homeAvatar" 
@@ -102,9 +99,9 @@ const confirmLocation = () => {
       :style="homeData.avatar ? { backgroundImage: `url('${homeData.avatar}')`, backgroundColor: 'transparent' } : {}"
     ></div>
     
-    <!-- =======================
-         ** 自定义文本输入框 **
-         ======================= -->
+    <!-- ==========================================
+         自定义文本输入框
+         ========================================== -->
     <input 
       type="text" 
       class="custom-text-input" 
@@ -114,9 +111,9 @@ const confirmLocation = () => {
       @blur="saveHomeData"
     >
     
-    <!-- =======================
-         ** 底部小组件 (日期/天气) **
-         ======================= -->
+    <!-- ==========================================
+         底部小组件 (日期/天气)
+         ========================================== -->
     <div class="widgets-container">
       <div class="mini-widget-capsule">
         <span>{{ currentDate }}</span>
@@ -127,7 +124,9 @@ const confirmLocation = () => {
     </div>
   </div>
 
-  <!-- 地点输入弹窗 -->
+  <!-- ==========================================
+       地点输入弹窗
+       ========================================== -->
   <Modal v-model:visible="showLocationModal" :title="t('homeScreen.enterLocation')">
     <input 
       type="text" 
@@ -144,11 +143,12 @@ const confirmLocation = () => {
 </template>
 
 <style scoped>
-/* =======================
-   ** 顶部容器样式 **
-   ======================= */
+/* ==========================================
+   顶部容器样式
+   ========================================== */
 .section-top {
-    flex: 1.3;
+    height: 100%; /* 填充父容器高度 */
+    width: 100%;
     background: rgb(255, 255, 255);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -167,9 +167,9 @@ const confirmLocation = () => {
     transition: background-image 0.3s ease;
 }
 
-/* =======================
-   ** 背景与遮罩 **
-   ======================= */
+/* ==========================================
+   背景与遮罩
+   ========================================== */
 .section-top-bg-trigger {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -205,9 +205,9 @@ const confirmLocation = () => {
     pointer-events: none;
 }
 
-/* =======================
-   ** 头像样式 **
-   ======================= */
+/* ==========================================
+   头像样式
+   ========================================== */
 .profile-avatar {
     width: 80px;
     height: 80px;
@@ -229,13 +229,13 @@ const confirmLocation = () => {
 
 .profile-avatar:active { transform: translateX(-50%) scale(0.95); }
 
-/* =======================
-   ** 自定义文本输入框样式 **
-   ======================= */
+/* ==========================================
+   自定义文本输入框样式
+   ========================================== */
 .custom-text-input {
     background: transparent;
     border: none;
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
     font-size: 11px;
     font-weight: 500;
     text-align: center;
@@ -263,9 +263,9 @@ const confirmLocation = () => {
     color: rgba(255,255,255,0.7);
 }
 
-/* =======================
-   ** 小组件容器样式 **
-   ======================= */
+/* ==========================================
+   小组件容器样式
+   ========================================== */
 .widgets-container {
     display: flex;
     justify-content: space-between;
@@ -282,7 +282,7 @@ const confirmLocation = () => {
     padding: 6px 8px;
     border-radius: 20px;
     border: none;
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
     font-size: 10px;
     font-weight: 500;
     display: flex;

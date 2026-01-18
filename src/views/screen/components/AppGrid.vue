@@ -1,4 +1,7 @@
 <script setup>
+// ==========================================
+// Props & Emits 定义
+// ==========================================
 defineProps({
   apps: {
     type: Array,
@@ -12,13 +15,16 @@ defineProps({
 
 const emit = defineEmits(['app-click'])
 
+// ==========================================
+// 事件处理方法
+// ==========================================
 const handleAppClick = (app) => {
   emit('app-click', app)
 }
 </script>
 
 <template>
-  <div class="section-bottom-right">
+  <div class="app-grid">
     <div 
       v-for="app in apps" 
       :key="app.id" 
@@ -34,12 +40,12 @@ const handleAppClick = (app) => {
 </template>
 
 <style scoped>
-.section-bottom-right {
-    flex: 1;
+.app-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
     gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .app-icon {
@@ -68,7 +74,7 @@ const handleAppClick = (app) => {
 
 .app-icon .label {
     font-size: 10px;
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
     text-align: center;
 }
 

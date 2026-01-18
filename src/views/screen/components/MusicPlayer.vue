@@ -80,7 +80,7 @@ const updateMusicText = (index, value) => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
 }
 
 .music-player-container {
@@ -104,7 +104,7 @@ const updateMusicText = (index, value) => {
 .music-text-input {
     background: transparent;
     border: none;
-    color: var(--text-darkest);
+    color: var(--home-text-color, var(--text-darkest));
     text-align: center;
     width: 100%;
     outline: none;
@@ -149,7 +149,7 @@ const updateMusicText = (index, value) => {
 .music-controls .svg-icon {
     width: 13px;
     height: 13px;
-    stroke: var(--text-darkest);
+    stroke: var(--home-text-color, var(--text-darkest));
     opacity: 0.9;
     fill: none;
 }
@@ -157,7 +157,7 @@ const updateMusicText = (index, value) => {
 .music-controls .play-btn {
     width: 19px;
     height: 19px;
-    fill: var(--text-darkest);
+    fill: var(--home-text-color, var(--text-darkest));
     stroke: none;
 }
 
