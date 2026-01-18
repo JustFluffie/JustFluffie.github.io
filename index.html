@@ -7,7 +7,7 @@
     
     <!-- Favicon -->
     <link rel="icon" href="/favicon.ico">
-    <script type="module" crossorigin src="/assets/index-BhEjVreo.js"></script>
+    <script type="module" crossorigin src="/assets/index-BysHRnOZ.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-CR9njdZe.css">
   <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
@@ -35,11 +35,12 @@
           }
         }
         .app-loading-image {
-          max-width: 62%;
-          max-height: 62%;
+          max-width: calc(62%+1px);
+          max-height: calc(62%+1px);
           object-fit: contain;
           position: relative; /* 开启相对定位，才能用 top/left/right/bottom */
-          top: -5px; /* 向下偏移10px，负值则向上 */
+          top: -6px; /* 向下偏移10px，负值则向上 */
+          box-sizing: border-box;
         }
       </style>
       <div class="app-loading-wrapper">
