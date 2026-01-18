@@ -210,8 +210,8 @@ const confirmLocation = () => {
    头像样式
    ========================================== */
 .profile-avatar {
-    width: 80px;
-    height: 80px;
+    width: 7em;
+    height: 7em;
     border-radius: 50%;
     border: 0px solid rgba(255,255,255,0.9);
     background-color: var(--bg-white);
