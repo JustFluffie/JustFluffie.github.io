@@ -1,4 +1,4 @@
-import{m as W,E as Ke,r as w,G as Xe,u as Ze,i as ce,q as _,D as ae,_ as F,k as Q,a as S,o as b,e,f as R,z as k,y,h as de,w as H,v as O,x as J,M as ee,c as L,b as q,F as j,A as X,n as U,H as re,C as Z,I as be,t as z,d as Y,S as oe,J as _e,B as G,L as et,N as tt,s as ke,O as st,P as K,Q as nt,R as ne,T as ot}from"./index-vVFo7Nn2.js";const at=(t,v)=>{const o=v.map(s=>`${s.role==="user"?"用户":t.name}: ${s.content}`).join(`
+import{m as W,E as Ke,r as w,G as Xe,u as Ze,i as ce,q as _,D as ae,_ as F,k as Q,a as S,o as b,e,f as R,z as k,y,h as de,w as H,v as O,x as J,M as ee,c as L,b as q,F as j,A as X,n as U,H as re,C as Z,I as be,t as z,d as Y,S as oe,J as _e,B as G,L as et,N as tt,s as ke,O as st,P as K,Q as nt,R as ne,T as ot}from"./index-Dc73a8hm.js";const at=(t,v)=>{const o=v.map(s=>`${s.role==="user"?"用户":t.name}: ${s.content}`).join(`
 `);return`
 你正在扮演角色“${t.name}”，你需要根据以下设定和最近的对话，生成一段角色的实时“心声”。
 心声由多个部分组成，请严格按照下面的JSON格式返回，不要添加任何额外的解释或文字。
