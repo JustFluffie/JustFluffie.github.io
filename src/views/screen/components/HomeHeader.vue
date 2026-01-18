@@ -1,8 +1,17 @@
 <script setup>
+// =======================
+// ** 模块导入 **
+// =======================
 import { useI18n } from 'vue-i18n'
 
+// =======================
+// ** i18n 初始化 **
+// =======================
 const { t } = useI18n()
 
+// =======================
+// ** 组件属性定义 **
+// =======================
 defineProps({
   homeData: {
     type: Object,
@@ -18,25 +27,44 @@ defineProps({
   }
 })
 
+// =======================
+// ** 组件事件定义 **
+// =======================
 const emit = defineEmits(['show-source-select', 'save-home-data', 'update:homeData'])
 
+// =======================
+// ** 事件处理方法 **
+// =======================
+/**
+ * 显示资源选择器
+ * @param {string} type - 资源类型 ('bg' 或 'avatar')
+ */
 const showSourceSelect = (type) => {
   emit('show-source-select', type)
 }
 
+/**
+ * 保存主页数据
+ */
 const saveHomeData = () => {
   emit('save-home-data')
 }
 </script>
 
 <template>
-  <div class="section-top" id="topComponent" :style="homeData.bg ? { backgroundImage: `url('${homeData.bg}')` } : {}">
-    <!-- 背景触发器 -->
-    <div class="section-top-bg-trigger" @click="showSourceSelect('bg')"></div>
-    <!-- 磨砂遮罩 -->
+  <!-- =======================
+       ** 顶部区域容器 **
+       ======================= -->
+  <div class="section-top" id="topComponent" :style="homeData.headerBg ? { backgroundImage: `url('${homeData.headerBg}')` } : {}">
+    <!-- 背景点击触发器 -->
+    <div class="section-top-bg-trigger" @click="showSourceSelect('headerBg')"></div>
+    
+    <!-- 磨砂玻璃遮罩 -->
     <div class="glass-mask"></div>
     
-    <!-- 头像 -->
+    <!-- =======================
+         ** 用户头像 **
+         ======================= -->
     <div 
       class="profile-avatar" 
       id="homeAvatar" 
@@ -44,7 +72,9 @@ const saveHomeData = () => {
       :style="homeData.avatar ? { backgroundImage: `url('${homeData.avatar}')`, backgroundColor: 'transparent' } : {}"
     ></div>
     
-    <!-- 自定义文本 -->
+    <!-- =======================
+         ** 自定义文本输入框 **
+         ======================= -->
     <input 
       type="text" 
       class="custom-text-input" 
@@ -54,7 +84,9 @@ const saveHomeData = () => {
       @blur="saveHomeData"
     >
     
-    <!-- 底部小组件 (日期/天气) -->
+    <!-- =======================
+         ** 底部小组件 (日期/天气) **
+         ======================= -->
     <div class="widgets-container">
       <div class="mini-widget-capsule">
         <span>{{ currentDate }}</span>
@@ -67,9 +99,12 @@ const saveHomeData = () => {
 </template>
 
 <style scoped>
+/* =======================
+   ** 顶部容器样式 **
+   ======================= */
 .section-top {
     flex: 1.3;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgb(255, 255, 255);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: none;
@@ -87,6 +122,9 @@ const saveHomeData = () => {
     transition: background-image 0.3s ease;
 }
 
+/* =======================
+   ** 背景与遮罩 **
+   ======================= */
 .section-top-bg-trigger {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -96,11 +134,11 @@ const saveHomeData = () => {
 
 .glass-mask {
     position: absolute;
-    top: 60%;
+    top: 58%;
     left: 0;
     width: 100%;
     height: 50%;
-    background: rgba(236, 236, 236, 0.1);
+    background: rgba(250, 252, 255, 0.1);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     border-top: none;
@@ -117,11 +155,14 @@ const saveHomeData = () => {
     width: 100%;
     height: 100%;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
-    opacity: 0.40;
+    opacity: 0.25;
     border-radius: 0 0 20px 20px;
     pointer-events: none;
 }
 
+/* =======================
+   ** 头像样式 **
+   ======================= */
 .profile-avatar {
     width: 80px;
     height: 80px;
@@ -134,7 +175,7 @@ const saveHomeData = () => {
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     z-index: 2;
     position: absolute;
-    top: 35%;
+    top: 43%;
     left: 50%;
     transform: translateX(-50%);
     cursor: pointer;
@@ -143,6 +184,9 @@ const saveHomeData = () => {
 
 .profile-avatar:active { transform: translateX(-50%) scale(0.95); }
 
+/* =======================
+   ** 自定义文本输入框样式 **
+   ======================= */
 .custom-text-input {
     background: transparent;
     border: none;
@@ -159,7 +203,7 @@ const saveHomeData = () => {
     border-radius: 8px;
     transition: background 0.2s;
     position: absolute;
-    top: 75%;
+    top: 80%;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -174,6 +218,9 @@ const saveHomeData = () => {
     color: rgba(255,255,255,0.7);
 }
 
+/* =======================
+   ** 小组件容器样式 **
+   ======================= */
 .widgets-container {
     display: flex;
     justify-content: space-between;

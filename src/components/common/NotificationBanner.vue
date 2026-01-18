@@ -1,20 +1,14 @@
 <template>
   <Transition name="notification-slide">
     <div v-if="store.show" class="notification-banner" @click="handleClick">
-      <div class="notification-content-wrapper">
-        <div class="notification-header">
-          <div class="notification-app-info">
-            <div class="notification-icon">
-              <img :src="store.icon || DEFAULT_ICON" alt="icon" @error="handleImageError">
-            </div>
-            <span class="notification-title">{{ store.title }}</span>
-          </div>
-          <span class="notification-time">{{ store.time }}</span>
-        </div>
-        <div class="notification-body">
-          {{ store.content }}
-        </div>
+      <div class="avatar">
+        <img :src="store.icon || DEFAULT_ICON" alt="icon" @error="handleImageError">
       </div>
+      <div class="content-area">
+        <div class="character-remark">{{ store.title }}</div>
+        <div class="message-content">{{ store.content }}</div>
+      </div>
+      <span class="notification-time">{{ store.time }}</span>
     </div>
   </Transition>
 </template>
@@ -42,75 +36,75 @@ const handleImageError = (e) => {
 <style scoped>
 .notification-banner {
   position: absolute;
-  top: 10px;
+  top: 32px;
   left: 10px;
   right: 10px;
-  background: white;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 14px;
-  padding: 12px 12px;
-  min-height: 60px; /* 增加最小高度 */
+  padding: 15px 20px;
+  min-height: 80px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 9999;
   cursor: pointer;
   user-select: none;
   overflow: hidden;
-  display: flex; /* 使用 flex 布局使内容垂直居中 */
-  align-items: center; /* 垂直居中 */
-}
-
-.notification-content-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.notification-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.notification-app-info {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
 }
 
-.notification-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px; /* Changed from 50% for a square look */
   overflow: hidden;
   background: #f0f0f0;
+  flex-shrink: 0;
 }
 
-.notification-icon img {
+.avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.notification-title {
-  font-size: 13px;
+.content-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex-grow: 1;
+  overflow: hidden;
+  padding-right: 40px; /* 避免文字与时间重叠 */
+}
+
+.character-remark {
+  font-size: 14px;
   font-weight: 600;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.notification-time {
-  font-size: 11px;
-  color: #888;
-}
-
-.notification-body {
+.message-content {
   font-size: 13px;
-  color: #333;
+  color: #555;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.notification-time {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 11px;
+  color: #888;
 }
 
 /* Dark mode support (temporarily disabled) */
@@ -121,12 +115,9 @@ const handleImageError = (e) => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
   
-  .notification-title {
+  .character-remark,
+  .message-content {
     color: #fff;
-  }
-  
-  .notification-body {
-    color: #ddd;
   }
 }
 */

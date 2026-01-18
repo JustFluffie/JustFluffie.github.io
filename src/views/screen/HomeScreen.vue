@@ -41,6 +41,7 @@ const fileInput = ref(null) // (保留引用，虽然主要使用 Modal)
 // --- 主页核心数据 ---
 let homeData = reactive({
   bg: '',
+  headerBg: '',
   avatar: '',
   text: t('homeScreen.greeting'),
   musicTexts: ['虚拟', '- 陈粒', '摇摇晃晃情绪却满溢', '你是我未曾拥有无法捕捉的亲昵', '我却有你的吻你的魂你的心'],
@@ -75,6 +76,7 @@ const dockApps = computed(() => [
 const modalTitle = computed(() => {
   const titleMap = {
     bg: t('homeScreen.modalTitles.setBg'),
+    headerBg: '设置顶部背景',
     avatar: t('homeScreen.modalTitles.setAvatar'),
     cdCover: t('homeScreen.modalTitles.setCdCover'),
     photo1: t('homeScreen.modalTitles.setPhoto1'),
