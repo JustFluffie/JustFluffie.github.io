@@ -47,6 +47,7 @@ const icons = {
   'plus-circle': '<circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m4-4H8" />',
   'sticker': '<circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round" /><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke-linecap="round" stroke-linejoin="round" /><line x1="9" y1="9" x2="9.01" y2="9" stroke-linecap="round" stroke-linejoin="round" /><line x1="15" y1="9" x2="15.01" y2="9" stroke-linecap="round" stroke-linejoin="round" />',
   'voice-circle': '<circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round" /><path d="M8 12h.01" stroke-linecap="round" stroke-linejoin="round" /><path d="M11 10a3 3 0 0 1 0 4" stroke-linecap="round" stroke-linejoin="round" /><path d="M14 8a6 6 0 0 1 0 8" stroke-linecap="round" stroke-linejoin="round" />',
+  'Sparkles': '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>',
   // 可以根据需要添加更多图标
 }
 

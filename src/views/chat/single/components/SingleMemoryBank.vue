@@ -1,29 +1,24 @@
 <template>
-  <div class="memory-bank-wrapper">
-    <!-- 主弹窗 -->
-    <Modal 
-      :visible="visible" 
-      @update:visible="close" 
-      containerClass="memory-bank-modal-container"
-      teleportTo="#phone-screen-container"
-    >
-      <!-- 头部 -->
-      <template #header>
-        <div class="modal-header-content">
-          <h3>长期记忆</h3>
-          <div class="header-actions">
-            <button class="btn summary-btn" @click="showSummaryModal">总结</button>
-          </div>
-        </div>
-      </template>
-      
+  <AppLayout title="长期记忆">
+    <template #action>
+      <div class="header-actions">
+        <button class="icon-btn" @click="showRefineModal" title="提炼">
+          <SvgIcon name="Sparkles" />
+        </button>
+        <button class="icon-btn" @click="addMemory" title="添加">
+          <SvgIcon name="plus" />
+        </button>
+      </div>
+    </template>
+
+    <div class="memory-bank-content">
       <!-- 记忆列表 -->
       <div class="memory-scroll-container">
         <div v-if="!displayMemories || displayMemories.length === 0" class="empty-state">
           <div class="empty-text">{{ showFavoritesOnly ? '暂无收藏记忆' : '暂无长期记忆' }}</div>
         </div>
         <div v-else class="memory-list">
-          <div v-for="mem in displayMemories" :key="mem.id || index" class="card memory-card">
+          <div v-for="(mem, index) in displayMemories" :key="mem.id || index" class="card memory-card">
             <div class="card-header-row">
               <div class="header-left">
                 <div class="sort-buttons">
@@ -53,15 +48,9 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 底部 -->
-      <template #footer>
-        <button class="modal-btn primary-text" @click="addMemory">+ 新增</button>
-        <button class="modal-btn cancel" @click="close">关闭</button>
-      </template>
-    </Modal>
-
-    <!-- 嵌套弹窗 -->
+    <!-- 弹窗 -->
     <Modal v-model:visible="showInputModal" :title="editingIndex >= 0 ? '编辑记忆' : '新增记忆'" class="nested">
       <textarea class="base-input modal-textarea" v-model="inputText" placeholder="输入希望AI记住的内容..." style="height: 150px;"></textarea>
       <template #footer>
@@ -76,15 +65,15 @@
         <button class="modal-btn confirm danger" @click="deleteMemory">确认删除</button>
       </template>
     </Modal>
-    <Modal v-model:visible="showSummarySettingsModal" title="记忆总结" class="nested">
+    <Modal v-model:visible="showRefineSettingsModal" title="记忆提炼" class="nested">
       <p class="summary-tip">将对现有长期记忆进行再总结。</p>
       <textarea class="base-input modal-textarea" v-model="summaryPrompt" placeholder="输入总结提示词..." style="height: 100px;"></textarea>
       <template #footer>
-        <button class="modal-btn cancel" @click="closeSummaryModal">取消</button>
-        <button class="modal-btn confirm" @click="doSummary">开始总结</button>
+        <button class="modal-btn cancel" @click="closeRefineModal">取消</button>
+        <button class="modal-btn confirm" @click="doRefine">开始提炼</button>
       </template>
     </Modal>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup>
@@ -93,25 +82,20 @@
 // ================================================================================================
 // Vue
 import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 // Pinia
 import { useSingleStore } from '@/stores/chat/singleStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useApiStore } from '@/stores/apiStore'
 // 组件
+import AppLayout from '@/components/common/AppLayout.vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
-
-// ================================================================================================
-// 属性、事件
-// ================================================================================================
-const props = defineProps({
-  visible: Boolean,
-  charId: String
-})
-const emit = defineEmits(['update:visible'])
 
 // ================================================================================================
 // 组合式函数
 // ================================================================================================
+const route = useRoute()
+const router = useRouter()
 const singleStore = useSingleStore()
 const themeStore = useThemeStore()
 const apiStore = useApiStore()
@@ -119,6 +103,7 @@ const apiStore = useApiStore()
 // ================================================================================================
 // 响应式状态
 // ================================================================================================
+const charId = ref(route.params.charId)
 const showFavoritesOnly = ref(false)
 // 输入/编辑弹窗
 const showInputModal = ref(false)
@@ -127,14 +112,14 @@ const inputText = ref('')
 // 删除弹窗
 const showDeleteModal = ref(false)
 const deletingIndex = ref(-1)
-// 总结弹窗
-const showSummarySettingsModal = ref(false)
+// 提炼弹窗
+const showRefineSettingsModal = ref(false)
 const summaryPrompt = ref('')
 
 // ================================================================================================
 // 计算属性
 // ================================================================================================
-const character = computed(() => singleStore.getCharacter(props.charId))
+const character = computed(() => singleStore.getCharacter(charId.value))
 const memories = computed(() => character.value?.memories || [])
 const charName = computed(() => character.value?.name || '角色')
 const displayMemories = computed(() => showFavoritesOnly.value ? memories.value.filter(m => m.isFavorite) : memories.value)
@@ -142,10 +127,9 @@ const displayMemories = computed(() => showFavoritesOnly.value ? memories.value.
 // ================================================================================================
 // 方法 - UI
 // ================================================================================================
-const close = () => { emit('update:visible', false) }
 const closeInputModal = () => { showInputModal.value = false; inputText.value = ''; }
 const closeDeleteModal = () => { showDeleteModal.value = false; deletingIndex.value = -1; }
-const closeSummaryModal = () => { showSummarySettingsModal.value = false; }
+const closeRefineModal = () => { showRefineSettingsModal.value = false; }
 
 // ================================================================================================
 // 方法 - 格式化与辅助
@@ -229,18 +213,18 @@ const toggleFavorite = (index) => {
   singleStore.saveData()
 }
 
-const showSummaryModal = () => {
+const showRefineModal = () => {
   summaryPrompt.value = character.value.memorySummaryPrompt || ''
-  showSummarySettingsModal.value = true
+  showRefineSettingsModal.value = true
 }
 
-const doSummary = async () => {
+const doRefine = async () => {
   const char = character.value;
   if (!char) return;
 
   char.memorySummaryPrompt = summaryPrompt.value;
-  themeStore.showToast('正在总结记忆...', 'info');
-  closeSummaryModal();
+  themeStore.showToast('正在提炼记忆...', 'info');
+  closeRefineModal();
 
   const existingMemories = memories.value.map(mem => mem.content).join('\n---\n');
   const prompt = summaryPrompt.value || '请总结以下内容，提取关键信息。';
@@ -255,84 +239,71 @@ const doSummary = async () => {
       if (!char.memories) char.memories = [];
       char.memories.unshift({ content: `[记忆再总结] ${summaryResult}`, time: Date.now(), charName: char.name, isFavorite: false });
       singleStore.saveData();
-      themeStore.showToast('记忆总结已完成', 'success');
+      themeStore.showToast('记忆提炼已完成', 'success');
     } else {
-      themeStore.showToast('总结失败，未收到有效回复', 'error');
+      themeStore.showToast('提炼失败，未收到有效回复', 'error');
     }
   } catch (error) {
-    console.error('记忆总结失败:', error);
+    console.error('记忆提炼失败:', error);
   }
 }
 </script>
 
-<style>
-/* --- 非 Scoped 样式，用于 Teleport 的 Modal --- */
-.memory-bank-modal-container {
-  height: 100% !important;
-  max-height: 600px !important;
-  width: 100% !important;
-  max-width: 1000px !important;
-  display: flex;
-  flex-direction: column;
-}
-.memory-bank-modal-container .modal-body {
-  padding: 0 !important;
-  display: flex;
-  flex-direction: column;
-}
-</style>
-
 <style scoped>
 @import '@/assets/css/components/Card.css';
 
-/* --- 头部 --- */
-.modal-header-content {
-  display: flex; justify-content: center; align-items: center;
-  position: relative; width: calc(100% + 40px); margin: -10px -20px 0; padding: 10px 20px;
+:deep(.action-btn) {
+  width: auto; 
+  justify-content: flex-end; 
 }
-.modal-header-content h3 {
-  font-size: 16px; font-weight: 600; margin: 0;
-  position: absolute; left: 50%; transform: translateX(-50%);
-}
-.header-actions { margin-left: auto; display: flex; gap: 10px; }
-.summary-btn {
-  font-size: 13px; cursor: pointer; background: transparent;
-  border-radius: 4px; color: #666; padding: 4px 55px;
-}
-.summary-btn:hover { background: #f5f5f5; }
 
-/* --- 列表容器 --- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* 【可调整】修改此数值可改变两个按钮之间的间距 */
+  padding-right: 4px; /* 【可调整】修改此数值可改变按钮组离右边框的距离 */
+}
+
+.memory-bank-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .memory-scroll-container {
-  flex: 1; overflow-y: auto; padding: 2px 10px; background: #f5f5f5;
-  scrollbar-width: none; -ms-overflow-style: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0; /* AppLayout has padding */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .memory-scroll-container::-webkit-scrollbar { display: none; }
 .empty-state { display: flex; justify-content: center; align-items: center; height: 100%; color: #999; font-size: 14px; }
 
 /* --- 记忆卡片 --- */
-.memory-card { display: flex; flex-direction: column; padding: 10px 5px; }
-.card-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-.header-left { display: flex; align-items: center; gap: 2px; }
+.memory-card { display: flex; flex-direction: column; padding: 10px 15px; }
+.card-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+.header-left { display: flex; align-items: center; gap: 5px; }
 .char-info { display: flex; flex-direction: column; justify-content: center; }
 .char-name { font-weight: 700; font-size: 16px; color: #333; line-height: 1.2; }
 .save-time { font-size: 10px; color: #999; margin-top: 2px; }
 .header-right { display: flex; align-items: center; gap: 8px; padding-top: 5px; }
-.card-content-row { font-size: 14px; line-height: 1.5; color: #555; white-space: pre-wrap; padding-left: 23px; }
+.card-content-row { font-size: 14px; line-height: 1.5; color: #555; white-space: pre-wrap; padding-left: 28px; }
 
 /* --- 按钮 --- */
 .icon-btn {
   background: transparent; border: none; cursor: pointer; padding: 4px;
-  color: #888; display: flex; align-items: center; justify-content: center;
+  color: var(--c-text-2); display: flex; align-items: center; justify-content: center;
   border-radius: 4px; transition: all 0.2s; font-size: 16px;
 }
-.icon-btn :deep(svg) { width: 1.2em; height: 1.2em; }
-.icon-btn:hover { background: rgba(0,0,0,0.05); color: #333; }
+.icon-btn :deep(svg) { width: 24px; height: 24px; }
+.icon-btn:hover { background: rgba(0,0,0,0.05); color: var(--c-text-1); }
 .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .icon-btn.danger { color: #FF3B30; }
 .icon-btn.danger:hover { color: #FF3B30; background: rgba(255, 59, 48, 0.1); }
 .sort-buttons { display: flex; flex-direction: column; }
-.sort-btn { height: 16px; width: 20px; display: flex; align-items: center; justify-content: center; }
-.sort-btn .svg-icon { width: 14px; height: 14px; }
+.sort-btn { height: 18px; width: 23px; display: flex; align-items: center; justify-content: center; }
+.sort-btn .svg-icon { width: 16px; height: 16px; }
 .favorite-btn { color: #ccc; }
 .favorite-btn:active { color: #FF2D55; background: transparent; }
 .is-favorite { color: #FF2D55; }

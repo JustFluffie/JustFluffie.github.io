@@ -75,6 +75,12 @@ const router = createRouter({
       name: 'theme',
       component: () => import('../views/theme/Theme.vue')
     },
+    {
+      path: '/memory/:charId',
+      name: 'memory-bank',
+      component: () => import('../views/chat/single/components/SingleMemoryBank.vue'),
+      props: true
+    },
   ]
 })
 

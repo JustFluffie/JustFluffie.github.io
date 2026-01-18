@@ -175,7 +175,7 @@ const saveHomeData = () => {
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     z-index: 2;
     position: absolute;
-    top: 43%;
+    top: 42%;
     left: 50%;
     transform: translateX(-50%);
     cursor: pointer;
@@ -203,7 +203,7 @@ const saveHomeData = () => {
     border-radius: 8px;
     transition: background 0.2s;
     position: absolute;
-    top: 80%;
+    top: 78.5%;
     left: 50%;
     transform: translateX(-50%);
 }

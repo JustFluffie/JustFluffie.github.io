@@ -52,8 +52,6 @@
       </template>
     </Modal>
 
-    <!-- 记忆库弹窗 -->
-    <MemoryBank v-model:visible="showMemoryBank" :charId="charId" />
   </div>
 </template>
 
@@ -69,7 +67,6 @@ import { useRouter } from 'vue-router'
 import { useSingleStore } from '@/stores/chat/singleStore'
 import { useThemeStore } from '@/stores/themeStore'
 // 组件
-import MemoryBank from './SingleMemoryBank.vue'
 import Modal from '@/components/common/Modal.vue'
 
 // ================================================================================================
@@ -110,7 +107,6 @@ const themeStore = useThemeStore()
 const showStatusModal = ref(false)
 const statusIconInput = ref('')
 const statusTextInput = ref('')
-const showMemoryBank = ref(false)
 
 // ================================================================================================
 // 方法
@@ -160,7 +156,7 @@ const confirmStatus = () => {
  * @description 打开记忆库
  */
 const openMemoryBank = () => {
-    showMemoryBank.value = true
+    router.push({ name: 'memory-bank', params: { charId: props.charId } })
 }
 </script>
 

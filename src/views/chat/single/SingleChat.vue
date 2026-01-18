@@ -91,9 +91,6 @@
       @edit-message="handleEditMessage"
     />
 
-    <!-- 聊天室设置抽屉 -->
-    <ChatRoomSettings v-if="isSettingsVisible" v-model:visible="isSettingsVisible" :charId="props.charId" />
-
     <!-- 转发选择弹窗 -->
     <ForwardSelectionModal
       :visible="isForwarding"
@@ -122,7 +119,6 @@ import { useMessageInteraction } from '@/composables/chat/useMessageInteraction.
 // 组件导入
 import ChatRoomHeader from './components/SingleChatHeader.vue'
 import ChatRoomInputBar from '../components/ChatInputBar.vue'
-import ChatRoomSettings from './components/SingleChatSettings.vue'
 import ChatRoomMessageMenu from '../components/MessageMenu.vue'
 import ChatRoomSelectionBar from '../components/SelectionBar.vue'
 import ChatRoomMessageList from '../components/MessageList.vue'
