@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Minimized Float Window -->
+    <!-- 1. 最小化浮窗 -->
     <GlobalFloat
       :is-active="videoCall.isActive && videoCall.isMinimized"
       :image-url="characterAvatar"
@@ -16,9 +16,10 @@
       </div>
     </GlobalFloat>
 
-    <!-- Maximized Video Call Overlay -->
+    <!-- 2. 视频通话主界面 (最大化时) -->
     <div class="video-call-overlay" v-if="isVideoCallActive">
-        <!-- Hangup Confirmation Dialog -->
+        
+        <!-- 2.1 挂断确认弹窗 -->
         <div class="video-confirm-dialog" v-if="showHangupConfirm">
             <div class="confirm-box">
                 <p>确定要挂断吗？</p>
@@ -29,7 +30,7 @@
             </div>
         </div>
 
-        <!-- Waiting UI -->
+        <!-- 2.2 等待接通界面 -->
         <div class="video-waiting" v-if="videoCallStatus === 'waiting'">
             <div class="waiting-avatar">
                 <img :src="characterAvatar || 'https://placehold.co/100x100/gray/white?text=Avatar'">
@@ -44,25 +45,34 @@
             </div>
         </div>
 
-        <!-- Connected UI -->
+        <!-- 2.3 通话中界面 -->
         <div class="video-content" v-if="videoCallStatus === 'connected'">
+            <!-- 背景 -->
             <img :src="character?.videoBg || 'https://placehold.co/375x812/black/white?text=No+Image'" class="video-bg">
             
+            <!-- 通话计时器 -->
             <div class="video-timer">{{ videoTimerStr }}</div>
 
-            <!-- 您可以修改这里的 width 和 height 来调整图标大小 -->
+            <!-- 最小化按钮 -->
             <div class="video-minimize-btn" @click="minimizeVideoCall">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 30px; height: 30px;transform: translate(10px, -8px);"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline></svg>
             </div>
 
+            <!-- 用户自己的小窗 (可拖拽) -->
             <div class="draggable-window" ref="videoFloatWindow">
                 <img :src="character?.userVideoImg || 'https://placehold.co/100x160/gray/white?text=User'">
             </div>
             
+            <!-- 视频中的文字聊天面板 -->
             <div class="video-chat-panel" v-show="isVideoChatVisible">
                 <div class="video-chat-messages" ref="videoChatMessagesContainer">
                     <div v-for="(msg, idx) in videoChatMessages" :key="idx" class="video-chat-msg" :class="msg.type">
                         {{ msg.text }}
+                    </div>
+                    <div v-if="isAiReplying" class="video-chat-msg received typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
                     </div>
                 </div>
                 <div class="video-chat-input-box">
@@ -73,6 +83,7 @@
                 </div>
             </div>
 
+            <!-- 底部控制按钮 -->
             <div class="video-controls">
                 <div class="video-btn" @click="isVideoChatVisible = !isVideoChatVisible" title="打开文本框">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -90,11 +101,14 @@
 </template>
 
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useApiStore } from '@/stores/apiStore';
 import GlobalFloat from '@/components/common/GlobalFloat.vue';
 
+// =================================================================
+// Props
+// =================================================================
 const props = defineProps({
   boundaryRef: {
     type: Object,
@@ -102,26 +116,23 @@ const props = defineProps({
   }
 });
 
+// =================================================================
+// 状态管理 (Pinia)
+// =================================================================
 const singleStore = useSingleStore();
 const apiStore = useApiStore();
 
-// Shared State
+// =================================================================
+// 核心状态与计算属性
+// =================================================================
 const videoCall = computed(() => singleStore.videoCall);
 const character = computed(() => singleStore.getCharacter(videoCall.value.characterId));
 const characterAvatar = computed(() => character.value?.avatar || 'https://placehold.co/60x60/gray/white?text=Avatar');
 
-// --- Logic for Maximized View ---
+// UI相关的计算属性
 const isVideoCallActive = computed(() => videoCall.value.isActive && !videoCall.value.isMinimized);
 const videoCallStatus = computed(() => videoCall.value.status);
 const videoDuration = computed(() => videoCall.value.duration);
-
-const showHangupConfirm = ref(false);
-const isVideoChatVisible = ref(false);
-const videoChatInput = ref('');
-const videoChatMessages = ref([]);
-const videoChatMessagesContainer = ref(null);
-const videoFloatWindow = ref(null); // This is for the small user window inside the call
-
 const videoTimerStr = computed(() => {
     const duration = videoDuration.value;
     const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
@@ -129,16 +140,23 @@ const videoTimerStr = computed(() => {
     return `${minutes}:${seconds}`;
 });
 
+// =================================================================
+// 挂断逻辑
+// =================================================================
+const showHangupConfirm = ref(false);
+
 const endVideoCall = () => {
     if (videoCallStatus.value === 'waiting') {
-        singleStore.endVideoCall();
+        // 在等待状态直接挂断，无需总结消息
+        singleStore.endVideoCall([]);
     } else {
         showHangupConfirm.value = true;
     }
 };
 
 const confirmEndVideoCall = () => {
-    singleStore.endVideoCall();
+    // 确认挂断时，传递聊天记录
+    singleStore.endVideoCall(videoChatMessages.value);
     showHangupConfirm.value = false;
 };
 
@@ -146,6 +164,9 @@ const cancelEndVideoCall = () => {
     showHangupConfirm.value = false;
 };
 
+// =================================================================
+// 窗口状态管理 (最小化/最大化)
+// =================================================================
 const minimizeVideoCall = () => {
     singleStore.minimizeVideoCall();
 };
@@ -154,26 +175,28 @@ const maximize = () => {
     singleStore.maximizeVideoCall();
 };
 
-const retry = () => {
-    // Placeholder for retry logic
-    console.log("Retry action triggered");
-    // You can add your AI regeneration logic here
-};
+// =================================================================
+// 视频通话中的文本聊天
+// =================================================================
+const isVideoChatVisible = ref(false);
+const videoChatInput = ref('');
+const videoChatMessages = ref([]);
+const isAiReplying = ref(false);
+const videoChatMessagesContainer = ref(null); // 模板引用
 
 const sendVideoChatMessage = async () => {
     const text = videoChatInput.value.trim();
     if (!text) return;
 
-    // Add user message to local chat
+    // 将用户消息添加到本地聊天
     videoChatMessages.value.push({ text, type: 'sent' });
-    const currentUserMessage = { role: 'user', content: text };
     videoChatInput.value = '';
     await nextTick();
     if (videoChatMessagesContainer.value) {
         videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
     }
 
-    // Temporarily add system and user messages to singleStore for API call
+    // 临时将消息添加到 singleStore 以进行 API 调用
     const charId = character.value.id;
     const originalMessages = singleStore.messages[charId] ? [...singleStore.messages[charId]] : [];
     if (!singleStore.messages[charId]) {
@@ -187,18 +210,15 @@ const sendVideoChatMessage = async () => {
         time: Date.now()
     });
 
+    isAiReplying.value = true;
     try {
-        // Get AI response
+        // 获取 AI 回复
         const responseText = await apiStore.getChatCompletion(charId);
 
         if (responseText) {
-            // Add AI response to local chat
+            // 将 AI 回复添加到本地聊天
             videoChatMessages.value.push({ text: responseText, type: 'received' });
-            await nextTick();
-            if (videoChatMessagesContainer.value) {
-                videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
-            }
-            // Also add to singleStore to maintain context for subsequent calls within the video chat
+            // 同时添加到 singleStore 以在视频聊天中保持上下文
             singleStore.messages[charId].push({
                 id: (Date.now() + 1).toString(),
                 sender: 'char',
@@ -208,15 +228,29 @@ const sendVideoChatMessage = async () => {
             });
         }
     } catch (error) {
-        console.error("Failed to get AI response in video chat:", error);
+        console.error("获取视频聊天中的 AI 回复失败：", error);
         videoChatMessages.value.push({ text: '抱歉，我暂时无法回复...', type: 'received' });
     } finally {
-        // IMPORTANT: Restore original messages to prevent video chat from polluting main chat history
+        isAiReplying.value = false;
+        // 重要：恢复原始消息，以防止视频聊天污染主聊天记录
         singleStore.messages[charId] = originalMessages;
+        await nextTick();
+        if (videoChatMessagesContainer.value) {
+            videoChatMessagesContainer.value.scrollTop = videoChatMessagesContainer.value.scrollHeight;
+        }
     }
 };
 
-// --- Draggable Window Logic ---
+const retry = () => {
+    // 重试逻辑占位符
+    console.log("重试操作已触发");
+    // 你可以在这里添加你的 AI 重新生成逻辑
+};
+
+// =================================================================
+// 可拖动窗口逻辑
+// =================================================================
+const videoFloatWindow = ref(null); // 模板引用
 const isDragging = ref(false);
 const dragStartX = ref(0);
 const dragStartY = ref(0);
@@ -228,20 +262,17 @@ const dragStart = (e) => {
   if (!el) return;
   
   isDragging.value = true;
-  // For touch events
   const touch = e.touches ? e.touches[0] : e;
   dragStartX.value = touch.clientX;
   dragStartY.value = touch.clientY;
   elStartX.value = el.offsetLeft;
   elStartY.value = el.offsetTop;
 
-  // Add move and end listeners to the window
   window.addEventListener('mousemove', dragMove);
   window.addEventListener('mouseup', dragEnd);
   window.addEventListener('touchmove', dragMove, { passive: false });
   window.addEventListener('touchend', dragEnd);
   
-  // Prevent text selection while dragging
   e.preventDefault();
 };
 
@@ -259,7 +290,7 @@ const dragMove = (e) => {
   let newX = elStartX.value + dx;
   let newY = elStartY.value + dy;
 
-  // Constrain within parent bounds
+  // 限制在父元素边界内
   const maxX = parent.clientWidth - el.offsetWidth;
   const maxY = parent.clientHeight - el.offsetHeight;
   newX = Math.max(0, Math.min(newX, maxX));
@@ -267,10 +298,9 @@ const dragMove = (e) => {
 
   el.style.left = `${newX}px`;
   el.style.top = `${newY}px`;
-  el.style.right = 'auto'; // Override the initial 'right' style
-  el.style.bottom = 'auto'; // Override any potential 'bottom' style
+  el.style.right = 'auto';
+  el.style.bottom = 'auto';
   
-  // Prevent scrolling on touch devices
   if (e.touches) {
     e.preventDefault();
   }
@@ -279,28 +309,32 @@ const dragMove = (e) => {
 const dragEnd = () => {
   if (!isDragging.value) return;
   isDragging.value = false;
-  // Remove listeners from the window
   window.removeEventListener('mousemove', dragMove);
   window.removeEventListener('mouseup', dragEnd);
   window.removeEventListener('touchmove', dragMove);
   window.removeEventListener('touchend', dragEnd);
 };
 
-onMounted(() => {
-  const el = videoFloatWindow.value;
-  if (el) {
-    el.addEventListener('mousedown', dragStart);
-    el.addEventListener('touchstart', dragStart, { passive: false });
+// =================================================================
+// 生命周期钩子
+// =================================================================
+
+// 监听 videoFloatWindow ref 的变化，以确保在元素存在时添加事件监听器
+watch(videoFloatWindow, (newEl, oldEl) => {
+  if (oldEl) {
+    // 清理旧元素的事件监听器
+    oldEl.removeEventListener('mousedown', dragStart);
+    oldEl.removeEventListener('touchstart', dragStart);
+  }
+  if (newEl) {
+    // 为新元素添加事件监听器
+    newEl.addEventListener('mousedown', dragStart);
+    newEl.addEventListener('touchstart', dragStart, { passive: false });
   }
 });
 
 onBeforeUnmount(() => {
-  const el = videoFloatWindow.value;
-  if (el) {
-    el.removeEventListener('mousedown', dragStart);
-    el.removeEventListener('touchstart', dragStart);
-  }
-  // Clean up global listeners just in case
+  // 为安全起见，在组件卸载时清除所有可能残留的全局监听器
   window.removeEventListener('mousemove', dragMove);
   window.removeEventListener('mouseup', dragEnd);
   window.removeEventListener('touchmove', dragMove);
@@ -309,7 +343,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* Styles for Minimized Float */
+/* =================================================================
+   1. 最小化浮窗
+   ================================================================= */
 .image-container {
   width: 100%;
   height: 100%;
@@ -337,18 +373,18 @@ onBeforeUnmount(() => {
   color: white;
   animation: pulse 2s infinite;
 }
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
-}
 
-/* Styles for Maximized Overlay */
+/* =================================================================
+   2. 视频通话主界面
+   ================================================================= */
 .video-call-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: #000; z-index: 2000; display: flex; flex-direction: column;
 }
 
+/* =================================================================
+   2.1 等待界面
+   ================================================================= */
 .video-waiting {
     flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: linear-gradient(180deg, #2b2b2b 0%, #1a1a1a 100%); color: white; padding-bottom: 100px;
@@ -364,10 +400,6 @@ onBeforeUnmount(() => {
     animation: ripple 2s infinite; z-index: 1;
 }
 .waiting-ripple.delay { animation-delay: 1s; }
-@keyframes ripple {
-    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-}
 .waiting-text { font-size: 16px; margin-bottom: 60px; opacity: 0.8; }
 .waiting-controls { 
     position: absolute; 
@@ -381,12 +413,95 @@ onBeforeUnmount(() => {
     z-index: 2002;
 }
 
+/* =================================================================
+   2.2 通话中界面
+   ================================================================= */
 .video-content { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; }
 .video-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
 .video-timer {
     position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
     color: white; font-size: 16px; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.5); z-index: 2004;
 }
+
+/* =================================================================
+   2.3 可拖拽的用户小窗
+   ================================================================= */
+.draggable-window {
+    position: absolute; top: 40px; right: 20px; width: 100px; height: 160px;
+    background: #333; border-radius: 12px; overflow: hidden; z-index: 2001;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+    cursor: grab;
+    touch-action: none;
+}
+.draggable-window:active {
+    cursor: grabbing;
+}
+.draggable-window img { width: 100%; height: 100%; object-fit: cover; }
+
+/* =================================================================
+   2.4 视频内文本聊天面板
+   ================================================================= */
+.video-chat-panel {
+    position: absolute; 
+    bottom: 95px; 
+    left: 15px; right: 15px; height: 250px;
+    background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(2px); border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2); display: flex; flex-direction: column; z-index: 2001; padding: 10px;
+}
+.video-chat-messages {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; scrollbar-width: none;
+}
+.video-chat-messages::-webkit-scrollbar { display: none; }
+.video-chat-msg {
+    padding: 6px 10px; border-radius: 8px; font-size: 15px; line-height: 1.4; max-width: 95%; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.video-chat-msg.received { align-self: flex-start; }
+.video-chat-msg.sent { align-self: flex-end; }
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+}
+.typing-indicator .dot {
+    width: 6px;
+    height: 6px;
+    margin: 0 2px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    animation: typing-bounce 1.2s infinite ease-in-out;
+}
+.typing-indicator .dot:nth-child(2) { animation-delay: -1.0s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: -0.8s; }
+
+.video-chat-input-box {
+    height: 40px; display: flex; align-items: center; gap: 8px;
+    background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 0 5px 0 15px;
+}
+.video-chat-input-box input {
+    background: transparent;
+    border: none;
+    color: white;
+    flex: 1;
+    outline: none;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 10px 0;
+}
+.video-chat-input-box input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 1;
+}
+.video-send-btn {
+    width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
+}
+
+/* =================================================================
+   3. 控制器与按钮
+   ================================================================= */
 .video-controls {
     position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 40px; z-index: 2002;
 }
@@ -403,59 +518,6 @@ onBeforeUnmount(() => {
 .video-btn svg { width: 24px; height: 24px; stroke-width: 1.5; }
 .video-btn.hangup svg { width: 30px; height: 30px; }
 
-.draggable-window {
-    position: absolute; top: 40px; right: 20px; width: 100px; height: 160px;
-    background: #333; border-radius: 12px; overflow: hidden; z-index: 2001;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
-    cursor: grab;
-    touch-action: none;
-}
-.draggable-window:active {
-    cursor: grabbing;
-}
-.draggable-window img { width: 100%; height: 100%; object-fit: cover; }
-
-.video-chat-panel {
-    position: absolute; 
-    /* Adjust this value to change the distance between the text box and the bottom controls */
-    bottom: 95px; 
-    left: 15px; right: 15px; height: 200px;
-    background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(2px); border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2); display: flex; flex-direction: column; z-index: 2001; padding: 10px;
-}
-.video-chat-messages {
-    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; scrollbar-width: none;
-}
-.video-chat-messages::-webkit-scrollbar { display: none; }
-.video-chat-msg {
-    padding: 6px 10px; border-radius: 8px; font-size: 13px; line-height: 1.4; max-width: 85%; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-.video-chat-msg.received { align-self: flex-start; }
-.video-chat-msg.sent { align-self: flex-end; }
-
-.video-chat-input-box {
-    height: 40px; display: flex; align-items: center; gap: 8px;
-    background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 0 5px 0 15px;
-}
-.video-chat-input-box input {
-    background: transparent;
-    border: none;
-    color: white;
-    flex: 1;
-    outline: none;
-    font-family: inherit;
-    font-size: 14px;
-    padding: 10px 0;
-}
-.video-chat-input-box input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-    opacity: 1;
-}
-.video-send-btn {
-    width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
-}
-
 .video-minimize-btn {
     position: absolute; top: 40px; left: 20px; width: 36px; height: 36px; border-radius: 50%;
     background: transparent;
@@ -463,7 +525,9 @@ onBeforeUnmount(() => {
     color: white; z-index: 2003; cursor: pointer;
 }
 
-/* Styles for Confirmation Dialog */
+/* =================================================================
+   4. 确认弹窗
+   ================================================================= */
 .video-confirm-dialog {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.6);
@@ -507,13 +571,34 @@ onBeforeUnmount(() => {
     color: white;
 }
 .confirm-buttons .cancel-btn:active {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.2);
 }
 .confirm-buttons .confirm-btn {
     background-color: rgba(255, 59, 48, 0.7);
     color: white;
 }
 .confirm-buttons .confirm-btn:active {
-    background-color: rgba(255, 59, 48, 0.9);
+    background-color: rgba(255, 59, 48, 0.7);
+}
+
+/* =================================================================
+   5. 动画效果
+   ================================================================= */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes ripple {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+@keyframes typing-bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1.0);
+    }
 }
 </style>

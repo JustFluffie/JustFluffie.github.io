@@ -196,7 +196,7 @@ export const useBackupStore = defineStore('backup', () => {
       const commitMessage = `Backup from phone-vue-app: ${new Date().toISOString()}`;
       const body = {
         message: commitMessage,
-        content: btoa(backupContent), // 直接对 UTF-8 字符串进行 Base64 编码
+        content: btoa(unescape(encodeURIComponent(backupContent))), // 修复btoa的中文编码问题
         sha: sha, // 如果是更新，则需要提供 sha
       };
 

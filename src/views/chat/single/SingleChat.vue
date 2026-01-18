@@ -184,12 +184,14 @@ const chatBackground = computed(() => character.value?.chatBackground || '')
 
 // 用户相关
 const userAvatar = computed(() => {
+    // 确保 userPersonas 是响应式的
+    const personas = singleStore.userPersonas;
     if (character.value?.userPersona && character.value.userPersona !== 'default') {
-        const persona = singleStore.userPersonas.find(p => p.id === character.value.userPersona)
-        if (persona && persona.avatar) return persona.avatar
+        const persona = personas.find(p => p.id === character.value.userPersona);
+        if (persona && persona.avatar) return persona.avatar;
     }
-    return localStorage.getItem('homeAvatar') || ''
-})
+    return localStorage.getItem('homeAvatar') || '';
+});
 
 // 消息列表
 const messages = computed(() => singleStore.messages[props.charId] || [])

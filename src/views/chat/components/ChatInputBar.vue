@@ -28,7 +28,7 @@
           @input="$emit('update:modelValue', $event.target.value)"
           @keypress.enter="handleSendMessage"
           id="messageInput"
-          autocomplete="off"
+          autocomplete="new-password"
         >
       </div>
       <!-- 表情按钮 -->

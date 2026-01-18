@@ -1,7 +1,7 @@
 <template>
   <Modal v-model:visible="isVisible" title="发送位置">
-    <input type="text" class="base-input" v-model="locationName" placeholder="位置名称 (如: 广州塔)" autocomplete="off">
-    <input type="text" class="base-input" v-model="locationDetail" placeholder="详细地址 (可选)" style="margin-top: 10px;" autocomplete="off">
+    <input type="text" class="base-input" v-model="locationName" placeholder="位置名称 (如: 广州塔)" autocomplete="new-password">
+    <input type="text" class="base-input" v-model="locationDetail" placeholder="详细地址 (可选)" style="margin-top: 10px;" autocomplete="new-password">
     <template #footer>
       <button class="modal-btn cancel" @click.stop="isVisible = false">取消</button>
       <button class="modal-btn confirm" @click="handleConfirm">发送</button>

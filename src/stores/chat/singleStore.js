@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia';
 import LZString from 'lz-string';
+import { useApiStore } from '@/stores/apiStore';
+import { useAiResponder } from '@/composables/chat/useAiResponder';
+import { ref } from 'vue';
 
 const defaultStickers = [];
 
@@ -215,11 +218,62 @@ export const useSingleStore = defineStore('singleChat', {
         }, 1000);
     },
 
-    endVideoCall() {
+    async _summarizeVideoCallAndReply(charId, videoChatMessages) {
+        if (!videoChatMessages || videoChatMessages.length === 0) return;
+
+        const apiStore = useApiStore();
+        const character = this.getCharacter(charId);
+        if (!character) return;
+
+        // 1. Format chat log
+        const chatLog = videoChatMessages.map(msg => {
+            return `${msg.type === 'sent' ? '用户' : character.name}：${msg.text}`;
+        }).join('\n');
+
+        // 2. Build prompt for summarization
+        const prompt = `你是一个对话总结助手。请根据以下视频通话记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。
+---
+通话记录：
+${chatLog}
+---
+请生成核心记忆：`;
+
+        try {
+            // 3. Get summary from API
+            const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
+
+            if (summary) {
+                // 4. Add to long-term memory
+                if (!character.memories) {
+                    character.memories = [];
+                }
+                character.memories.push({
+                    id: Date.now(),
+                    content: summary.trim()
+                });
+                console.log(`[VideoCall Summary] Added to ${character.name}'s memory: ${summary}`);
+            }
+
+            // 5. Trigger auto-reply after summary
+            // We need a ref for charId to use the composable
+            const charIdRef = ref(charId);
+            const { triggerAiResponse } = useAiResponder(charIdRef, apiStore);
+            await triggerAiResponse();
+
+        } catch (error) {
+            console.error('[VideoCall Summary] Failed to summarize or reply:', error);
+        }
+    },
+
+    endVideoCall(videoChatMessages = []) {
+      const wasConnected = this.videoCall.status === 'connected';
+      const callDuration = this.videoCall.duration;
+      const charId = this.videoCall.characterId;
+
       this._clearVideoTimers();
       
       // 如果通话已连接且有通话时长，则发送通话总结消息
-      if (this.videoCall.status === 'connected' && this.videoCall.duration > 0) {
+      if (wasConnected && callDuration > 0) {
         const duration = this.videoCall.duration;
         const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
         const seconds = (duration % 60).toString().padStart(2, '0');
@@ -239,11 +293,18 @@ export const useSingleStore = defineStore('singleChat', {
       }
 
       // 重置状态
+      const shouldSummarize = wasConnected && callDuration > 0 && videoChatMessages.length > 0;
+      
       this.videoCall.isActive = false;
       this.videoCall.isMinimized = false;
       this.videoCall.status = 'idle';
       this.videoCall.characterId = null;
       this.videoCall.duration = 0;
+
+      // 异步执行总结和回复，不阻塞UI
+      if (shouldSummarize) {
+        this._summarizeVideoCallAndReply(charId, videoChatMessages);
+      }
     },
 
     minimizeVideoCall() {
