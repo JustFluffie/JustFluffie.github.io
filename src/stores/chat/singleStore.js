@@ -520,6 +520,28 @@ export const useSingleStore = defineStore('singleChat', {
       }
     },
 
+    addMessageFromChar(charId, content) {
+      const character = this.getCharacter(charId);
+      if (!character) return;
+
+      if (!this.messages[charId]) {
+        this.messages[charId] = [];
+      }
+
+      this.messages[charId].push({
+        id: Date.now().toString(),
+        sender: 'char',
+        type: 'text',
+        content: content,
+        isTextGenerated: false,
+        time: Date.now(),
+        blocked: character.isBlocked || false
+      });
+
+      this.incrementUnreadCount(charId);
+      this.saveData();
+    },
+
     async summarizeMessages(charId, options) {
       const character = this.getCharacter(charId);
       if (!character) return { success: false, message: '角色不存在' };

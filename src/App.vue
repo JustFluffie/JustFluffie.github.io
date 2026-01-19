@@ -14,6 +14,7 @@ import HomeScreen from '@/views/screen/HomeScreen.vue'
 import { useBatteryStore } from '@/stores/batteryStore' // 引入新的 battery store
 import { useApiStore } from '@/stores/apiStore' // 引入 api store
 import { useBackgroundService } from '@/composables/useBackgroundService'
+import { useProactiveNotifier } from '@/composables/useProactiveNotifier' // 引入主动通知服务
 import { useNotificationStore } from '@/stores/notificationStore'
 
 const router = useRouter()
@@ -30,6 +31,7 @@ const videoCall = computed(() => singleStore.videoCall)
 
 // 启动后台服务
 useBackgroundService();
+useProactiveNotifier(); // 启动主动通知服务
 
 onMounted(() => {
   batteryStore.initialize() // 初始化时间和电池监听

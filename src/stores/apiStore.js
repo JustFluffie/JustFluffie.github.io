@@ -4,8 +4,8 @@ import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useWorldBookStore } from '@/stores/worldBookStore';
 import { usePresetStore } from '@/stores/presetStore';
-import { useCalendarStore } from '@/stores/calendarStore'; // 引入日历 store
-import { formatISO } from 'date-fns'; // 引入日期格式化工具
+import { useCalendarStore } from '@/stores/calendarStore';
+import { formatISO, parseISO, differenceInDays, isWithinInterval } from 'date-fns';
 
 export const useApiStore = defineStore('api', () => {
   // --- 持久化逻辑 ---
@@ -198,9 +198,27 @@ export const useApiStore = defineStore('api', () => {
     // 2. 角色人设
     systemPrompt += "【角色人设】:\n" + (character.charPersona || '你是一个友好的人工智能助手。') + "\n\n";
 
-    // 2.1. 新增：今日待办事项
-    const today = formatISO(new Date(), { representation: 'date' });
-    const todayEvents = calendarStore.getEventsByDate(today);
+    // 2.1. 新增：生理周期与待办事项
+    const today = new Date();
+    const todayISO = formatISO(today, { representation: 'date' });
+    let periodStatusText = '';
+
+    // 检查是否在经期中
+    const lastPeriod = calendarStore.periodHistory.length > 0 ? calendarStore.periodHistory[calendarStore.periodHistory.length - 1] : null;
+    if (lastPeriod && isWithinInterval(today, { start: parseISO(lastPeriod.start), end: parseISO(lastPeriod.end) })) {
+        periodStatusText = '用户目前正处于生理期。';
+    } else if (calendarStore.predictedPeriod?.startDate) {
+        const daysUntilPrediction = differenceInDays(parseISO(calendarStore.predictedPeriod.startDate), today);
+        if (daysUntilPrediction >= 0 && daysUntilPrediction <= 3) {
+            periodStatusText = `距离用户的预测生理期开始还有 ${daysUntilPrediction} 天。`;
+        }
+    }
+
+    if (periodStatusText) {
+        systemPrompt += `【用户状态】:\n${periodStatusText}\n\n`;
+    }
+
+    const todayEvents = calendarStore.getEventsByDate(todayISO);
     const todoList = todayEvents.filter(e => e.type === 'todo' && !e.done);
 
     if (todoList.length > 0) {

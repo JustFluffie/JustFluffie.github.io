@@ -91,15 +91,15 @@ const showSourceSelect = (type) => {
 .s-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--home-text-color); }
 
 /* --- 星星位置 --- */
-.pos-1 { top: -7%; left: 25%; transform: rotate(-15deg); } 
+.pos-1 { top: -7%; left: 25%; transform: rotate(-15deg); opacity: 0.7;} 
 .pos-2 { top: 5%; left: 20%; }
 /* 中间那个特别的大星星 */
-.pos-3 { top: 48%; left: 45%; transform: scale(1.2); }
-.pos-4 { top: 40%; left: 51%; transform: rotate(20deg); }
+.pos-3 { top: 48%; left: 45%; transform: scale(1.2); opacity: 0.8;}
+.pos-4 { top: 40%; left: 51%; transform: rotate(20deg); opacity: 0.7;}
 .pos-5 { top: 15%; left: 95%; transform: scale(0.7); }
-.pos-6 { top: 25%; left: 90%; transform: rotate(45deg); }
+.pos-6 { top: 25%; left: 90%; transform: rotate(45deg); opacity: 0.7;}
 .pos-7 { top: 95%; left: 54%; }
-.pos-8 { top: 90%; left: 6%; transform: rotate(10deg); }
+.pos-8 { top: 90%; left: 6%; transform: rotate(10deg); opacity: 0.7;}
 
 /* --- 拍立得卡片 --- */
 .polaroid {

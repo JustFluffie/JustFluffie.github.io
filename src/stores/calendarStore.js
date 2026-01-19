@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch, nextTick } from 'vue';
 import { formatISO, addDays, isWithinInterval, parseISO } from 'date-fns';
+import { useSingleStore } from '@/stores/chat/singleStore'; // 引入 singleStore
 // Import the new functions from the composable
 import { 
   predictNextPeriod, 
@@ -99,6 +100,14 @@ export const useCalendarStore = defineStore('calendar', () => {
     
     const updatedHistory = [...periodHistory.value, newRecord];
     setPeriodHistory(updatedHistory);
+
+    // --- 新增：触发角色消息 ---
+    const singleStore = useSingleStore();
+    const firstCharId = singleStore.characters[0]?.id;
+    if (firstCharId) {
+      singleStore.addMessageFromChar(firstCharId, '生理期开始了吗？辛苦了，要注意休息，喝点热水哦。');
+    }
+    // --- 结束 ---
   };
 
   const endPeriod = (endDate) => {
@@ -115,6 +124,14 @@ export const useCalendarStore = defineStore('calendar', () => {
 
     lastRecord.end = endDate;
     setPeriodHistory(updatedHistory);
+
+    // --- 新增：触发角色消息 ---
+    const singleStore = useSingleStore();
+    const firstCharId = singleStore.characters[0]?.id;
+    if (firstCharId) {
+      singleStore.addMessageFromChar(firstCharId, '生理期结束了？太好了，终于可以放松一下了！');
+    }
+    // --- 结束 ---
   };
 
   const setPeriodHistory = (history) => {

@@ -1,10 +1,20 @@
 <script setup>
+// ========================================================================
+// 模块导入
+// ========================================================================
 import { computed } from 'vue';
 import { useCalendarStore } from '@/stores/calendarStore';
-import { formatISO } from 'date-fns';
+import { formatISO, parseISO, isWithinInterval } from 'date-fns';
+import { getPeriodStatusForDate } from '@/composables/usePeriodTracking';
 
+// ========================================================================
+// Store 初始化
+// ========================================================================
 const calendarStore = useCalendarStore();
 
+// ========================================================================
+// 待办事项 (To-Do List) 逻辑
+// ========================================================================
 const todos = computed(() => {
   const todayStr = formatISO(new Date(), { representation: 'date' });
   return calendarStore.getEventsByDate(todayStr)
@@ -21,39 +31,85 @@ const formatTime = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
 };
+
+// ========================================================================
+// 经期追踪 (Period Tracker) 逻辑
+// ========================================================================
+const periodStatus = computed(() => {
+  // 直接使用导入的函数，并传入正确的参数（今天的日期和完整的历史记录）
+  return getPeriodStatusForDate(new Date(), calendarStore.periodHistory);
+});
+
+const periodDisplayText = computed(() => {
+  const { status, dayCount } = periodStatus.value;
+  const prediction = calendarStore.predictedPeriod;
+
+  // 状态1: 实际经期中
+  if (status === 'actual') {
+    return `经期第 ${dayCount} 天`;
+  }
+  
+  // 状态2: 预测期
+  if (status === 'predicted') {
+    // 检查今天是否正好在预测区间内
+    if (prediction && isWithinInterval(new Date(), { start: parseISO(prediction.startDate), end: parseISO(prediction.endDate) })) {
+      return '预测期内';
+    }
+    // 如果不在区间内，说明是倒计时
+    return `预计 ${dayCount} 天后`;
+  }
+  
+  // 状态3: 默认状态 (无历史记录或不在任何特殊时期)
+  return '添加历史记录以开始预测';
+});
+
 </script>
 
 <template>
   <div class="sticker-card todo-card">
+    <!-- 装饰元素 -->
     <h3 class="handwritten-title">To Do List</h3>
     <div class="black-dot-deco"></div>
     <div class="star-deco"></div>
     <div class="tape-deco"></div>
-    <ul v-if="todos.length > 0" class="todo-list">
-      <li
-        v-for="todo in todos"
-        :key="todo.id"
-        :class="{ 'done': todo.done }"
-      >
-        <div class="checkbox" :class="{ 'checked': todo.done }" @click="toggleStatus(todo.id)"></div>
-        <span class="todo-time">{{ formatTime(todo.date) }}</span>
-        <span class="todo-content">{{ todo.content }}</span>
-      </li>
-    </ul>
-    <p v-else class="no-todos">今天没有待办事项</p>
-  </div>
+    
+    <!-- 待办事项列表容器 (可滚动) -->
+    <div class="todo-list-container">
+      <ul v-if="todos.length > 0" class="todo-list">
+        <li
+          v-for="todo in todos"
+          :key="todo.id"
+          :class="{ 'done': todo.done }"
+        >
+          <div class="checkbox" :class="{ 'checked': todo.done }" @click="toggleStatus(todo.id)"></div>
+          <span class="todo-time">{{ formatTime(todo.date) }}</span>
+          <span class="todo-content">{{ todo.content }}</span>
+        </li>
+      </ul>
+      <p v-else class="no-todos">今天没有待办事项</p>
+    </div>
 
+    <!-- 分割线 -->
+    <div class="divider"></div>
+
+    <!-- 经期追踪容器 -->
+    <div class="period-tracker-container">
+      <p class="period-text">{{ periodDisplayText }}</p>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-/* Styles adapted from ToDoList.vue for a sticker/memo look */
+/* ========================================================================
+   1. 主卡片布局与背景
+   ======================================================================== */
 .sticker-card {
   background: #ffffff;
   background-image: radial-gradient(circle, rgba(41, 41, 41, 0.08) 1.5px, transparent 1.5px),
     radial-gradient(circle, rgba(0, 0, 0, 0.08) 1.5px, transparent 1.5px);
   background-size: 20px 20px;
   background-position: 0 0, 10px 10px; 
-  padding: 25px 15px;
+  padding: 25px 15px 10px;
   border-radius: 4px;
   box-shadow: 
     0 1px 2px rgba(0,0,0,0.05), 
@@ -65,6 +121,9 @@ const formatTime = (dateString) => {
   color: #333;
 }
 
+/* ========================================================================
+   2. 装饰元素 (标题、胶带、星星等)
+   ======================================================================== */
 .handwritten-title {
   font-family: 'Caveat', cursive;
   font-size: 24px;
@@ -72,7 +131,7 @@ const formatTime = (dateString) => {
   margin: -15px -8px 0 -10px;
   transform: translateX(-31%) rotate(-4deg);
   text-align: right;
-  flex-shrink: 0;
+  flex-shrink: 0; /* 防止标题被压缩 */
 }
 
 .tape-deco {
@@ -99,58 +158,76 @@ const formatTime = (dateString) => {
   z-index: 5;
 }
 
-/* 容器：铺满卡片，不挡点击 */
 .star-deco {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* 鼠标穿透 */
+  pointer-events: none;
   z-index: 1;
 }
 
-/* 定义星星的形状（公共样式） */
 .star-deco::before,
 .star-deco::after {
   content: "";
   position: absolute;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  
-  /* 这里是内凹四角星的 SVG 代码 */
-  /* 颜色我默认设为黑色，通过下面的 opacity 变灰 */
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 C55 35 65 45 100 50 C65 55 55 65 50 100 C45 65 35 55 0 50 C35 45 45 35 50 0 Z' fill='%23000000'/%3E%3C/svg%3E");
+  /* 这里设定大小 */
+  width: 20px; 
+  height: 20px;
+  background-color: var(--home-text-color);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 C55 35 65 45 100 50 C65 55 55 65 50 100 C45 65 35 55 0 50 C35 45 45 35 50 0 Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 C55 35 65 45 100 50 C65 55 55 65 50 100 C45 65 35 55 0 50 C35 45 45 35 50 0 Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
-/* --- 第一颗星：标题左下方（稍大） --- */
 .star-deco::before {
-  bottom: 2%;   /* 根据你的标题位置调整 */
+  bottom: 2%;
   left: -5px;  
-  width: 19px; /* 星星大小 */
+  width: 19px;
   height: 19px;
-  opacity: 0.6; /* 透明度 */
-  transform: rotate(-15deg); /* 稍微转一下更生动 */
+  opacity: 0.6;
+  transform: rotate(-15deg);
 }
 
-/* --- 第二颗星：右下角（稍小，做平衡） --- */
 .star-deco::after {
   bottom: 80px;
   right: 0;
   width: 12px;
   height: 12px;
-  opacity: 0.3; /* 离得远，淡一点 */
+  opacity: 0.3;
   transform: rotate(10deg);
+}
+
+/* ========================================================================
+   3. 内容区域布局与样式
+   ======================================================================== */
+
+/* --- 待办事项列表 --- */
+.todo-list-container {
+  flex-grow: 1; 
+  overflow-y: auto; 
+  min-height: 0;
+  
+  /* 隐藏滚动条的样式 */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.todo-list-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
 }
 
 .todo-list {
   list-style: none;
   padding: 0;
   margin: 6px 0;
-  overflow-y: auto;
-  flex-grow: 1;
 }
+
 .todo-list li {
   display: flex;
   align-items: center;
@@ -159,6 +236,7 @@ const formatTime = (dateString) => {
   border-bottom: 1px dashed #e0e0e0;
   font-size: 10px;
 }
+
 .checkbox {
   width: 11px;
   height: 11px;
@@ -168,20 +246,24 @@ const formatTime = (dateString) => {
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
+
 .checkbox.checked {
   background: #ccc;
   border-color: #ccc;
 }
+
 .done .todo-content,
 .done .todo-time {
   text-decoration: line-through;
   color: #bbb;
 }
+
 .todo-time {
   color: #999;
   font-size: 8px;
   flex-shrink: 0;
 }
+
 .todo-content {
   flex-grow: 1;
   white-space: nowrap;
@@ -189,11 +271,33 @@ const formatTime = (dateString) => {
   text-overflow: ellipsis;
   font-size: 10px;
 }
+
 .no-todos {
   font-size: 12px;
   text-align: center;
   color: #aaa;
   margin: auto;
   font-family: 'Caveat', cursive;
+}
+
+/* --- 分割线 --- */
+.divider {
+  border-bottom: 1px dashed #e0e0e0;
+  margin: 5px 0;
+  flex-shrink: 0; /* 防止分割线被压缩 */
+}
+
+/* --- 经期追踪 --- */
+.period-tracker-container {
+  flex-shrink: 0; /* 防止此容器被压缩 */
+  text-align: center;
+  padding: 0px 0; 
+}
+
+.period-text {
+  font-size: 10px;
+  color: #666;
+  font-family: 'Caveat', cursive;
+  margin: 0;
 }
 </style>
