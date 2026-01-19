@@ -164,7 +164,7 @@ const showSourceSelect = (type) => {
     border: none;
     color: var(--home-text-color);
     padding: 5px;
-    font-size: 1.02em; 
+    font-size: 1em; 
     font-weight: 500;
     font-family: inherit;
     font-style: italic;

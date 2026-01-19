@@ -147,8 +147,8 @@ const confirmLocation = () => {
    顶部容器样式
    ========================================== */
 .section-top {
-    height: 13rem; /* 填充父容器高度 */
-    width: 19.7rem;
+    height: 100%; /* 填充父容器高度 */
+    width: 100%;
     background: rgb(255, 255, 255);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -165,7 +165,7 @@ const confirmLocation = () => {
     background-size: cover;
     background-position: center;
     margin-top: 7px;
-    transition: background-image 0.3s ease
+    transition: background-image 0.3s ease;
 }
 
 /* ==========================================

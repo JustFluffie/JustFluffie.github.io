@@ -434,7 +434,7 @@ onMounted(() => {
 
 .home-list-card {
   position: absolute;
-  top: 52%;
+  bottom: 21%;
   left: 25px; /* Match page padding */
   width: 9rem; /* Half page width minus some padding */
   height: 11.5rem; /* Adjust length */
