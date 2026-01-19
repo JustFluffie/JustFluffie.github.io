@@ -208,6 +208,20 @@ export const useSingleStore = defineStore('singleChat', {
       }
     },
 
+    sendSystemNotification(charId, content) {
+      if (!this.messages[charId]) {
+        this.messages[charId] = [];
+      }
+      this.messages[charId].push({
+        id: Date.now().toString(),
+        sender: 'system',
+        type: 'notification',
+        content: content,
+        timestamp: Date.now()
+      });
+      this.saveData();
+    },
+
     retryFromMessage(charId, messageId) {
       const msgs = this.messages[charId];
       if (!msgs) return;

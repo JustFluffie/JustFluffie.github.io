@@ -1,7 +1,7 @@
 ﻿<script setup>
 import { useI18n } from 'vue-i18n'
 import { ref, onMounted, onUnmounted, watch, computed, provide } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView, useRouter, useRoute } from 'vue-router'
 import StatusBar from '@/components/common/StatusBar.vue' // 引入新的状态栏组件
 import VideoChat from './views/chat/single/components/SingleVideoChat.vue'
 import Modal from '@/components/common/Modal.vue'
@@ -86,6 +86,7 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
     }
   }
 });
+
 </script>
 
 <template>

@@ -376,6 +376,7 @@ const localImageHostProvider = ref('catbox');
 const localImgbbApiKey = ref('');
 const localCatboxUserHash = ref('');
 const imageHostOptions = ref([
+  { value: 'none', label: '无' },
   { value: 'catbox', label: 'Catbox' },
   { value: 'imgbb', label: 'ImgBB' },
 ]);

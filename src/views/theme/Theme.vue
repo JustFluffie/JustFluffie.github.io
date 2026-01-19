@@ -202,7 +202,8 @@
       :title="uploadModalConfig.title"
       :bizType="uploadModalConfig.bizType"
       type="basic"
-      @send-image="handleImageUpload"
+      @preview-ready="handleWallpaperPreview"
+      @upload-complete="handleWallpaperUploadComplete"
     />
 
   </div>
@@ -400,18 +401,30 @@ function toggleSetting(settingKey) {
 // 6. 壁纸设置模块逻辑
 // ==========================================
 function openWallpaperModal(type) {
-  currentWallpaperType.value = type
+  currentWallpaperType.value = type;
   const typeName = type === 'home' ? t('theme.homeScreen') : t('theme.lockScreen');
   uploadModalConfig.title = t('theme.setWallpaper', { type: typeName });
-  uploadModalConfig.onConfirm = (image) => {
-    const url = image.type === 'url' ? image.content : image.content;
-    if (type === 'home') {
-      pendingThemeSettings.bg = url
-    } else if (type === 'lock') {
-      pendingThemeSettings.lockbg = url
-    }
+  uploadModalConfig.bizType = 'theme'; // 确保使用高质量压缩
+  isUploadModalVisible.value = true;
+}
+
+function handleWallpaperPreview(image) {
+  const url = image.content;
+  if (currentWallpaperType.value === 'home') {
+    pendingThemeSettings.bg = url;
+  } else if (currentWallpaperType.value === 'lock') {
+    pendingThemeSettings.lockbg = url;
   }
-  isUploadModalVisible.value = true
+}
+
+function handleWallpaperUploadComplete(image) {
+  const url = image.content;
+  if (currentWallpaperType.value === 'home') {
+    pendingThemeSettings.bg = url;
+  } else if (currentWallpaperType.value === 'lock') {
+    pendingThemeSettings.lockbg = url;
+  }
+  isUploadModalVisible.value = false;
 }
 
 function updateThemeWallpaper(type, url) {
@@ -429,11 +442,14 @@ function showAppIconOptions(key) {
   currentIconKey.value = key;
   const appName = apps.value.find(a => a.key === key)?.name || '';
   uploadModalConfig.title = t('theme.setAppIcon', { appName });
+  // For App Icons, we don't need the preview logic, so we can still use onConfirm.
   uploadModalConfig.onConfirm = (image) => {
-    const url = image.type === 'url' ? image.content : image.content;
-    updateAppIcon(key, url)
-  }
-  isUploadModalVisible.value = true
+    const url = image.content;
+    updateAppIcon(key, url);
+    isUploadModalVisible.value = false; // Close modal on confirm
+  };
+  uploadModalConfig.bizType = 'avatar'; // Use a smaller compression for icons
+  isUploadModalVisible.value = true;
 }
 
 function updateAppIcon(key, url) {
@@ -444,34 +460,9 @@ function updateAppIcon(key, url) {
 }
 
 function handleImageUpload(image) {
+  // This function is now deprecated for wallpapers, but kept for app icons.
   if (uploadModalConfig.onConfirm) {
     uploadModalConfig.onConfirm(image);
-  }
-  isUploadModalVisible.value = false;
-}
-
-// ==========================================
-// 8. 字体设置模块逻辑
-// ==========================================
-function switchFontPreset(name) {
-  themeStore.switchFontPreset(name)
-}
-
-function saveFontPreset() {
-  const name = prompt(t('theme.prompt.enterFontPresetName'));
-  if (name) {
-    const url = fontUrlInput.value.trim();
-    if (url) {
-      try {
-        new URL(url);
-        themeStore.saveFontPreset(name, url);
-        themeStore.showToast(t('theme.toast.saveSuccess'));
-      } catch (e) {
-        themeStore.showToast(t('theme.toast.invalidUrl'), 'error');
-      }
-    } else {
-      themeStore.showToast(t('theme.toast.enterUrl'), 'info');
-    }
   }
 }
 
@@ -562,6 +553,30 @@ function adjustAppLabelFontSize(amount) {
 // ==========================================
 // 9. 预设管理模块逻辑 (主题 & CSS)
 // ==========================================
+// --- 字体预设 ---
+function switchFontPreset(name) {
+  themeStore.switchFontPreset(name);
+  fontUrlInput.value = fontPresets.value[name] || '';
+}
+
+function saveFontPreset() {
+  const name = prompt(t('theme.prompt.enterFontPresetName'));
+  if (name) {
+    const url = fontUrlInput.value.trim();
+    if (url) {
+      try {
+        new URL(url);
+        themeStore.saveFontPreset(name, url);
+        themeStore.showToast(t('theme.toast.saveSuccess'));
+      } catch (e) {
+        themeStore.showToast(t('theme.toast.invalidUrl'), 'error');
+      }
+    } else {
+      themeStore.showToast(t('theme.toast.enterFontUrl'), 'info');
+    }
+  }
+}
+
 // --- 主题预设 ---
 function switchThemePreset(name) {
   if (confirm(t('theme.confirm.switchTheme'))) {

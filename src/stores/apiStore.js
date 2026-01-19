@@ -27,7 +27,7 @@ export const useApiStore = defineStore('api', () => {
   );
   const activePresetName = ref(savedActivePresetName || '默认预设');
   const models = ref([]); // 初始模型列表为空
-  const imageHostProvider = ref(savedImageHostProvider || 'catbox');
+  const imageHostProvider = ref(savedImageHostProvider || 'none');
   const imgbbApiKey = ref(savedImgbbApiKey || '');
   const catboxUserHash = ref(savedCatboxUserHash || '');
 

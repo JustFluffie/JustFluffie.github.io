@@ -23,7 +23,7 @@
               v-model="userNameInput" 
               class="username-input" 
               @click.stop 
-              @change="updateProfile('name')"
+              @input="updateProfile('name')"
               placeholder="昵称"
             />
             <div class="avatar" :style="userAvatar ? { backgroundImage: `url(${userAvatar})` } : { backgroundColor: '#ccc' }" @click.stop="openImageEdit('avatar')"></div>
@@ -31,7 +31,7 @@
               v-model="userSignatureInput" 
               class="signature-input" 
               @click.stop 
-              @change="updateProfile('signature')"
+              @input="updateProfile('signature')"
               placeholder="个性签名"
             />
           </div>

@@ -22,8 +22,8 @@
     /* 文字色（合并相近深灰色，保留层级） */
     --text-darkest: #1f1f1f;          /* 黑灰色 */
     --text-primary: #262626;          /* 深灰色 */
-    --text-secondary: #4A4A4A;        /* 中灰色 */
-    --text-tertiary: #8E8E8E;         /* 浅灰色 */
+    --text-secondary: #5a5a5a;        /* 中灰色 */
+    --text-tertiary: #949494;         /* 浅灰色 */
     --text-quaternary: #e7e7e7;       /* 灰白色 */
     --text-white: #FFFFFF;            /* 白色 */
   
@@ -31,6 +31,7 @@
     --accent-green: #34C759;          /* 绿色 */
     --danger-color: #ff3030;          /* 红色 */
     --danger-bg: rgba(255, 58, 48, 0.747); /* 透红色 */
+    --color-pink: #FFC0CB;            /* 粉色 */
   
     /* 边框/阴影/圆角（布局样式） */
     --border-color: #e0e0e0;

@@ -416,7 +416,14 @@
     </div>
 
     <!-- 弹窗组件 -->
-    <ImageUploadModal v-model:visible="showImageUploadModal" type="basic" biz-type="avatar" :title="uploadModalTitle" @send-image="handleImageUploadConfirm" />
+    <ImageUploadModal 
+      v-model:visible="showImageUploadModal" 
+      type="basic" 
+      :biz-type="currentUploadTarget" 
+      :title="uploadModalTitle" 
+      @preview-ready="handleImagePreview"
+      @upload-complete="handleImageUploadConfirm"
+    />
 
     <!-- 手动总结选项弹窗 -->
     <Modal v-model:visible="showSummaryModal" :title="t('chat.singleChat.settings.manualSummary')">
@@ -891,8 +898,33 @@ const deleteBubblePreset = () => {
 };
 
 // --- 6.5 图片上传逻辑 (Image Upload Logic) ---
+const handleImagePreview = (image) => {
+    const url = image.content;
+    const target = currentUploadTarget.value;
+
+    // 仅更新UI上的预览，不保存
+    switch (target) {
+        case 'avatar':
+            // 角色头像是直接保存在 character 对象里的，预览也直接改
+            if (character.value) character.value.avatar = url;
+            break;
+        case 'userPersonaAvatar':
+            userPersonaAvatar.value = url;
+            break;
+        case 'chatBg':
+            chatBackground.value = url;
+            break;
+        case 'videoBg':
+            videoBg.value = url;
+            break;
+        case 'userVideoImg':
+            userVideoImg.value = url;
+            break;
+    }
+};
+
 const handleImageUploadConfirm = (image) => {
-    const url = typeof image === 'string' ? image : image.content;
+    const url = image.content;
     const target = currentUploadTarget.value;
 
     // Logic for things that save immediately (character avatar, backgrounds)
@@ -904,7 +936,7 @@ const handleImageUploadConfirm = (image) => {
         };
         if (updates[target]) {
             updates[target].obj[updates[target].key] = url;
-            if (updates[target].localRef) updates[target].localRef.value = url;
+            if (updates[target].localRef) updates[target].localRef.value = url; // 确保最终的高清图也更新到UI
             singleStore.saveData();
             themeStore.showToast(updates[target].toast);
         }
@@ -917,7 +949,8 @@ const handleImageUploadConfirm = (image) => {
         if (target === 'userVideoImg') {
             userVideoImg.value = url;
         }
-        themeStore.showToast(t('chat.singleChat.settings.toast.avatarUpdated'));
+        // 这里不立即保存，等待用户点击顶部的“保存”按钮
+        themeStore.showToast(t('chat.singleChat.settings.toast.imageReadyToSave'));
     }
     
     showImageUploadModal.value = false;

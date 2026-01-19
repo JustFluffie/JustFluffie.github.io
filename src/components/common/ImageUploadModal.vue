@@ -136,7 +136,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:visible', 'send-image', 'import-sticker']);
+const emit = defineEmits(['update:visible', 'send-image', 'import-sticker', 'preview-ready', 'upload-complete']);
 
 // 内部状态
 const mode = ref('text'); // text | url
@@ -149,12 +149,37 @@ const urlBatchInput = ref('');
 const importGroupInput = ref('');
 
 // 初始化 useImageUpload
-const onImageReady = (image) => {
-  emit('send-image', image);
-  close();
+const onPreviewReady = (image) => {
+  emit('preview-ready', image);
 };
 
-const { createImageFromText, triggerFileUpload } = useImageUpload(onImageReady);
+const onUploadComplete = (image) => {
+  // 兼容旧的 send-image 事件，用于不需要预览的场景
+  emit('send-image', image);
+  // 发送新的完成事件
+  emit('upload-complete', image);
+  // 弹窗已在 handleLocalUpload 中提前关闭，此处不再需要
+};
+
+const uploadOptions = computed(() => {
+  const highQualityTypes = ['theme', 'chatBg', 'videoBg', 'userVideoImg'];
+  if (highQualityTypes.includes(props.bizType)) {
+    return {
+      compress: {
+        maxWidth: 1024,
+        maxHeight: 1024,
+        quality: 0.8
+      }
+    };
+  }
+  // For 'avatar' and other types, use the new default (512px) by returning an empty object.
+  return {};
+});
+
+const { createImageFromText, triggerFileUpload } = useImageUpload(
+  { onPreview: onPreviewReady, onComplete: onUploadComplete },
+  uploadOptions.value
+);
 
 // 监听 visible 变化以重置状态
 watch(() => props.visible, (val) => {
@@ -241,6 +266,7 @@ const close = () => {
 
 const handleLocalUpload = () => {
   triggerFileUpload();
+  close();
 };
 
 const handleConfirm = () => {

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useSingleStore } from './chat/singleStore';
 import { useGroupStore } from './chat/groupStore';
+import { useMomentsStore } from './chat/momentsStore';
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
@@ -94,9 +95,11 @@ export const useChatStore = defineStore('chat', {
     initData() {
       const singleStore = useSingleStore();
       const groupStore = useGroupStore();
+      const momentsStore = useMomentsStore();
       
       singleStore.initData();
       groupStore.initData();
+      momentsStore.initData();
       
       const savedNote = localStorage.getItem('chatTopNote');
       if (savedNote) {

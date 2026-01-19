@@ -33,7 +33,18 @@
             <span class="nav-label">聊天</span>
           </div>
           <div class="chat-nav-item" :class="{ active: currentTab === 'moments' }" @click="switchTab('moments')">
-            <span class="nav-icon"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></span>
+            <span class="nav-icon">
+              <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="stroke-width: 1.5;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="9.69" y1="8" x2="3.95" y2="17.94"></line>
+                <line x1="14.31" y1="8" x2="2.83" y2="8"></line>
+                <line x1="16.62" y1="12" x2="10.88" y2="2.06"></line>
+                <line x1="14.31" y1="16" x2="20.05" y2="6.06"></line>
+                <line x1="9.69" y1="16" x2="21.17" y2="16"></line>
+                <line x1="7.38" y1="12" x2="13.12" y2="21.94"></line>
+              </svg>
+              <div v-if="momentsStore.unread" class="unread-badge"></div>
+            </span>
             <span class="nav-label">朋友圈</span>
           </div>
           <div class="chat-nav-item" :class="{ active: currentTab === 'npc' }" @click="switchTab('npc')">
@@ -60,11 +71,13 @@
 <script setup>
 import { ref, computed, provide } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useMomentsStore } from '@/stores/chat/momentsStore';
 
 const route = useRoute();
 const router = useRouter();
 const childRef = ref(null);
 const showMomentsCamera = ref(true);
+const momentsStore = useMomentsStore();
 
 // 判断当前是否为聊天室
 const isChatRoom = computed(() => ['single-chat', 'single-chat-settings', 'memory-bank'].includes(route.name));
@@ -107,6 +120,9 @@ const openMomentsModal = () => {
 };
 
 const switchTab = (tab) => {
+  if (tab === 'moments') {
+    momentsStore.setMomentsRead();
+  }
   const pathMap = {
     chat: '/chat/list',
     moments: '/chat/moments',
@@ -189,10 +205,22 @@ const switchTab = (tab) => {
 }
 
 .nav-icon {
+  position: relative;
   font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.unread-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background-color: red;
+  border-radius: 50%;
+  border: 1px solid var(--bg-white);
 }
 
 .nav-label {

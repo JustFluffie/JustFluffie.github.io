@@ -56,11 +56,9 @@ const showSourceSelect = (type) => {
 .polaroid-container {
     /* 1. 整体大小 (Zoom) */
     font-size: 11px; 
-
     /* 2. 散布范围 (Spread) */
     width: 16em;  
     height: 14em; 
-    
     /* 3. 整体位置移动 (Move) */
     position: relative;
     top: -2em;   
@@ -74,74 +72,45 @@ const showSourceSelect = (type) => {
     pointer-events: none; z-index: 15; 
 }
 
-/* 基础星星：使用变量，浓度为 1 */
-.star { 
-    position: absolute; 
-    background-color: var(--home-text-color, rgb(180, 180, 180)); 
-}
-
-.s-four { 
-    width: 1.4em; height: 1.4em; 
-    clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%); 
-}
+/* 基础星星 */
+.star { position: absolute; background-color: var(--home-text-color); }
+.s-four { width: 1.4em; height: 1.4em; clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%); }
 
 /* 十字星：背景透明，但线条要用变量色 */
-.s-cross { 
-    width: 1.2em; height: 1.2em; 
-    background: transparent; /* 十字星本体透明 */
-}
-.s-cross::before, .s-cross::after { 
-    content: ''; position: absolute; 
-    /* 线条颜色 */
-    background: var(--home-text-color, rgb(180, 180, 180)); 
-}
+.s-cross { width: 1.2em; height: 1.2em; background: transparent; }
+.s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); }
 .s-cross::before { top: 45%; left: 0; width: 100%; height: 1px; }
 .s-cross::after { top: 0; left: 45%; width: 1px; height: 100%; }
 
 /* 圆点：稍微淡一点，增加层次 (用 0.8 透明度) */
-.s-dot { 
-    width: 0.4em; height: 0.4em; 
-    border-radius: 50%; 
-    background: var(--home-text-color, rgb(180, 180, 180)); 
-}
+.s-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--home-text-color); }
 
-/* --- 星星位置 (保持原有的 opacity 不变，这就是层次感的来源) --- */
-.pos-1 { top: 0%; left: 25%; transform: rotate(-15deg); opacity: 0.5; } 
-.pos-2 { top: 10%; left: 20%; opacity: 0.56; }
-
-/* 中间那个特别的大星星：为了让它显眼，可以加深一点或者保持原样 */
-.pos-3 { 
-    top: 45%; left: 48%; 
-    transform: scale(1.2); 
-    opacity: 0.7; 
-    /* 这里如果想更深，可以用 filter 压暗 */
-    filter: brightness(0.8); 
-}
-
-.pos-4 { top: 38%; left: 55%; transform: rotate(20deg); opacity: 0.4; }
-.pos-5 { top: 15%; left: 95%; transform: scale(0.7); opacity: 0.3; }
-.pos-6 { top: 25%; left: 90%; transform: rotate(45deg); opacity: 0.4; }
-.pos-7 { top: 95%; left: 50%; opacity: 0.48; }
-.pos-8 { top: 90%; left: 10%; transform: rotate(10deg); opacity: 0.3; }
+/* --- 星星位置 --- */
+.pos-1 { top: 0%; left: 25%; transform: rotate(-15deg); } 
+.pos-2 { top: 10%; left: 20%; }
+/* 中间那个特别的大星星 */
+.pos-3 { top: 45%; left: 48%; transform: scale(1.2); }
+.pos-4 { top: 38%; left: 55%; transform: rotate(20deg); }
+.pos-5 { top: 15%; left: 95%; transform: scale(0.7); }
+.pos-6 { top: 25%; left: 90%; transform: rotate(45deg); }
+.pos-7 { top: 95%; left: 50%; }
+.pos-8 { top: 90%; left: 10%; transform: rotate(10deg); }
 
 /* --- 拍立得卡片 --- */
 .polaroid {
     width: 6.5em; 
     height: 8.5em;
-    padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */
-    
+    padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */ 
     /* 纸张质感背景：渐变 + SVG噪点纹理 */
     background-color: #ffffff;
     background-image: 
         linear-gradient(145deg, #ffffff 0%, #f8f8f8 50%, #f0f0f0 100%),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");    
     /* 高级阴影 */
     box-shadow: 
         0 1px 3px rgba(0,0,0,0.08),
         0 3px 6px rgba(0,0,0,0.06),
         inset 0 1px 0 rgba(255,255,255,0.8);
-        
     position: absolute;
     /* 丝滑的贝塞尔曲线过渡 */
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 

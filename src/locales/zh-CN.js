@@ -259,6 +259,19 @@ export default {
   },
 
   // ================================
+  // 日历 (Calendar)
+  // ================================
+  calendar: {
+    periodTracker: {
+      confirmStartTitle: '确认经期',
+      confirmStartMsg: '经期开始了吗？',
+      confirmEndTitle: '确认经期',
+      confirmEndMsg: '经期结束了吗？',
+      alertEndBeforeStart: '结束日期不能早于开始日期。'
+    }
+  },
+
+  // ================================
   // 聊天 (Chat)
   // ================================
   chat: {

@@ -2,7 +2,8 @@ import { ref } from 'vue';
 import { useApiStore } from '@/stores/apiStore';
 import { useThemeStore } from '@/stores/themeStore';
 
-export function useImageUpload(onImageReady) {
+export function useImageUpload(callbacks, options = {}) {
+  const { onPreview, onComplete } = callbacks || {};
   const apiStore = useApiStore();
   const themeStore = useThemeStore();
 
@@ -99,7 +100,9 @@ export function useImageUpload(onImageReady) {
 
     const handleFileAndCleanup = (event) => {
       handleFileChange(event);
-      document.body.removeChild(inputEl);
+      if (inputEl.parentNode) {
+        document.body.removeChild(inputEl);
+      }
       window.removeEventListener('focus', cleanup);
     };
 
@@ -117,76 +120,99 @@ export function useImageUpload(onImageReady) {
   };
 
   // 处理文件选择、上传或转换
-  const handleFileChange = async (event) => {
+  const handleFileChange = (event) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
     const file = files[0];
 
-    let imageUrl = null;
-    const provider = apiStore.imageHostProvider;
-
-    // 根据设置选择上传服务
-    if (provider === 'catbox') {
-      imageUrl = await uploadToCatbox(file);
-    } else if (provider === 'imgbb') {
-      imageUrl = await uploadToImgbb(file);
-    }
-
-    // 如果上传成功，则调用回调
-    if (imageUrl) {
-      if (onImageReady) {
-        onImageReady({
-          type: 'url',
-          content: imageUrl,
-        });
-      }
-      return;
-    }
-    
-    // 如果没有配置图床或上传失败，则回退到 Base64
-    console.log('图床上传失败或未配置，回退到 Base64 编码。');
-    themeStore.showToast('图床未配置或上传失败，转为本地图片', 'warning');
-    
-    const compressOptions = {
-      maxWidth: 1024,
-      maxHeight: 1024,
-      quality: 0.8,
-    };
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let { naturalWidth: width, naturalHeight: height } = img;
-
-        if (width > height) {
-          if (width > compressOptions.maxWidth) {
-            height = Math.round(height * (compressOptions.maxWidth / width));
-            width = compressOptions.maxWidth;
+      img.onload = async () => {
+        // 1. 生成并发送预览图
+        const previewCanvas = document.createElement('canvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        const previewOptions = { maxWidth: 256, maxHeight: 256 };
+        
+        let { naturalWidth: pWidth, naturalHeight: pHeight } = img;
+        if (pWidth > pHeight) {
+          if (pWidth > previewOptions.maxWidth) {
+            pHeight = Math.round(pHeight * (previewOptions.maxWidth / pWidth));
+            pWidth = previewOptions.maxWidth;
           }
         } else {
-          if (height > compressOptions.maxHeight) {
-            width = Math.round(width * (compressOptions.maxHeight / height));
-            height = compressOptions.maxHeight;
+          if (pHeight > previewOptions.maxHeight) {
+            pWidth = Math.round(pWidth * (previewOptions.maxHeight / pHeight));
+            pHeight = previewOptions.maxHeight;
+          }
+        }
+        previewCanvas.width = pWidth;
+        previewCanvas.height = pHeight;
+        previewCtx.drawImage(img, 0, 0, pWidth, pHeight);
+        const previewBase64 = previewCanvas.toDataURL('image/jpeg', 0.7);
+        
+        if (onPreview) {
+          onPreview({ type: 'base64', content: previewBase64 });
+        }
+
+        // 2. 异步处理全尺寸图片
+        const provider = apiStore.imageHostProvider;
+        let imageUrl = null;
+
+        if (provider && provider !== 'none') {
+            if (provider === 'catbox') {
+              imageUrl = await uploadToCatbox(file);
+            } else if (provider === 'imgbb') {
+              imageUrl = await uploadToImgbb(file);
+            }
+        }
+
+        if (imageUrl) {
+          if (onComplete) {
+            onComplete({ type: 'url', content: imageUrl });
+          }
+          return;
+        }
+
+        // 3. 如果图床失败，回退到 Base64 压缩
+        console.log('图床上传失败或未配置，回退到 Base64 编码。');
+        if (onPreview) { // 只有在有预览时才显示这个toast，避免普通上传也显示
+          themeStore.showToast('图床未配置或上传失败，转为本地图片', 'warning');
+        }
+        
+        const defaultCompressOptions = { maxWidth: 512, maxHeight: 512, quality: 0.8 };
+        const compressOptions = { ...defaultCompressOptions, ...(options.compress || {}) };
+
+        const fullCanvas = document.createElement('canvas');
+        const fullCtx = fullCanvas.getContext('2d');
+        let { naturalWidth: fWidth, naturalHeight: fHeight } = img;
+
+        if (fWidth > fHeight) {
+          if (fWidth > compressOptions.maxWidth) {
+            fHeight = Math.round(fHeight * (compressOptions.maxWidth / fWidth));
+            fWidth = compressOptions.maxWidth;
+          }
+        } else {
+          if (fHeight > compressOptions.maxHeight) {
+            fWidth = Math.round(fWidth * (compressOptions.maxHeight / fHeight));
+            fHeight = compressOptions.maxHeight;
           }
         }
 
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
+        fullCanvas.width = fWidth;
+        fullCanvas.height = fHeight;
+        fullCtx.drawImage(img, 0, 0, fWidth, fHeight);
 
         const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
         const quality = mimeType === 'image/jpeg' ? compressOptions.quality : 1.0;
-        const compressedBase64 = canvas.toDataURL(mimeType, quality);
+        const compressedBase64 = fullCanvas.toDataURL(mimeType, quality);
 
-        if (onImageReady) {
-          onImageReady({
+        if (onComplete) {
+          onComplete({
             type: 'base64',
             content: compressedBase64,
-            width: width,
-            height: height,
+            width: fWidth,
+            height: fHeight,
           });
         }
       };

@@ -12,6 +12,7 @@ export const useMomentsStore = defineStore('moments', {
       cover: '', // 默认为空，显示灰色
       signature: '点击设置个性签名'
     },
+    unread: false, // 新增：未读消息角标
   }),
 
   actions: {
@@ -32,6 +33,7 @@ export const useMomentsStore = defineStore('moments', {
             cover: '',
             signature: '点击设置个性签名'
           };
+          this.unread = data.unread || false;
         } catch (e) {
           console.error("Failed to parse moments data", e);
           this.moments = [];
@@ -41,6 +43,7 @@ export const useMomentsStore = defineStore('moments', {
             cover: '',
             signature: '点击设置个性签名'
           };
+          this.unread = false;
         }
       } else if (oldChat) {
         // 尝试从旧的 chatStore 数据中恢复朋友圈数据
@@ -68,7 +71,8 @@ export const useMomentsStore = defineStore('moments', {
     saveData() {
       const data = {
         moments: this.moments,
-        userMomentsProfile: this.userMomentsProfile
+        userMomentsProfile: this.userMomentsProfile,
+        unread: this.unread
       };
       try {
         const jsonString = JSON.stringify(data);
@@ -81,6 +85,14 @@ export const useMomentsStore = defineStore('moments', {
         } else {
             console.error('Error saving moments data', e);
         }
+      }
+    },
+
+    // 新增：设置朋友圈为已读
+    setMomentsRead() {
+      if (this.unread) {
+        this.unread = false;
+        this.saveData();
       }
     },
 
@@ -193,6 +205,12 @@ export const useMomentsStore = defineStore('moments', {
             const jsonString = jsonMatch ? jsonMatch[1] : result;
 
             const reaction = JSON.parse(jsonString);
+
+            // 如果是用户发的动态被响应，则标记为未读
+            if (moment.userId === 'user') {
+                this.unread = true;
+            }
+            
             switch (reaction.action) {
                 case 'chat':
                     if (singleStore.receiveMessage) {
@@ -226,6 +244,15 @@ export const useMomentsStore = defineStore('moments', {
                 ...comment
             };
             moment.comments.push(newComment);
+
+            // 如果是别人评论/回复我的动态/评论，则标记为未读
+            if (comment.userId !== 'user') {
+                // 评论我的动态，或者回复我的评论
+                if (moment.userId === 'user' || (newComment.replyTo && newComment.replyTo.id === 'user')) {
+                    this.unread = true;
+                }
+            }
+
             this.saveData();
 
             // 触发 AI 反应
@@ -307,6 +334,10 @@ export const useMomentsStore = defineStore('moments', {
             const index = moment.likes.indexOf(userId);
             if (index === -1) {
                 moment.likes.push(userId);
+                // 如果是别人点赞我的动态，则标记为未读
+                if (userId !== 'user' && moment.userId === 'user') {
+                    this.unread = true;
+                }
             } else {
                 moment.likes.splice(index, 1);
             }
@@ -367,6 +398,15 @@ export const useMomentsStore = defineStore('moments', {
     updateUserMomentsProfile(profile) {
         this.userMomentsProfile = { ...this.userMomentsProfile, ...profile };
         this.saveData();
+    },
+
+    async triggerRandomCharacterMoment() {
+        const singleStore = useSingleStore();
+        const characters = singleStore.characters.filter(c => c.id !== 'user' && !c.isAssistant);
+        if (characters.length > 0) {
+            const randomChar = characters[Math.floor(Math.random() * characters.length)];
+            await this.triggerCharacterMoment(randomChar.id);
+        }
     },
 
     // 主动发布朋友圈

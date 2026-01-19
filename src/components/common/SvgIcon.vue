@@ -27,6 +27,7 @@ const props = defineProps({
 // 简单的图标路径字典
 const icons = {
   'chevron-down': '<path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />',
+  'chevron-up': '<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />',
   'chevron-right': '<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />',
   'chevron-left': '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />',
   'x-mark': '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />',
@@ -69,7 +70,7 @@ const svgClass = computed(() => {
   width: 28px;
   height: 28px;
   vertical-align: -0.15em;
-  fill: none; /* 默认不填充，因为很多图标是 stroke */
+  fill: none;/* 默认不填充，因为很多图标是 stroke */
   stroke: currentColor;
   stroke-width: 2;
   overflow: hidden;
