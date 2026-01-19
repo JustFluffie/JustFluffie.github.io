@@ -188,9 +188,16 @@ export const useBackupStore = defineStore('backup', () => {
 
       // 2. 创建或更新文件
       const commitMessage = `Backup from phone-vue-app: ${new Date().toISOString()}`;
+      
+      // 将UTF-8字符串转换为Base64的现代、可靠方法
+      const utf8Encoder = new TextEncoder();
+      const utf8Bytes = utf8Encoder.encode(backupContent);
+      const binaryString = Array.from(utf8Bytes).map(byte => String.fromCharCode(byte)).join('');
+      const base64Content = btoa(binaryString);
+
       const body = {
         message: commitMessage,
-        content: btoa(unescape(encodeURIComponent(backupContent))), // 修复btoa的中文编码问题
+        content: base64Content,
         sha: sha, // 如果是更新，则需要提供 sha
       };
 
