@@ -166,12 +166,21 @@ export const useCalendarStore = defineStore('calendar', () => {
     });
   };
 
+  const toggleTodoStatus = (eventId) => {
+    const event = events.value.find(e => e.id === eventId);
+    if (event && event.type === 'todo') {
+      event.done = !event.done;
+      saveEventsToLocalStorage();
+    }
+  };
+
   return {
     events,
     addEvent,
     removeEvent,
     updateEvent,
     getEventsByDate,
+    toggleTodoStatus,
     periodHistory,
     recordPeriod,
     endPeriod, // Expose the new action

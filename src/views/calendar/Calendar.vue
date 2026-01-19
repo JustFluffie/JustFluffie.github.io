@@ -65,22 +65,23 @@
         </div>
 
         <!-- 动态事件卡片 -->
-        <div v-if="eventsForSelectedDate.length > 0" class="cards-container">
-          <div v-for="event in eventsForSelectedDate" :key="event.id">
+        <div class="cards-container">
+          <!-- 其他事件卡片 -->
+          <div v-for="event in otherEventsForSelectedDate" :key="event.id">
             <div v-if="event.type === 'countdown'" class="sticker-card count-card">
               <!-- ... countdown card content ... -->
             </div>
             <div v-if="event.type === 'anniversary'" class="sticker-card count-card anniversary">
               <!-- ... anniversary card content ... -->
             </div>
-            <div v-if="event.type === 'todo'" class="sticker-card todo-card">
-              <!-- ... todo card content ... -->
-            </div>
           </div>
+
+          <!-- 新的待办事项卡片组件 -->
+          <ToDoList :todos="todosForSelectedDate" />
         </div>
         
         <!-- 无事件提示 -->
-        <div v-else class="no-events-placeholder">
+        <div v-if="eventsForSelectedDate.length === 0" class="no-events-placeholder">
           <p>今天没有特别的安排</p>
           <span>点击右上角按钮添加一个吧</span>
         </div>
@@ -106,6 +107,7 @@ import AppLayout from '@/components/common/AppLayout.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import EventFormModal from '@/components/common/EventFormModal.vue';
 import PeriodTrackerCard from '@/components/calendar/PeriodTrackerCard.vue';
+import ToDoList from '@/components/calendar/ToDoList.vue';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { getPeriodStatusForDate } from '@/composables/usePeriodTracking';
 
@@ -163,6 +165,15 @@ const isSelected = (day) => day === selectedDate.value.getDate() && currentMonth
 const selectDate = (date) => selectedDate.value = date;
 const selectDateNum = (day) => selectedDate.value = new Date(currentYear.value, currentMonth.value, day);
 const eventsForSelectedDate = computed(() => calendarStore.getEventsByDate(selectedDate.value));
+
+// 按类型筛选事件
+const todosForSelectedDate = computed(() => 
+  eventsForSelectedDate.value.filter(e => e.type === 'todo')
+);
+const otherEventsForSelectedDate = computed(() => 
+  eventsForSelectedDate.value.filter(e => e.type !== 'todo')
+);
+
 const hasEventsOnDate = (date) => calendarStore.getEventsByDate(date).length > 0;
 
 // === New Period Tracking Logic ===
@@ -238,8 +249,8 @@ const getDayMarkerClass = (day) => {
 .grid-cell { width: 14.28%; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 50%; font-size: 14px; position: relative; }
 .grid-cell.active { background: #333; color: #fff; } .grid-cell.today { color: #f36b6b; font-weight: bold; } .grid-cell.active.today { color: #fff; }
 .events-display-section { display: flex; flex-direction: column; gap: 16px; }
-.cards-container { display: flex; flex-direction: column; gap: 16px; }
-.sticker-card { background: #fff; border-radius: 16px; padding: 20px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #f2f2f2; }
+.cards-container { display: flex; flex-direction: column; gap: 5px; }
+.sticker-card { background: #fff; border-radius: 16px; padding: 20px; padding-bottom: 10px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #f2f2f2; }
 .no-events-placeholder { text-align: center; padding: 40px 20px; background: #f9f9f9; border-radius: 16px; color: #aaa; }
 .no-events-placeholder p { font-size: 16px; margin: 0 0 8px 0; color: #888; }
 .no-events-placeholder span { font-size: 12px; }

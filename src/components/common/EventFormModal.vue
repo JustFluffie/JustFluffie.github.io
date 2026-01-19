@@ -17,24 +17,29 @@
         </div>
       </div>
 
-      <div class="form-group" v-if="formData.type !== 'period'">
+      <div class="form-group" v-if="formData.type !== 'period' && formData.type !== 'todo'">
         <label>标题</label>
         <input type="text" v-model="formData.title" placeholder="例如：生日">
       </div>
 
-      <div class="form-group" v-if="formData.type === 'countdown' || formData.type === 'anniversary' || formData.type === 'todo'">
+      <div class="form-group" v-if="formData.type === 'countdown' || formData.type === 'anniversary'">
         <label>日期</label>
         <input type="date" v-model="formData.date">
       </div>
 
-      <div class="form-group" v-if="formData.type === 'todo'">
-        <label>时间</label>
-        <input type="time" v-model="formData.time">
-      </div>
-      
-      <div class="form-group" v-if="formData.type === 'todo'">
-        <label>待办内容</label>
-        <textarea v-model="formData.details" placeholder="记录需要做的事情..."></textarea>
+      <!-- New layout for todo -->
+      <div v-if="formData.type === 'todo'">
+        <div class="form-group">
+          <label>日期和时间</label>
+          <div class="datetime-group">
+            <input type="date" v-model="formData.date">
+            <input type="time" v-model="formData.time">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>待办内容</label>
+          <textarea v-model="formData.details" placeholder="记录需要做的事情..."></textarea>
+        </div>
       </div>
 
       <!-- Period Management Area for {start, end} -->
@@ -81,9 +86,9 @@ const emit = defineEmits(['close', 'submit', 'submit-period']);
 const calendarStore = useCalendarStore();
 
 const eventTypes = [
+  { label: '待办', value: 'todo' },
   { label: '倒数日', value: 'countdown' },
   { label: '纪念日', value: 'anniversary' },
-  { label: '待办', value: 'todo' },
   { label: '经期', value: 'period' },
 ];
 
@@ -91,11 +96,12 @@ const periodRecord = reactive({ start: '', end: '' });
 const periodRecords = ref([]); // This will now hold {start, end} objects
 
 const initialFormData = () => ({
-  type: 'countdown',
+  type: 'todo',
   title: '',
   date: props.selectedDate ? props.selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   time: new Date().toTimeString().slice(0, 5),
   details: '',
+  content: '', // Add content for todo
 });
 
 const formData = reactive(initialFormData());
@@ -133,9 +139,29 @@ const close = () => {
 const submit = () => {
   if (formData.type === 'period') {
     emit('submit-period', periodRecords.value);
-  } else {
-    emit('submit', { ...formData });
+    close();
+    return;
   }
+
+  const dataToSubmit = { ...formData };
+
+  if (dataToSubmit.type === 'todo') {
+    if (!dataToSubmit.details.trim()) {
+      alert('待办内容不能为空！');
+      return;
+    }
+    const [year, month, day] = dataToSubmit.date.split('-').map(Number);
+    const [hours, minutes] = dataToSubmit.time.split(':').map(Number);
+    const newDate = new Date(year, month - 1, day, hours, minutes);
+    
+    dataToSubmit.date = newDate.toISOString();
+    dataToSubmit.content = dataToSubmit.details;
+    delete dataToSubmit.details;
+    delete dataToSubmit.title;
+    delete dataToSubmit.time;
+  }
+  
+  emit('submit', dataToSubmit);
   close();
 };
 </script>
@@ -162,6 +188,14 @@ const submit = () => {
 input[type="text"], input[type="date"], input[type="time"], textarea {
   width: 100%; padding: 10px; border: 1px solid #ddd;
   border-radius: 8px; font-size: 14px;
+}
+.datetime-group {
+  display: flex;
+  gap: 10px;
+}
+.datetime-group input[type="date"],
+.datetime-group input[type="time"] {
+  flex: 1;
 }
 textarea { resize: vertical; min-height: 80px; }
 .period-management-area { display: flex; flex-direction: column; gap: 15px; }

@@ -180,7 +180,7 @@ const handleRecordClick = () => {
   --period-color: #e66262;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: 'Georgia', 'Times New Roman', serif;
-
+  margin-top: 10px;
   position: relative;
   display: flex;
   align-items: flex-start; /* 保持顶部对齐 */
