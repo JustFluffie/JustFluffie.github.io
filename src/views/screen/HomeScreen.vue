@@ -434,10 +434,10 @@ onMounted(() => {
 
 .home-list-card {
   position: absolute;
-  top: 53.5%;
+  top: 52%;
   left: 25px; /* Match page padding */
-  width: calc(47% - 25px); /* Half page width minus some padding */
-  height: 25%; /* Adjust length */
+  width: calc(48% - 25px); /* Half page width minus some padding */
+  height: 26%; /* Adjust length */
   z-index: 10;
 }
 

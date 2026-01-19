@@ -3,7 +3,9 @@ import { useRouter, useRoute } from 'vue-router';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useApiStore } from '@/stores/apiStore'; // 确保 apiStore 被正确使用
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useCalendarStore } from '@/stores/calendarStore'; // 引入日历 store
 import { parseAiResponse } from '@/utils/messageParser';
+import { formatISO } from 'date-fns'; // 引入日期格式化工具
 
 // 心声生成的Prompt
 const getInnerVoicePrompt = (char, chatHistory) => {
@@ -44,6 +46,7 @@ ${historyText}
 export function useAiResponder(charId, apiStore) {
   const singleStore = useSingleStore();
   const notificationStore = useNotificationStore();
+  const calendarStore = useCalendarStore(); // 实例化日历 store
   const router = useRouter();
   const route = useRoute();
 
@@ -54,9 +57,36 @@ export function useAiResponder(charId, apiStore) {
     isTyping.value = true;
     try {
       const character = singleStore.getCharacter(charId.value);
-      const responseText = await apiStore.getChatCompletion(charId.value);
+      let responseText = await apiStore.getChatCompletion(charId.value);
       
       if (responseText) {
+        // --- 新增：处理待办事项 ---
+        const todoPattern = /\[待办：(?:(\d{1,2}:\d{2})\s)?(.+?)\]/g;
+        let match;
+        while ((match = todoPattern.exec(responseText)) !== null) {
+          const time = match[1] || new Date().toTimeString().slice(0, 5); // 如果匹配到时间则使用，否则用当前时间
+          const todoContent = match[2].trim();
+          if (todoContent) {
+            calendarStore.addEvent({
+              type: 'todo',
+              title: todoContent,
+              date: formatISO(new Date(), { representation: 'date' }),
+              done: false,
+              time: time
+            });
+            console.log(`[useAiResponder] Added new todo: "${todoContent}" at ${time}`);
+          }
+        }
+        // 从回复中移除待办事项指令，以免显示在聊天中
+        responseText = responseText.replace(todoPattern, '').trim();
+        // 如果移除后消息为空，则直接返回，不继续处理
+        if (!responseText) {
+            isTyping.value = false;
+            generateAndSaveInnerVoice(); // 即使没有消息也尝试生成心声
+            return;
+        }
+        // --- 结束：处理待办事项 ---
+
         if (!singleStore.messages[charId.value]) singleStore.messages[charId.value] = [];
         const isCharBlocked = character?.isBlocked || false;
 

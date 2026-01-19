@@ -38,9 +38,9 @@ const showSourceSelect = (type) => {
       </div>
 
       <!-- 字素1 -->
-      <input type="text" class="custom-text-input photo-wall-input1" placeholder="Good">
-      <input type="text" class="custom-text-input photo-wall-input2" placeholder="Say something...">
-      <input type="text" class="custom-text-input photo-wall-input3" placeholder="Say something...">
+      <input type="text" class="custom-text-input photo-wall-input1" placeholder="about">
+      <input type="text" class="custom-text-input photo-wall-input2" placeholder="sunshine and fantasy">
+      <input type="text" class="custom-text-input photo-wall-input3" placeholder="Life is...">
       
     </div>
   </div>
@@ -91,21 +91,22 @@ const showSourceSelect = (type) => {
 .s-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--home-text-color); }
 
 /* --- 星星位置 --- */
-.pos-1 { top: 0%; left: 25%; transform: rotate(-15deg); } 
-.pos-2 { top: 10%; left: 20%; }
+.pos-1 { top: -7%; left: 25%; transform: rotate(-15deg); } 
+.pos-2 { top: 5%; left: 20%; }
 /* 中间那个特别的大星星 */
-.pos-3 { top: 45%; left: 48%; transform: scale(1.2); }
-.pos-4 { top: 38%; left: 55%; transform: rotate(20deg); }
+.pos-3 { top: 48%; left: 45%; transform: scale(1.2); }
+.pos-4 { top: 40%; left: 51%; transform: rotate(20deg); }
 .pos-5 { top: 15%; left: 95%; transform: scale(0.7); }
 .pos-6 { top: 25%; left: 90%; transform: rotate(45deg); }
-.pos-7 { top: 95%; left: 50%; }
-.pos-8 { top: 90%; left: 10%; transform: rotate(10deg); }
+.pos-7 { top: 95%; left: 54%; }
+.pos-8 { top: 90%; left: 6%; transform: rotate(10deg); }
 
 /* --- 拍立得卡片 --- */
 .polaroid {
-    width: 6.5em; 
-    height: 8.5em;
+    width: 6.8em; 
+    height: 8.8em;
     padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */ 
+    margin-left: -5%;
     /* 纸张质感背景：渐变 + SVG噪点纹理 */
     background-color: #ffffff;
     background-image: 
@@ -140,12 +141,12 @@ const showSourceSelect = (type) => {
 /* 卡片定位 (使用百分比，随容器自适应) */
 .polaroid.p2 { 
     top: 0%; 
-    left: 48%; /* 稍微调整了下位置以配合星星 */
+    left: 52%; /* 稍微调整了下位置以配合星星 */
     transform: rotate(10deg); 
     z-index: 12; 
 }
 .polaroid.p1 { 
-    top: 35%; 
+    top: 43%; 
     left: 12%; 
     transform: rotate(-10deg); 
     z-index: 11; 
@@ -157,7 +158,7 @@ const showSourceSelect = (type) => {
 .photo-wall-input3 {
     position: absolute;
     top: 65%;
-    left: 51%;
+    left: 48%;
     width: 10em; /* 紧凑一点 */
     background: transparent;
     border: none;
@@ -175,8 +176,8 @@ const showSourceSelect = (type) => {
     transition: background 0.2s ease;
 }
 
-.photo-wall-input2 { position: absolute; top: 75%; left: 51%; width: 15em;}
-.photo-wall-input3 { position: absolute; top: 12%; left: 0%; text-align: center;}
+.photo-wall-input2 { position: absolute; top: 75%; left: 48%; width: 15em;}
+.photo-wall-input3 { position: absolute; top: 14%; left: 0%; text-align: center;}
 
 
 .photo-wall-input1:focus,

@@ -4,6 +4,8 @@ import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useWorldBookStore } from '@/stores/worldBookStore';
 import { usePresetStore } from '@/stores/presetStore';
+import { useCalendarStore } from '@/stores/calendarStore'; // 引入日历 store
+import { formatISO } from 'date-fns'; // 引入日期格式化工具
 
 export const useApiStore = defineStore('api', () => {
   // --- 持久化逻辑 ---
@@ -156,6 +158,7 @@ export const useApiStore = defineStore('api', () => {
     const worldBookStore = useWorldBookStore();
     const presetStore = usePresetStore();
     const themeStore = useThemeStore();
+    const calendarStore = useCalendarStore(); // 实例化日历 store
     const character = singleStore.getCharacter(charId);
     const activePreset = getActivePreset();
 
@@ -195,7 +198,19 @@ export const useApiStore = defineStore('api', () => {
     // 2. 角色人设
     systemPrompt += "【角色人设】:\n" + (character.charPersona || '你是一个友好的人工智能助手。') + "\n\n";
 
-    // 2.1. 实时环境信息 (Real-time Sense)
+    // 2.1. 新增：今日待办事项
+    const today = formatISO(new Date(), { representation: 'date' });
+    const todayEvents = calendarStore.getEventsByDate(today);
+    const todoList = todayEvents.filter(e => e.type === 'todo' && !e.done);
+
+    if (todoList.length > 0) {
+      const todoText = todoList
+        .map(todo => `- ${todo.time || ''} ${todo.title}`)
+        .join('\n');
+      systemPrompt += `【今日待办事项】:\n${todoText}\n\n`;
+    }
+
+    // 2.2. 实时环境信息 (Real-time Sense)
     const rts = character.realtimeSettings;
     if (rts) {
         const buildEnvString = (locationData, type, timeEnabled, weatherEnabled) => {
@@ -231,7 +246,12 @@ export const useApiStore = defineStore('api', () => {
         }
     }
     
-    // 2.2 格式指令
+    // 2.3 格式指令
+    systemPrompt += "【待办指令】:\n" +
+        "1. 如果你想为用户创建待办事项，请使用格式：[待办：HH:mm 任务内容] 或 [待办：任务内容]。\n" +
+        "   - 如果提供了时间，任务将按时添加；如果未提供，则使用当前时间。\n" +
+        "   - 例如：[待办：14:30 开会] 或 [待办：买菜]。\n\n";
+        
     const availableStickers = singleStore.stickers.map(e => e.name).filter(Boolean);
     const stickerInstruction = availableStickers.length > 0 
         ? `2. 如果你想发送表情包，请使用格式：[表情包：表情名称]。\n   可用表情包：${availableStickers.join(', ')}。\n   注意：只能使用上述列表中的表情包，严禁编造不存在的表情包。\n`
