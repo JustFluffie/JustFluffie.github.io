@@ -47,8 +47,34 @@ onMounted(() => {
 
   // 清理
   onUnmounted(() => {
-    // 注意：这里不再需要移除 touchstart 监听器
+    document.removeEventListener('touchmove', preventPullToRefresh);
   });
+
+  // PWA下拉刷新
+  const preventPullToRefresh = (e) => {
+    // 检查是否在可滚动元素内部
+    let target = e.target;
+    while (target && target !== document.body) {
+      if (target.scrollHeight > target.clientHeight) {
+        // 如果是在可滚动元素内，并且滚动到了顶部，则阻止默认行为
+        if (target.scrollTop === 0 && e.touches[0].clientY > (window.lastTouchY || 0)) {
+           // e.preventDefault();
+        }
+        window.lastTouchY = e.touches[0].clientY;
+        return; // 不阻止默认行为，允许滚动
+      }
+      target = target.parentNode;
+    }
+    // 如果不在可滚动元素内，或者在不可滚动的元素上，则阻止默认行为
+    e.preventDefault();
+  };
+
+  document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      window.lastTouchY = e.touches[0].clientY;
+    }
+  }, { passive: true });
 })
 
 // Global watcher to handle navigation when maximizing video call

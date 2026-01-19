@@ -66,24 +66,22 @@ export const useMomentsStore = defineStore('moments', {
     },
 
     saveData() {
-      setTimeout(() => {
-        const data = {
-          moments: this.moments,
-          userMomentsProfile: this.userMomentsProfile
-        };
-        try {
-          const jsonString = JSON.stringify(data);
-          const compressed = LZString.compressToUTF16(jsonString);
-          localStorage.setItem('aiPhoneMomentsData', compressed);
-        } catch (e) {
-          if (e.name === 'QuotaExceededError' || e.code === 22) {
-              console.error('LocalStorage quota exceeded!', e);
-              alert('存储空间已满！无法保存朋友圈数据。请尝试删除一些包含大量图片的内容。');
-          } else {
-              console.error('Error saving moments data', e);
-          }
+      const data = {
+        moments: this.moments,
+        userMomentsProfile: this.userMomentsProfile
+      };
+      try {
+        const jsonString = JSON.stringify(data);
+        const compressed = LZString.compressToUTF16(jsonString);
+        localStorage.setItem('aiPhoneMomentsData', compressed);
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            console.error('LocalStorage quota exceeded!', e);
+            alert('存储空间已满！无法保存朋友圈数据。请尝试删除一些包含大量图片的内容。');
+        } else {
+            console.error('Error saving moments data', e);
         }
-      }, 0);
+      }
     },
 
     // --- 朋友圈 Actions ---

@@ -55,7 +55,7 @@
             </div>
             <div class="option-label">所在位置</div>
             <div class="option-value">{{ location || '' }}</div>
-            <div class="option-arrow">>_</div>
+            <div class="option-arrow">></div>
           </div>
           <div v-if="showLocationInput" class="expanded-input-container">
             <input type="text" v-model="location" placeholder="输入位置" class="base-input" />
@@ -67,7 +67,7 @@
             </div>
             <div class="option-label">提醒谁看</div>
             <div class="option-value">{{ remindList.length ? `${remindList.length}个联系人` : '' }}</div>
-            <div class="option-arrow">>_</div>
+            <div class="option-arrow">></div>
           </div>
 
           <div class="option-row" @click="showVisibilitySelector = true">
@@ -76,7 +76,7 @@
             </div>
             <div class="option-label">谁可以看</div>
             <div class="option-value">{{ visibility.type === 'public' ? '公开' : `${visibility.allowed.length}个联系人` }}</div>
-            <div class="option-arrow">>_</div>
+            <div class="option-arrow">></div>
           </div>
         </div>
       </div>

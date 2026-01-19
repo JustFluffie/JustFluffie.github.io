@@ -67,7 +67,7 @@ const leftApps = computed(() => [
 
 const rightApps = computed(() => [
   { id: 'chat', label: t('homeScreen.apps.chat'), route: '/chat' },
-  { id: 'calendar', label: t('homeScreen.apps.calendar'), action: () => console.log('Open Calendar') }
+  { id: 'calendar', label: t('homeScreen.apps.calendar'), route: '/calendar' }
 ])
 
 const dockApps = computed(() => [

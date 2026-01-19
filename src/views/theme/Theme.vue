@@ -194,24 +194,6 @@
         </div>
       </div>
 
-      <!-- ==================== 7. 通知测试模块 ==================== -->
-      <div class="card theme-section">
-        <div class="card-title">通知测试</div>
-        <div class="card-content">
-          <div class="theme-item no-icon">
-            <div class="item-content">
-              <div class="item-label" style="font-weight: 600;">桌面通知</div>
-              <div class="item-value">开启后，应用在后台时也能收到消息提醒</div>
-            </div>
-            <div class="toggle-switch" :class="{ active: notificationStore.desktopNotificationsEnabled }" @click="notificationStore.desktopNotificationsEnabled = !notificationStore.desktopNotificationsEnabled"></div>
-          </div>
-          <div class="theme-item no-icon">
-            <div class="import-export-container" style="flex: 1; justify-content: space-around;">
-              <button class="btn btn-secondary big-btn" @click="notificationStore.triggerNotification('测试通知', '这是一条测试通知。')">发送测试通知</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- ==================== 弹窗组件区域 ==================== -->
@@ -234,7 +216,6 @@ import { ref, onMounted, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/themeStore'
-import { useNotificationStore } from '@/stores/notificationStore'
 import { storeToRefs } from 'pinia'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import Modal from '@/components/common/Modal.vue'
@@ -243,7 +224,6 @@ import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
 const { t } = useI18n()
 const router = useRouter()
 const themeStore = useThemeStore()
-const notificationStore = useNotificationStore()
 
 const {
   themePresets,

@@ -82,6 +82,11 @@ const router = createRouter({
       component: () => import('../views/theme/Theme.vue')
     },
     {
+      path: '/calendar',
+      name: 'calendar',
+      component: () => import('../views/calendar/Calendar.vue')
+    },
+    {
       path: '/memory/:charId',
       name: 'memory-bank',
       component: () => import('../views/chat/single/components/SingleMemoryBank.vue'),
