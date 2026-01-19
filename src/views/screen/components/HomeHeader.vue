@@ -147,8 +147,8 @@ const confirmLocation = () => {
    顶部容器样式
    ========================================== */
 .section-top {
-    height: 100%; /* 填充父容器高度 */
-    width: 100%;
+    height: 13rem; /* 填充父容器高度 */
+    width: 19.7rem;
     background: rgb(255, 255, 255);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -210,8 +210,8 @@ const confirmLocation = () => {
    头像样式
    ========================================== */
 .profile-avatar {
-    width: 79px;
-    height: 79px;
+    width: 5.5em;
+    height: 5.5em;
     border-radius: 50%;
     border: 0px solid rgba(255,255,255,0.9);
     background-color: var(--bg-white);
@@ -237,7 +237,7 @@ const confirmLocation = () => {
     background: transparent;
     border: none;
     color: var(--home-text-color, var(--text-darkest));
-    font-size: 11px;
+    font-size: 0.79em;
     font-weight: 500;
     text-align: center;
     width: 90%;
@@ -284,7 +284,7 @@ const confirmLocation = () => {
     border-radius: 20px;
     border: none;
     color: var(--home-text-color, var(--text-darkest));
-    font-size: 10px;
+    font-size: 0.7em;
     font-weight: 500;
     display: flex;
     align-items: center;
