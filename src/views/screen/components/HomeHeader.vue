@@ -165,7 +165,7 @@ const confirmLocation = () => {
     background-size: cover;
     background-position: center;
     margin-top: 7px;
-    transition: background-image 0.3s ease;
+    transition: background-image 0.3s ease
 }
 
 /* ==========================================
