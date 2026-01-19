@@ -103,8 +103,8 @@ const showSourceSelect = (type) => {
 
 /* --- 拍立得卡片 --- */
 .polaroid {
-    width: 6.8em; 
-    height: 8.8em;
+    width: 5rem; 
+    height: 6.5rem;
     padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */ 
     margin-left: -5%;
     /* 纸张质感背景：渐变 + SVG噪点纹理 */
@@ -158,13 +158,13 @@ const showSourceSelect = (type) => {
 .photo-wall-input3 {
     position: absolute;
     top: 65%;
-    left: 48%;
+    left: 45%;
     width: 10em; /* 紧凑一点 */
     background: transparent;
     border: none;
     color: var(--home-text-color);
     padding: 5px;
-    font-size: 0.8em; 
+    font-size: 1.02em; 
     font-weight: 500;
     font-family: inherit;
     font-style: italic;
@@ -176,8 +176,8 @@ const showSourceSelect = (type) => {
     transition: background 0.2s ease;
 }
 
-.photo-wall-input2 { position: absolute; top: 75%; left: 48%; width: 15em;}
-.photo-wall-input3 { position: absolute; top: 14%; left: 0%; text-align: center;}
+.photo-wall-input2 { position: absolute; top: 75%; left: 45%; width: 15em;}
+.photo-wall-input3 { position: absolute; top: 14%; left: -10%; text-align: center;}
 
 
 .photo-wall-input1:focus,

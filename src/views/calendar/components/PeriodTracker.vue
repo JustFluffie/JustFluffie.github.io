@@ -3,7 +3,7 @@
     <!-- 装饰：和纸胶带 -->
     <div class="washi-tape"></div>
 
-    <!-- 确认弹窗 -->
+    <!-- 操作弹窗 -->
     <Modal
       :visible="modalState.visible"
       :title="modalState.title"
@@ -11,8 +11,12 @@
     >
       <p>{{ modalState.message }}</p>
       <template #footer>
-        <button class="modal-btn cancel" @click="modalState.visible = false">{{ $t('cancel') }}</button>
-        <button class="modal-btn confirm" @click="handleConfirm">{{ $t('confirm') }}</button>
+        <button class="modal-btn" @click="handleStartPeriod" :disabled="!!ongoingPeriod">
+          {{ $t('calendar.periodTracker.start') }}
+        </button>
+        <button class="modal-btn confirm" @click="handleEndPeriod" :disabled="!ongoingPeriod">
+          {{ $t('calendar.periodTracker.end') }}
+        </button>
       </template>
     </Modal>
     
@@ -49,7 +53,8 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useCalendarStore } from '@/stores/calendarStore';
-import { format, parseISO, isWithinInterval, formatISO } from 'date-fns';
+import { format, parseISO, formatISO, startOfDay, differenceInDays } from 'date-fns';
+import { predictFuturePeriods } from '@/composables/usePeriodTracking';
 import Modal from '@/components/common/Modal.vue';
 
 // --- Component Definition ---
@@ -73,104 +78,88 @@ const { t } = useI18n();
 
 // --- Store and State ---
 const store = useCalendarStore();
-const { cycleStats, durationStats, predictedPeriod } = storeToRefs(store);
-const { recordPeriod, endPeriod } = store;
+const { periodHistory, ongoingPeriod, cycleStats, durationStats } = storeToRefs(store);
 
 // --- Modal State and Logic ---
 const modalState = ref({
   visible: false,
-  title: '',
-  message: '',
-  onConfirm: () => {},
+  title: t('calendar.periodTracker.recordTitle'),
+  message: t('calendar.periodTracker.recordMsg'),
 });
 
-const showConfirmModal = (title, message, onConfirm) => {
-  modalState.value = {
-    visible: true,
-    title,
-    message,
-    onConfirm,
-  };
-};
-
-const handleConfirm = () => {
-  if (typeof modalState.value.onConfirm === 'function') {
-    modalState.value.onConfirm();
-  }
-  modalState.value.visible = false;
-};
+// --- Computed Properties for Core Logic ---
+const futurePredictions = computed(() => predictFuturePeriods(periodHistory.value, ongoingPeriod.value, 2));
 
 // --- Computed Properties for Display ---
 const iconColor = computed(() => {
   switch (props.status) {
     case 'actual':
+    case 'ongoing':
       return 'var(--period-color)';
     case 'predicted':
-      // 仅当在预测期内才显示粉色
-      if (predictedPeriod.value && isWithinInterval(props.selectedDate, {
-        start: parseISO(predictedPeriod.value.startDate),
-        end: parseISO(predictedPeriod.value.endDate)
-      })) {
-        return 'var(--color-pink)';
-      }
-      // 预测期前（倒计时）显示默认色
-      return 'var(---text-tertiary)';
+      return 'var(--color-pink)';
     default:
       return 'var(---text-tertiary)';
   }
 });
 
 const buttonTitle = computed(() => {
-  return props.status === 'actual' ? '点击记录经期结束' : '点击记录经期开始';
+  if (ongoingPeriod.value) {
+    return t('calendar.periodTracker.end');
+  }
+  return t('calendar.periodTracker.start');
 });
 
 const predictionText = computed(() => {
-  if (!predictedPeriod.value) return '暂无预测';
-  const start = format(parseISO(predictedPeriod.value.startDate), 'M月d日');
-  const end = format(parseISO(predictedPeriod.value.endDate), 'M月d日');
-  return `预测期: ${start} - ${end}`;
+  if (futurePredictions.value.length === 0) return '暂无预测';
+  
+  const nextPrediction = futurePredictions.value[0];
+  const start = format(parseISO(nextPrediction.start), 'M月d日');
+  const end = format(parseISO(nextPrediction.end), 'M月d日');
+  
+  return `下次预测: ${start} - ${end}`;
 });
 
 const displayParts = computed(() => {
   const { status, dayCount, selectedDate } = props;
 
-  if (status === 'actual') {
-    return { prefix: '经期第', number: dayCount, suffix: '天' };
+  switch (status) {
+    case 'actual':
+    case 'ongoing':
+      return { prefix: '经期第', number: dayCount, suffix: '天' };
+    case 'predicted':
+      return { prefix: '预测第', number: dayCount, suffix: '天' };
+    default:
+      // Check if there's a future prediction to show a countdown
+      if (futurePredictions.value.length > 0) {
+        const nextStart = startOfDay(new Date(futurePredictions.value[0].start));
+        const today = startOfDay(selectedDate);
+        const daysUntil = differenceInDays(nextStart, today);
+
+        if (daysUntil > 0) {
+          return { prefix: '预计', number: daysUntil, suffix: '天后' };
+        }
+      }
+      // Default message
+      return { prefix: '添加历史记录以开始预测', number: null, suffix: '' };
   }
-  if (status === 'predicted') {
-    // Check if the selected date is within the predicted interval
-    if (predictedPeriod.value && isWithinInterval(selectedDate, {
-      start: parseISO(predictedPeriod.value.startDate),
-      end: parseISO(predictedPeriod.value.endDate)
-    })) {
-      return { prefix: '预测期内', number: null, suffix: '' };
-    }
-    // If before the prediction, show countdown
-    return { prefix: '预计', number: dayCount, suffix: '天后' };
-  }
-  // Default message
-  return { prefix: '添加历史记录以开始预测', number: null, suffix: '' };
 });
 
 // --- Event Handlers ---
 const handleRecordClick = () => {
-  const selectedDateISO = formatISO(props.selectedDate, { representation: 'date' });
+  modalState.value.visible = true;
+};
 
-  if (props.status === 'actual') {
-    // Currently in a period, ask to end it.
-    showConfirmModal(
-      t('calendar.periodTracker.confirmEndTitle'),
-      t('calendar.periodTracker.confirmEndMsg'),
-      () => endPeriod(selectedDateISO)
-    );
-  } else {
-    // Not in a period, ask to start it.
-    showConfirmModal(
-      t('calendar.periodTracker.confirmStartTitle'),
-      t('calendar.periodTracker.confirmStartMsg'),
-      () => recordPeriod(selectedDateISO)
-    );
-  }
+const handleStartPeriod = () => {
+  const selectedDateISO = formatISO(props.selectedDate, { representation: 'date' });
+  store.recordPeriod(selectedDateISO);
+  modalState.value.visible = false;
+};
+
+const handleEndPeriod = () => {
+  const selectedDateISO = formatISO(props.selectedDate, { representation: 'date' });
+  store.endPeriod(selectedDateISO);
+  modalState.value.visible = false;
 };
 </script>
 

@@ -436,8 +436,8 @@ onMounted(() => {
   position: absolute;
   top: 52%;
   left: 25px; /* Match page padding */
-  width: calc(48% - 25px); /* Half page width minus some padding */
-  height: 26%; /* Adjust length */
+  width: 9rem; /* Half page width minus some padding */
+  height: 11.5rem; /* Adjust length */
   z-index: 10;
 }
 

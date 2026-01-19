@@ -267,7 +267,11 @@ export default {
       confirmStartMsg: '经期开始了吗？',
       confirmEndTitle: '确认经期',
       confirmEndMsg: '经期结束了吗？',
-      alertEndBeforeStart: '结束日期不能早于开始日期。'
+      alertEndBeforeStart: '结束日期不能早于开始日期。',
+      recordTitle: '记录经期',
+      recordMsg: '您想记录经期开始还是结束？',
+      start: '开始记录',
+      end: '结束记录'
     }
   },
 

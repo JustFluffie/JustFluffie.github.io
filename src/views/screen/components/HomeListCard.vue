@@ -4,8 +4,8 @@
 // ========================================================================
 import { computed } from 'vue';
 import { useCalendarStore } from '@/stores/calendarStore';
-import { formatISO, parseISO, isWithinInterval } from 'date-fns';
-import { getPeriodStatusForDate } from '@/composables/usePeriodTracking';
+import { formatISO, startOfDay, differenceInDays } from 'date-fns';
+import { getPeriodStatusForDate, predictFuturePeriods } from '@/composables/usePeriodTracking';
 
 // ========================================================================
 // Store 初始化
@@ -36,31 +36,48 @@ const formatTime = (dateString) => {
 // 经期追踪 (Period Tracker) 逻辑
 // ========================================================================
 const periodStatus = computed(() => {
-  // 直接使用导入的函数，并传入正确的参数（今天的日期和完整的历史记录）
-  return getPeriodStatusForDate(new Date(), calendarStore.periodHistory);
+  return getPeriodStatusForDate(formatISO(new Date(), { representation: 'date' }), calendarStore.periodHistory, calendarStore.ongoingPeriod);
+});
+
+const futurePredictions = computed(() => {
+  return predictFuturePeriods(calendarStore.periodHistory, calendarStore.ongoingPeriod, 1);
 });
 
 const periodDisplayText = computed(() => {
   const { status, dayCount } = periodStatus.value;
-  const prediction = calendarStore.predictedPeriod;
 
-  // 状态1: 实际经期中
-  if (status === 'actual') {
-    return `经期第 ${dayCount} 天`;
+  switch (status) {
+    case 'actual':
+    case 'ongoing':
+      return `经期第 ${dayCount} 天`;
+    case 'predicted':
+      return `预测第 ${dayCount} 天`;
+    default:
+      if (futurePredictions.value.length > 0) {
+        const nextStart = startOfDay(new Date(futurePredictions.value[0].start));
+        const today = startOfDay(new Date());
+        const daysUntil = differenceInDays(nextStart, today);
+        if (daysUntil > 0) {
+          return `预计 ${daysUntil} 天后`;
+        } else if (daysUntil === 0) {
+          // This case might occur if the prediction starts today but isn't 'ongoing' yet.
+          return '预测今日开始';
+        }
+      }
+      return '添加历史记录以开始预测';
   }
-  
-  // 状态2: 预测期
-  if (status === 'predicted') {
-    // 检查今天是否正好在预测区间内
-    if (prediction && isWithinInterval(new Date(), { start: parseISO(prediction.startDate), end: parseISO(prediction.endDate) })) {
-      return '预测期内';
-    }
-    // 如果不在区间内，说明是倒计时
-    return `预计 ${dayCount} 天后`;
+});
+
+const periodTextColor = computed(() => {
+  switch (periodStatus.value.status) {
+    case 'actual':
+    case 'ongoing':
+      return 'var(--period-color, #e66262)'; // 红色
+    case 'predicted':
+      return 'var(--color-pink, #ff8c94)'; // 粉色
+    default:
+      return 'var(--text-tertiary, #999)'; // 灰色
   }
-  
-  // 状态3: 默认状态 (无历史记录或不在任何特殊时期)
-  return '添加历史记录以开始预测';
 });
 
 </script>
@@ -94,7 +111,12 @@ const periodDisplayText = computed(() => {
 
     <!-- 经期追踪容器 -->
     <div class="period-tracker-container">
-      <p class="period-text">{{ periodDisplayText }}</p>
+      <p 
+        class="period-text" 
+        :style="{ color: periodTextColor }"
+      >
+        {{ periodDisplayText }}
+      </p>
     </div>
   </div>
 </template>
@@ -129,7 +151,7 @@ const periodDisplayText = computed(() => {
   font-size: 24px;
   color: #333;
   margin: -15px -8px 0 -10px;
-  transform: translateX(-31%) rotate(-4deg);
+  transform: translateX(-2.7rem) rotate(-4deg);
   text-align: right;
   flex-shrink: 0; /* 防止标题被压缩 */
 }

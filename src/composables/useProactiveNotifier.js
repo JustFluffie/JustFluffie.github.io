@@ -1,7 +1,8 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { useSingleStore } from '@/stores/chat/singleStore';
-import { formatISO, parseISO, differenceInMinutes, differenceInDays } from 'date-fns';
+import { formatISO, parseISO, differenceInMinutes } from 'date-fns';
+import { getPeriodNotificationStatus } from '@/composables/usePeriodTracking';
 
 export function useProactiveNotifier() {
   const calendarStore = useCalendarStore();
@@ -36,16 +37,19 @@ export function useProactiveNotifier() {
     });
 
     // 2. 检查经期预测提醒 (每天只提醒一次)
-    if (calendarStore.predictedPeriod?.startDate) {
-      const daysUntilPrediction = differenceInDays(parseISO(calendarStore.predictedPeriod.startDate), now);
-      if (daysUntilPrediction >= 0 && daysUntilPrediction <= 3) {
-        const reminderKey = `reminder_sent_period_${calendarStore.predictedPeriod.startDate}`;
-        if (!sessionStorage.getItem(reminderKey)) {
-          const reminderMessage = `主人，预测你的生理期在 ${daysUntilPrediction} 天后就要来啦，要提前准备一下哦。`;
-          singleStore.addMessageFromChar(notifierCharId, reminderMessage);
-          sessionStorage.setItem(reminderKey, 'true');
-          console.log(`[useProactiveNotifier] Sent period prediction reminder.`);
-        }
+    const periodNotification = getPeriodNotificationStatus(today, calendarStore.periodHistory, calendarStore.ongoingPeriod);
+    if (periodNotification) {
+      const { daysUntil, startDate } = periodNotification;
+      const reminderKey = `reminder_sent_period_${startDate}`;
+      
+      if (!sessionStorage.getItem(reminderKey)) {
+        const reminderMessage = daysUntil === 0
+          ? `主人，预测你的生理期今天就要来啦，要注意身体哦。`
+          : `主人，预测你的生理期在 ${daysUntil} 天后就要来啦，要提前准备一下哦。`;
+        
+        singleStore.addMessageFromChar(notifierCharId, reminderMessage);
+        sessionStorage.setItem(reminderKey, 'true');
+        console.log(`[useProactiveNotifier] Sent period prediction reminder for ${startDate}.`);
       }
     }
   };

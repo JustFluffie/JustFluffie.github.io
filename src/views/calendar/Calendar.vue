@@ -102,7 +102,8 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { formatISO, isWithinInterval } from 'date-fns';
+import { formatISO } from 'date-fns';
+import { storeToRefs } from 'pinia';
 import AppLayout from '@/components/common/AppLayout.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import EventFormModal from '@/components/common/EventFormModal.vue';
@@ -113,6 +114,7 @@ import { getPeriodStatusForDate } from '@/composables/usePeriodTracking';
 
 // === Pinia Store ===
 const calendarStore = useCalendarStore();
+const { ongoingPeriod } = storeToRefs(calendarStore);
 
 // === Modal State ===
 const isModalVisible = ref(false);
@@ -179,7 +181,7 @@ const hasEventsOnDate = (date) => calendarStore.getEventsByDate(date).length > 0
 // === New Period Tracking Logic ===
 const periodStatusForSelectedDate = computed(() => {
   const dateString = formatISO(selectedDate.value, { representation: 'date' });
-  return getPeriodStatusForDate(dateString, calendarStore.periodHistory);
+  return getPeriodStatusForDate(dateString, calendarStore.periodHistory, ongoingPeriod.value);
 });
 
 const handleRecordPeriod = () => {
@@ -190,22 +192,30 @@ const handleRecordPeriod = () => {
 };
 
 
+const eventMarkers = computed(() => {
+  const markers = {};
+  for (const event of calendarStore.events) {
+    if (!event.date) continue;
+    const dateKey = formatISO(new Date(event.date), { representation: 'date' });
+    if (event.type === 'period_day') {
+      markers[dateKey] = 'event-dot actual-dot';
+    } else if (event.type === 'predicted_period_day') {
+      // Don't overwrite an actual dot with a predicted one
+      if (!markers[dateKey]) {
+        markers[dateKey] = 'event-dot predicted-dot';
+      }
+    } else if (!markers[dateKey]) {
+      // Generic event
+      markers[dateKey] = 'event-dot';
+    }
+  }
+  return markers;
+});
+
 const getDayMarkerClass = (day) => {
   const date = new Date(currentYear.value, currentMonth.value, day);
-  // getEventsByDate is a computed property, so this is efficient.
-  const eventsOnDay = calendarStore.getEventsByDate(date);
-  
-  if (eventsOnDay.some(e => e.type === 'period_day')) {
-    return 'event-dot actual-dot';
-  }
-  if (eventsOnDay.some(e => e.type === 'predicted_period_day')) {
-    return 'event-dot predicted-dot';
-  }
-  if (eventsOnDay.length > 0) {
-    // Generic event dot, you can style this differently if needed
-    return 'event-dot';
-  }
-  return ''; // No class if no events
+  const dateKey = formatISO(date, { representation: 'date' });
+  return eventMarkers.value[dateKey] || '';
 };
 
 </script>
