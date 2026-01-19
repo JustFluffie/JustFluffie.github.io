@@ -242,7 +242,7 @@ const confirmLocation = () => {
     text-align: center;
     width: 90%;
     outline: none;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
     z-index: 2;
     font-family: inherit;
     padding: 5px;
@@ -289,7 +289,7 @@ const confirmLocation = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
     cursor: pointer;
 }
 </style>

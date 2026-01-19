@@ -339,6 +339,7 @@ import { useBackupStore } from '@/stores/backupStore';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import localforage from 'localforage';
 import CustomSelect from '@/components/common/CustomSelect.vue';
 import AppLayout from '@/components/common/AppLayout.vue';
 import Modal from '@/components/common/Modal.vue';
@@ -592,11 +593,34 @@ function handleResetAllData() {
   themeStore.showConfirm(
     '确认清除所有数据？',
     '此操作将永久删除所有本地存储的数据（包括聊天记录、API设置、背景图片等）。应用将重置为初始状态。请确保您已备份重要数据。',
-    () => {
+    async () => {
+      // 1. 清除所有 localStorage 数据
       localStorage.clear();
+
+      // 2. 清除所有 localforage 数据
+      try {
+        await localforage.clear();
+      } catch (error) {
+        console.error("Error clearing localforage:", error);
+      }
+      
+      // 3. 手动重置所有 store 到初始状态
+      try {
+        apiStore.$reset();
+        backgroundStore.$reset();
+        backupStore.$reset();
+        singleStore.$reset();
+        themeStore.$reset();
+        notificationStore.$reset();
+        // 如果有其他 store，也在这里添加
+      } catch (error) {
+        console.error("Error resetting stores:", error);
+      }
+
+      // 4. 刷新页面以确保所有内容都从初始状态加载
       window.location.reload();
     },
-    { messageStyle: { color: '#FF3B30' }, confirmText: '清除' }
+    { messageStyle: { color: '#FF3B30' }, confirmText: 'delete' }
   );
 }
 

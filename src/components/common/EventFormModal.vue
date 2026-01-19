@@ -150,11 +150,8 @@ const submit = () => {
       alert('待办内容不能为空！');
       return;
     }
-    const [year, month, day] = dataToSubmit.date.split('-').map(Number);
-    const [hours, minutes] = dataToSubmit.time.split(':').map(Number);
-    const newDate = new Date(year, month - 1, day, hours, minutes);
-    
-    dataToSubmit.date = newDate.toISOString();
+    // 直接拼接日期和时间字符串，避免时区转换问题
+    dataToSubmit.date = `${dataToSubmit.date}T${dataToSubmit.time}:00`;
     dataToSubmit.content = dataToSubmit.details;
     delete dataToSubmit.details;
     delete dataToSubmit.title;

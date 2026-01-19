@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 // ==========================================
 // 模块导入
 // ==========================================
@@ -19,6 +19,7 @@ import PhotoWall from './components/PhotoWall.vue'
 import AppGrid from './components/AppGrid.vue'
 import DockBar from './components/DockBar.vue'
 import HomeScreen2 from './HomeScreen2.vue'
+import HomeListCard from './components/HomeListCard.vue'
 
 // ==========================================
 // 初始化与状态管理
@@ -266,6 +267,7 @@ onMounted(() => {
           </div>
 
           <!-- 内容区域模块 -->
+          <HomeListCard class="home-list-card" />
           <div class="content-row">
             <div class="left-column">
               <AppGrid
@@ -423,11 +425,20 @@ onMounted(() => {
    使用 transform 避免影响上方 PhotoWall 的居中位置
 */
 .right-column .app-grid {
-  transform: translateY(-50px);
+  transform: translateY(-38px);
 }
 
 .left-column .app-grid {
   transform: translateY(15px);
+}
+
+.home-list-card {
+  position: absolute;
+  top: 53.5%;
+  left: 25px; /* Match page padding */
+  width: calc(47% - 25px); /* Half page width minus some padding */
+  height: 25%; /* Adjust length */
+  z-index: 10;
 }
 
 .spacer {

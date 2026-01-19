@@ -106,8 +106,8 @@ import { formatISO, isWithinInterval } from 'date-fns';
 import AppLayout from '@/components/common/AppLayout.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 import EventFormModal from '@/components/common/EventFormModal.vue';
-import PeriodTrackerCard from '@/components/calendar/PeriodTrackerCard.vue';
-import ToDoList from '@/components/calendar/ToDoList.vue';
+import PeriodTrackerCard from '@/views/calendar/components/PeriodTracker.vue';
+import ToDoList from '@/views/calendar/components/ToDoList.vue';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { getPeriodStatusForDate } from '@/composables/usePeriodTracking';
 

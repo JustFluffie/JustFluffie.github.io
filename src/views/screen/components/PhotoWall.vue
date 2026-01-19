@@ -36,6 +36,11 @@ const showSourceSelect = (type) => {
       <div class="polaroid p1" @click="showSourceSelect('photo1')">
         <div class="photo" :style="homeData.photo1 ? { backgroundImage: `url('${homeData.photo1}')` } : {}"></div>
       </div>
+
+      <!-- 字素1 -->
+      <input type="text" class="custom-text-input photo-wall-input1" placeholder="Good">
+      <input type="text" class="custom-text-input photo-wall-input2" placeholder="Say something...">
+      <input type="text" class="custom-text-input photo-wall-input3" placeholder="Say something...">
       
     </div>
   </div>
@@ -144,6 +149,48 @@ const showSourceSelect = (type) => {
     left: 12%; 
     transform: rotate(-10deg); 
     z-index: 11; 
+}
+
+/* --- 字素1 --- */
+.photo-wall-input1,
+.photo-wall-input2,
+.photo-wall-input3 {
+    position: absolute;
+    top: 65%;
+    left: 51%;
+    width: 10em; /* 紧凑一点 */
+    background: transparent;
+    border: none;
+    color: var(--home-text-color);
+    padding: 5px;
+    font-size: 0.8em; 
+    font-weight: 500;
+    font-family: inherit;
+    font-style: italic;
+    text-align: left;
+    outline: none;
+    z-index: 13; /* 比 p1 和 p2 高 */
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.photo-wall-input2 { position: absolute; top: 75%; left: 51%; width: 15em;}
+.photo-wall-input3 { position: absolute; top: 12%; left: 0%; text-align: center;}
+
+
+.photo-wall-input1:focus,
+.photo-wall-input2:focus,
+.photo-wall-input3:focus {
+    box-shadow: none;
+    text-shadow: none;
+}
+
+.photo-wall-input1::placeholder,
+.photo-wall-input2::placeholder,
+.photo-wall-input3::placeholder {
+    color: var(--home-text-color);
+    font-style: italic;
 }
 
 /* --- 照片区域样式 --- */
