@@ -16,6 +16,7 @@ import { useApiStore } from '@/stores/apiStore' // 引入 api store
 import { useBackgroundService } from '@/composables/useBackgroundService'
 import { useProactiveNotifier } from '@/composables/useProactiveNotifier' // 引入主动通知服务
 import { useNotificationStore } from '@/stores/notificationStore'
+import DebugConsole from '@/components/common/DebugConsole.vue' // 引入调试控制台
 
 const router = useRouter()
 const singleStore = useSingleStore()
@@ -142,6 +143,9 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
 
     <!-- 全局加载指示器 -->
     <Loading />
+
+    <!-- 调试控制台 -->
+    <DebugConsole v-if="import.meta.env.VITE_APP_DEBUG_MODE === 'true'" />
   </div>
 </template>
 
