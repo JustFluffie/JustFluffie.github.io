@@ -19,6 +19,34 @@ import { useNotificationStore } from '@/stores/notificationStore'
 import DebugConsole from '@/components/common/DebugConsole.vue' // 引入调试控制台
 
 const router = useRouter()
+
+// 调试模式相关
+const isDebugEnabled = ref(false);
+let debugTapCount = 0;
+let debugTapTimer = null;
+
+const handleDebugTrigger = () => {
+  debugTapCount++;
+  clearTimeout(debugTapTimer);
+  debugTapTimer = setTimeout(() => {
+    debugTapCount = 0;
+  }, 1500); // 1.5秒内无新点击则重置计数器
+
+  if (debugTapCount >= 7) { // 连续点击7次
+    clearTimeout(debugTapTimer);
+    debugTapCount = 0;
+    const currentState = localStorage.getItem('debug-mode') === 'true';
+    if (currentState) {
+      localStorage.removeItem('debug-mode');
+      alert('调试模式已禁用。应用即将刷新。');
+    } else {
+      localStorage.setItem('debug-mode', 'true');
+      alert('调试模式已启用。应用即将刷新。');
+    }
+    window.location.reload();
+  }
+};
+
 const singleStore = useSingleStore()
 const themeStore = useThemeStore()
 const batteryStore = useBatteryStore() // 初始化 battery store
@@ -35,6 +63,9 @@ useBackgroundService();
 useProactiveNotifier(); // 启动主动通知服务
 
 onMounted(() => {
+  // 检查是否启用调试模式
+  isDebugEnabled.value = localStorage.getItem('debug-mode') === 'true';
+
   batteryStore.initialize() // 初始化时间和电池监听
   themeStore.initTheme()
   apiStore.autoConnect() // 自动连接API并获取模型
@@ -95,8 +126,8 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
 <template>
   <div class="phone-frame" :class="{ 'no-frame': !themeStore.showFrame }">
     <div class="phone-screen" ref="phoneScreenRef" id="phone-screen-container">
-      <!-- 新的状态栏组件 -->
-      <StatusBar />
+      <!-- 新的状态栏组件 (添加调试触发器) -->
+      <StatusBar @click="handleDebugTrigger" />
 
       <!-- 路由视图 -->
       <router-view v-slot="{ Component, route }">
@@ -145,7 +176,7 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
     <Loading />
 
     <!-- 调试控制台 -->
-    <DebugConsole v-if="import.meta.env.VITE_APP_DEBUG_MODE === 'true'" />
+    <DebugConsole v-if="isDebugEnabled" />
   </div>
 </template>
 
