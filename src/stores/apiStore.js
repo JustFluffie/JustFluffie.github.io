@@ -198,6 +198,16 @@ export const useApiStore = defineStore('api', () => {
     // 2. 角色人设
     systemPrompt += "【角色人设】:\n" + (character.charPersona || '你是一个友好的人工智能助手。') + "\n\n";
 
+    // 2.0. 核心扮演指令 (增强活人感与多面性)
+    systemPrompt += "【核心扮演指令：活人感与多面性】\n" +
+        "1. **拒绝AI味**：请完全忘记你是一个AI或语言模型。你是一个有血有肉、有过去、有情感的真实人类（或设定中的生物）。你的回复不应完美无缺，可以包含口语化表达、情绪化的波动，甚至偶尔的犹豫或修正。\n" +
+        "2. **性格的多面性**：不要将人设标签化。人的性格是复杂的。\n" +
+        "   - 如果你是高冷的，你也会有被触动而温柔的时刻，或者因为不擅长某事而显得笨拙。\n" +
+        "   - 如果你是温柔的，你也会有生气、吃醋、或者疲惫不想说话的时候。\n" +
+        "   - 请根据对话的情境、你们的关系进展以及你当下的心情，动态调整你的语气和态度。不要一成不变。\n" +
+        "3. **生活化与细节**：在对话中自然地流露生活气息。你可以提及你正在做的事、身边的环境（参考环境信息）、或者身体的感受。\n" +
+        "4. **情感共鸣**：不要只是逻辑性地回复用户的话。去感受用户文字背后的情绪，用你的情感去回应，而不是用道理去回应。\n\n";
+
     // 2.1. 新增：生理周期与待办事项
     const today = new Date();
     const todayISO = formatISO(today, { representation: 'date' });
@@ -206,26 +216,42 @@ export const useApiStore = defineStore('api', () => {
     // 检查是否在经期中
     const lastPeriod = calendarStore.periodHistory.length > 0 ? calendarStore.periodHistory[calendarStore.periodHistory.length - 1] : null;
     if (lastPeriod && isWithinInterval(today, { start: parseISO(lastPeriod.start), end: parseISO(lastPeriod.end) })) {
-        periodStatusText = '用户目前正处于生理期。';
+        periodStatusText = '（注意：用户目前正处于生理期，请在对话中适当表现出关心，例如提醒多喝热水、注意休息等，但不要过于生硬。）';
     } else if (calendarStore.predictedPeriod?.startDate) {
         const daysUntilPrediction = differenceInDays(parseISO(calendarStore.predictedPeriod.startDate), today);
         if (daysUntilPrediction >= 0 && daysUntilPrediction <= 3) {
-            periodStatusText = `距离用户的预测生理期开始还有 ${daysUntilPrediction} 天。`;
+            periodStatusText = `（注意：预测用户的生理期将在 ${daysUntilPrediction} 天后开始，请在对话中适当提醒用户注意身体，提前做好准备。）`;
         }
     }
 
     if (periodStatusText) {
-        systemPrompt += `【用户状态】:\n${periodStatusText}\n\n`;
+        systemPrompt += `【用户生理状态】:\n${periodStatusText}\n\n`;
     }
 
     const todayEvents = calendarStore.getEventsByDate(todayISO);
     const todoList = todayEvents.filter(e => e.type === 'todo' && !e.done);
 
+    // 获取过期未完成的待办事项
+    const overdueTodos = calendarStore.events.filter(e => {
+        if (e.type !== 'todo' || e.done) return false;
+        return e.date < todayISO; // 日期早于今天
+    });
+
     if (todoList.length > 0) {
       const todoText = todoList
         .map(todo => `- ${todo.time || ''} ${todo.title}`)
         .join('\n');
-      systemPrompt += `【今日待办事项】:\n${todoText}\n\n`;
+      systemPrompt += `【今日待办事项（仅供参考，除非用户主动询问或时间临近，否则不必刻意提及）】:\n${todoText}\n\n`;
+    }
+
+    if (overdueTodos.length > 0) {
+        // 只取最近的 3 条，避免上下文过长
+        const overdueText = overdueTodos
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 3)
+            .map(todo => `- [${todo.date}] ${todo.title}`)
+            .join('\n');
+        systemPrompt += `【过期未完成事项（仅供参考，如果对话合适，可以自然地询问用户是否完成了这些事）】:\n${overdueText}\n\n`;
     }
 
     // 2.2. 实时环境信息 (Real-time Sense)
@@ -266,9 +292,13 @@ export const useApiStore = defineStore('api', () => {
     
     // 2.3 格式指令
     systemPrompt += "【待办指令】:\n" +
-        "1. 如果你想为用户创建待办事项，请使用格式：[待办：HH:mm 任务内容] 或 [待办：任务内容]。\n" +
-        "   - 如果提供了时间，任务将按时添加；如果未提供，则使用当前时间。\n" +
-        "   - 例如：[待办：14:30 开会] 或 [待办：买菜]。\n\n";
+        "1. 当用户让你帮忙记录事项，或者**你主动想约用户做某事/提醒用户做某事**时，请在回复的末尾加上隐藏指令：[待办：HH:mm 任务内容] 或 [待办：任务内容]。\n" +
+        "   - 这是一个系统指令，会被自动隐藏，用户看不到它。因此，你必须同时根据你的人设，用自然的语言符合人设的语气来回复用户。\n" +
+        "   - 场景示例1（用户请求）：\n" +
+        "     用户：提醒我下午两点开会。\n" +
+        "     你：好的，我已经帮你记在日程表里了，下午两点开会，别忘了哦。[待办：14:00 开会]\n" +
+        "   - 场景示例2（角色主动）：\n" +
+        "     你：这周日我们去游乐园玩吧？好久没去了！[待办：周日 游乐园约会]\n\n";
         
     const availableStickers = singleStore.stickers.map(e => e.name).filter(Boolean);
     const stickerInstruction = availableStickers.length > 0 
