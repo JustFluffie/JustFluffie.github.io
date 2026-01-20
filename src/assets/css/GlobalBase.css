@@ -31,7 +31,10 @@
     --accent-green: #34C759;          /* 绿色 */
     --danger-color: #ff3030;          /* 红色 */
     --danger-bg: rgba(255, 58, 48, 0.747); /* 透红色 */
-    --color-pink: #FFC0CB;            /* 粉色 */
+    --C-pink: #EEA2A4;            /* 粉色 */
+    --C-blue: #A8DBFA;
+    --C-yellow: #FFDD8C; 
+    --C-red: #f36b6b; 
   
     /* 边框/阴影/圆角（布局样式） */
     --border-color: #e0e0e0;

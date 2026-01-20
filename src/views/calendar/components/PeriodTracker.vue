@@ -95,9 +95,9 @@ const iconColor = computed(() => {
   switch (props.status) {
     case 'actual':
     case 'ongoing':
-      return 'var(--period-color)';
+      return 'var(--C-red)';
     case 'predicted':
-      return 'var(--color-pink)';
+      return 'var(--C-pink)';
     default:
       return 'var(---text-tertiary)';
   }
@@ -166,7 +166,6 @@ const handleEndPeriod = () => {
 <style scoped>
 /* --- 主容器：手账便签风格 --- */
 .period-item {
-  --period-color: #e66262;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: 'Georgia', 'Times New Roman', serif;
   margin-top: 10px;

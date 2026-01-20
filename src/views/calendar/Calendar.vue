@@ -36,6 +36,7 @@
           >
             <span class="week-txt">{{ day.week }}</span>
             <span class="day-num">{{ day.day }}</span>
+            <div :class="getMarkerClassForDate(day.date)"></div>
           </div>
         </div>
         <div class="month-view" v-else>
@@ -248,25 +249,33 @@ const eventMarkers = computed(() => {
   for (const event of calendarStore.events) {
     if (!event.date) continue;
     const dateKey = formatISO(new Date(event.date), { representation: 'date' });
+    
     if (event.type === 'period_day') {
+      // 经期追踪最优先
       markers[dateKey] = 'event-dot actual-dot';
     } else if (event.type === 'predicted_period_day') {
-      // Don't overwrite an actual dot with a predicted one
-      if (!markers[dateKey]) {
+      // 预测经期次优先，不覆盖实际经期
+      if (markers[dateKey] !== 'event-dot actual-dot') {
         markers[dateKey] = 'event-dot predicted-dot';
       }
-    } else if (!markers[dateKey]) {
-      // Generic event
-      markers[dateKey] = 'event-dot';
+    } else {
+      // 普通事件，优先级最低，不覆盖经期相关标记
+      if (!markers[dateKey]) {
+        markers[dateKey] = 'event-dot normal-dot';
+      }
     }
   }
   return markers;
 });
 
-const getDayMarkerClass = (day) => {
-  const date = new Date(currentYear.value, currentMonth.value, day);
+const getMarkerClassForDate = (date) => {
   const dateKey = formatISO(date, { representation: 'date' });
   return eventMarkers.value[dateKey] || '';
+};
+
+const getDayMarkerClass = (day) => {
+  const date = new Date(currentYear.value, currentMonth.value, day);
+  return getMarkerClassForDate(date);
 };
 
 </script>
@@ -295,18 +304,19 @@ const getDayMarkerClass = (day) => {
 .week-view { display: flex; justify-content: space-between; }
 .day-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0; width: 40px; border-radius: 20px; cursor: pointer; }
 .day-item.active { background: #333; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.day-item.is-today .day-num { color: #f36b6b; font-weight: bold; }
+.day-item.is-today .day-num { color: var(--C-red); font-weight: bold; }
 .day-item.active.is-today .day-num { color: #fff; }
 .week-txt { font-size: 10px; font-weight: 700; opacity: 0.6; } .day-num { font-size: 16px; font-weight: 600; }
 .dot-mark { width: 4px; height: 4px; background: #fff; border-radius: 50%; margin-top: -2px;}
-.day-item .event-dot, .grid-cell .event-dot { width: 5px; height: 5px; background-color: #f36b6b; border-radius: 50%; position: absolute; bottom: 5px; }
+.day-item .event-dot, .grid-cell .event-dot { width: 5px; height: 5px; background-color: var(--C-blue); border-radius: 50%; position: absolute; bottom: 5px; }
 .day-item.active .event-dot { background-color: #fff; }
-.event-dot.actual-dot { background-color: #f36b6b; }
-.event-dot.predicted-dot { background-color: var(--color-pink); }
+.event-dot.actual-dot { background-color: var(--C-red); }
+.event-dot.predicted-dot { background-color: var(--C-pink); }
+.event-dot.normal-dot { background-color: var(--C-blue); }
 .grid-body { display: flex; flex-wrap: wrap; row-gap: 10px; }
 .grid-header { display: flex; margin-bottom: 10px; } .grid-header span { flex: 1; text-align: center; font-size: 12px; color: #999; }
 .grid-cell { width: 14.28%; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 50%; font-size: 14px; position: relative; }
-.grid-cell.active { background: #333; color: #fff; } .grid-cell.today { color: #f36b6b; font-weight: bold; } .grid-cell.active.today { color: #fff; }
+.grid-cell.active { background: #333; color: #fff; } .grid-cell.today { color: var(--C-red); font-weight: bold; } .grid-cell.active.today { color: #fff; }
 .events-display-section { display: flex; flex-direction: column; gap: 16px; }
 .cards-container { display: flex; flex-direction: column; gap: 5px; }
 .sticker-card { background: #fff; border-radius: 16px; padding: 20px; padding-bottom: 10px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #f2f2f2; }

@@ -73,9 +73,9 @@ const periodTextColor = computed(() => {
   switch (periodStatus.value.status) {
     case 'actual':
     case 'ongoing':
-      return 'var(--period-color, #e66262)'; // 红色
+      return 'var(--C-red)'; // 红色
     case 'predicted':
-      return 'var(--color-pink, #ff8c94)'; // 粉色
+      return 'var(--C-pink)'; // 粉色
     default:
       return 'var(--text-tertiary, #999)'; // 灰色
   }
@@ -128,22 +128,25 @@ const finalDisplayInfo = computed(() => {
     
     if (diff > 0) {
       return {
-        prefix: `${event.title} 已经 `,
+        title: event.title,
+        prefix: '已经 ',
         number: diff,
         suffix: ' 天',
-        color: '#4a90e2' // 蓝色
+        color: 'var(--C-yellow)' 
       };
     } else if (diff < 0) {
       return {
-        prefix: `${event.title} 还有 `,
+        title: event.title,
+        prefix: '还有 ',
         number: Math.abs(diff),
         suffix: ' 天',
-        color: '#f5a623' // 橙色
+        color: 'var(--C-blue)'
       };
     } else {
       return {
-        text: `${event.title} 就是今天`,
-        color: '#e66262' // 红色
+        title: event.title,
+        text: '就是今天',
+        color: 'var(--C-red)'
       };
     }
   }
@@ -180,7 +183,6 @@ const selectDisplay = (preference) => {
         :class="{ active: displayPreference.type === 'period' }"
         @click="selectDisplay({ type: 'period' })"
       >
-        <span class="item-icon">🩸</span>
         <div class="item-content">
           <span class="item-title">经期追踪</span>
           <span class="item-desc">显示当前经期状态或预测</span>
@@ -198,7 +200,6 @@ const selectDisplay = (preference) => {
         :class="{ active: displayPreference.type === 'event' && displayPreference.eventId === event.id }"
         @click="selectDisplay({ type: 'event', eventId: event.id })"
       >
-        <span class="item-icon">📅</span>
         <div class="item-content">
           <span class="item-title">{{ event.title }}</span>
           <span class="item-desc">{{ event.date }}</span>
@@ -252,18 +253,28 @@ const selectDisplay = (preference) => {
         <div class="divider"></div>
 
         <!-- 2.4 底部信息展示区域 (经期/事件) -->
-        <div class="period-tracker-container" @click="openSelectionModal">
-          <p 
-            class="period-text" 
+        <div class="bottom-info-container" @click="openSelectionModal">
+          <div 
+            class="info-content" 
             :style="{ color: finalDisplayInfo.color }"
           >
             <template v-if="finalDisplayInfo.number !== undefined">
-              <span class="period-label">{{ finalDisplayInfo.prefix }}</span><span class="period-number">{{ finalDisplayInfo.number }}</span><span class="period-label">{{ finalDisplayInfo.suffix }}</span>
+              <!-- 如果有标题（事件），显示标题 -->
+              <div v-if="finalDisplayInfo.title" class="info-title">{{ finalDisplayInfo.title }}</div>
+              
+              <!-- 详细信息行：前缀 + 数字 + 后缀 -->
+              <div class="info-detail">
+                <span class="info-prefix">{{ finalDisplayInfo.prefix }}</span>
+                <span class="info-number">{{ finalDisplayInfo.number }}</span>
+                <span class="info-suffix">{{ finalDisplayInfo.suffix }}</span>
+              </div>
             </template>
             <template v-else>
-              <span class="period-label">{{ finalDisplayInfo.text }}</span>
+              <!-- 纯文本情况 -->
+              <div v-if="finalDisplayInfo.title" class="info-title">{{ finalDisplayInfo.title }}</div>
+              <span class="info-text-single">{{ finalDisplayInfo.text }}</span>
             </template>
-          </p>
+          </div>
         </div>
       </div>
     </div>
@@ -522,55 +533,66 @@ const selectDisplay = (preference) => {
 /* --- 分割线 --- */
 .divider {
   border-bottom: 0.1em dashed #bebebe;
-  margin: 1em 0;
+  margin: 0.9em 0;
   flex-shrink: 0; /* 防止分割线被压缩 */
 }
 
 /* ========================================================================
    5. 底部信息区域样式 (Bottom Info Area)
    ======================================================================== */
-.period-tracker-container {
+.bottom-info-container {
   flex-shrink: 0; /* 防止此容器被压缩 */
   text-align: center;
   padding: 0; 
-  margin: 0 0;
-  font-family: 'ZCOOL KuaiLe', cursive;
+  margin: 0.5em 0;
   cursor: pointer;
   transition: transform 0.1s ease;
 }
 
-.period-tracker-container:active {
+.bottom-info-container:active {
   transform: scale(0.98);
 }
 
-.period-text {
-  /* --- 整体调整 --- */
-  font-size: 1em; /* [核心] 修改这里可同时调整文字和数字的大小 */
-  
-  /* --- 布局与样式 --- */
-  color: #666;
+.info-content {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  color: var(--text-secondary);
   margin: -5px 0;
   letter-spacing: 0.1em;
-  display: flex;            /* 使用 Flex 布局 */
-  align-items: baseline;    /* 关键：让文字和数字基线对齐 */
-  justify-content: center;  /* 水平居中 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.period-label {
-  /* --- 文字微调 --- */
-  /* position: relative; top: 0.15em;  <-- 旧的对齐方式，Flex baseline 下通常不需要 */
-  /* 如果字体基线差异大，可用 transform 微调，例如: transform: translateY(-2px); */
+.info-title {
+  font-size: 1.2em;
+  margin-bottom: 0em;
+  opacity: 0.9;
+  line-height: 1.2;
 }
 
-.period-number {
-  /* --- 数字调整 --- */
-  font-size: 1.8em; /* [核心] 修改这里调整数字相对于文字的比例 */
-  
-  /* --- 样式 --- */
+.info-detail {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.info-prefix, .info-suffix {
+  font-size: 1em;
+}
+
+.info-number {
+  font-size: 1.7em;
   font-weight: bold;
   font-family: var(--font-serif);
   margin: 0 0.3em;
-  /* vertical-align: -0.15em; <-- Flex baseline 下失效，已移除 */
+  line-height: 1;
+  transform: translateY(0.05em); /* 微调数字垂直对齐 */
+}
+
+.info-text-single {
+  font-size: 1.2em;
+  padding: 0.2em 0;
 }
 
 /* ========================================================================
@@ -600,8 +622,8 @@ const selectDisplay = (preference) => {
 }
 
 .selection-item.active {
-  background: #e6f7ff;
-  border-color: #91d5ff;
+  background: var(--text-quaternary);
+  border-color: var(--text-tertiary);
 }
 
 .item-icon {
@@ -613,21 +635,23 @@ const selectDisplay = (preference) => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  text-align: center;
 }
 
 .item-title {
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   font-size: 1.1em;
+  text-align: center;
 }
 
 .item-desc {
   font-size: 0.85em;
-  color: #888;
+  color: var(--text-tertiary);
 }
 
 .item-check {
-  color: #1890ff;
+  color: #e66262;
   font-weight: bold;
   font-size: 1.2em;
 }
@@ -640,7 +664,7 @@ const selectDisplay = (preference) => {
 
 .no-events-tip {
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   padding: 1em;
   font-size: 0.9em;
 }
