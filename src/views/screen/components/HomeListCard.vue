@@ -217,7 +217,7 @@ const selectDisplay = (preference) => {
   <!-- ========================================================================
        2. 主卡片容器
        ======================================================================== -->
-  <div class="list-card-wrapper">
+  <div class="list-card-wrapper" v-bind="$attrs">
     <div class="list-card-container">
       <div class="sticker-card todo-card">
         <!-- 2.1 装饰元素 -->

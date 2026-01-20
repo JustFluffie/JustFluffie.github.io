@@ -121,6 +121,10 @@ export const useBackupStore = defineStore('backup', () => {
         alert(`仓库 ${data.full_name} 创建成功！即将开始备份...`);
         await backupToGitHub();
       } else {
+        if (response.status === 401) {
+          alert('创建仓库失败: GitHub Token 无效或过期 (401)。请检查设置。');
+          return;
+        }
         const error = await response.json();
         // 如果仓库已存在，尝试直接使用
         if (error.errors && error.errors[0].message === 'name already exists on this account') {
@@ -178,11 +182,21 @@ export const useBackupStore = defineStore('backup', () => {
             'Accept': 'application/vnd.github.v3+json',
           },
         });
-        if (response.ok) {
+
+        if (response.status === 401) {
+          throw new Error('GitHub Token 无效或过期 (401)。请检查设置。');
+        }
+
+        if (response.status === 404) {
+          console.log('备份文件不存在，将创建新文件。');
+        } else if (response.ok) {
           const data = await response.json();
           sha = data.sha;
         }
       } catch (e) {
+        if (e.message.includes('GitHub Token')) {
+          throw e;
+        }
         // 文件不存在，忽略错误
       }
 
@@ -215,9 +229,13 @@ export const useBackupStore = defineStore('backup', () => {
         lastBackupTime.value = new Date();
         alert('备份成功！');
       } else {
+        if (putResponse.status === 401) {
+          alert('备份失败: GitHub Token 无效或过期 (401)。请检查设置。');
+          return;
+        }
         const errorData = await putResponse.json();
         console.error('GitHub API Error:', errorData);
-        alert(`备份失败: ${errorData.message}`);
+        alert(`备份失败: ${errorData.message || '未知错误'}`);
       }
 
     } catch (error) {

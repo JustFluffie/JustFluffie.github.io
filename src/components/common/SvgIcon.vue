@@ -77,8 +77,8 @@ const svgClass = computed(() => {
 
 <style scoped>
 .svg-icon {
-  width: 28px;
-  height: 28px;
+  width: 25px;
+  height: 25px;
   vertical-align: -0.15em;
   fill: none;/* 默认不填充，因为很多图标是 stroke */
   stroke: currentColor;

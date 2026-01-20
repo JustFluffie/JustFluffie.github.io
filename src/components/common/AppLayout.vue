@@ -86,8 +86,8 @@ function handleBack() {
     position: relative;
 }
 .app-header .back-btn {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;

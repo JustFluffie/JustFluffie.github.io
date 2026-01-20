@@ -21,24 +21,21 @@ export function useWeather() {
 
     themeStore.showLoading();
     try {
-      // 1. Geocoding
-      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(realLocationName)}&format=json&limit=1&accept-language=zh`;
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(nominatimUrl)}`;
-      const geoResponse = await fetch(proxyUrl);
+      // 1. Geocoding (使用 Open-Meteo Geocoding API)
+      const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(realLocationName)}&count=1&language=zh&format=json`;
+      const geoResponse = await fetch(geocodingUrl);
       if (!geoResponse.ok) throw new Error(`Geocoding failed: ${geoResponse.statusText}`);
       
-      const proxyData = await geoResponse.json();
-      const geoData = JSON.parse(proxyData.contents);
-      if (!geoData || geoData.length === 0) {
+      const geoData = await geoResponse.json();
+      if (!geoData.results || geoData.results.length === 0) {
         throw new Error('找不到该位置');
       }
 
-      const result = geoData[0];
-      const lat = parseFloat(result.lat);
-      const lon = parseFloat(result.lon);
-      const city = result.display_name.split(',')[0] || realLocationName;
-      const nameParts = result.display_name.split(',');
-      const country = nameParts[nameParts.length - 1]?.trim() || '';
+      const result = geoData.results[0];
+      const lat = result.latitude;
+      const lon = result.longitude;
+      const city = result.name || realLocationName;
+      const country = result.country || '';
 
       // 2. Get Weather
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&timezone=auto`;
