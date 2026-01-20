@@ -211,23 +211,21 @@ const getLangClass = (text) => {
 .photo-wall-input::placeholder { color: var(--home-text-color); font-style: italic; }
 
 /* --- 语言特定样式 --- */
-/* 英文：Georgia 斜体 */
+/* 英文 */
 .photo-wall-input.lang-en {
-    font-family: Segoe UI, serif;
-    font-size: 10.7px; font-style: italic; }
+    font-family: Segoe UI, serif; font-size: 10.7px; font-style: italic; }
 
-/* 中文：思源宋体 (或者你之前用的 ZCOOL KuaiLe) */
+/* 中文 */
 .photo-wall-input.lang-zh {
-    font-family: 'Noto Serif SC', 'SimSun', serif; 
-    font-size: 9px; font-style: normal; }
+    font-family: 'Noto Serif SC', 'SimSun', serif;  font-size: 9px; font-style: normal; }
 
-/* 日文：奇异丸 */
+/* 日文 */
 .photo-wall-input.lang-ja {
-    font-family: 'Kiwi Maru', serif; font-size: 10px; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
+    font-family: 'Kiwi Maru', serif; font-size: 9.7px; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
 
-/* 韩文：Gaegu */
+/* 韩文 */
 .photo-wall-input.lang-kr {
-    font-family: 'Gaegu', cursive; font-size: 11px; font-weight: 700; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
+    font-family: 'Gaegu', cursive; font-size: 13px; font-weight: 700; font-style: normal; letter-spacing: 0.7px; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
 
 .photo-wall-input-1 { top: 65%; left: 42%; width: 10em; }
 .photo-wall-input-2 { top: 75%; left: 42%; width: 15em; }

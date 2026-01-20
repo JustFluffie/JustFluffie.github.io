@@ -45,7 +45,7 @@ const fileInput = ref(null) // (保留引用，虽然主要使用 Modal)
 let homeData = reactive({
   headerBg: '',
   avatar: '',
-  text: t('homeScreen.greeting'),
+  text: '',
   musicTexts: ['虚拟', '- 陈粒', '摇摇晃晃情绪却满溢', '你是我未曾拥有无法捕捉的亲昵', '我却有你的吻你的魂你的心'],
   cdCover: '',
   photo1: '',
@@ -258,7 +258,8 @@ onMounted(() => {
           <!-- 顶部容器模块 -->
           <div class="header-container">
             <HomeHeader
-              v-model:homeData="homeData"
+              :homeData="homeData"
+              @update:homeData="newData => Object.assign(homeData, newData)"
               :current-date="currentDate"
               :weather-text="weatherText"
               @show-source-select="showSourceSelect"
@@ -293,7 +294,8 @@ onMounted(() => {
         
         <!-- ========== 第二页 ========== -->
         <HomeScreen2 
-          v-model:homeData="homeData"
+          :homeData="homeData"
+          @update:homeData="newData => Object.assign(homeData, newData)"
           @show-source-select="showSourceSelect"
           @save-home-data="saveHomeData"
         />

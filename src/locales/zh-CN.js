@@ -38,8 +38,7 @@ export default {
   // 主屏幕 (HomeScreen)
   // ================================
   homeScreen: {
-    greeting: '祝你早安、午安和晚安。',
-    inputPlaceholder: '点击输入文字',
+    inputPlaceholder: '祝你早安、午安和晚安',
     defaultWeather: '地名 温度℃',
     enterLocation: '请输入地名',
     apps: {

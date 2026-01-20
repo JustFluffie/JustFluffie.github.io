@@ -2,18 +2,19 @@
 // ==========================================
 // 模块导入
 // ==========================================
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useWeatherStore } from '@/stores/weatherStore'
-import Modal from '@/components/common/Modal.vue'
+// import Modal from '@/components/common/Modal.vue' // 注意：如果没用到可以去掉，或者保留备用
 
 // ==========================================
 // Props & Emits 定义
 // ==========================================
-defineProps({
+const props = defineProps({
   homeData: {
     type: Object,
-    required: true
+    required: true,
+    default: () => ({ text: '' }) // 建议加上默认值，防止父组件传空对象
   },
   currentDate: {
     type: String,
@@ -33,41 +34,43 @@ const emit = defineEmits(['show-source-select', 'save-home-data', 'update:homeDa
 const { t } = useI18n()
 const weatherStore = useWeatherStore()
 
-// 本地状态
 const showLocationModal = ref(false)
 const locationInput = ref('')
+
+const inputValue = computed({
+  get: () => props.homeData?.text || '', 
+  set: (val) => emit('update:homeData', { ...props.homeData, text: val })
+})
+const inputLangClass = computed(() => {
+  const text = inputValue.value;
+  if (!text) return 'lang-zh'; 
+  // 韩文
+  if (/[\uac00-\ud7af\u1100-\u11ff]/.test(text)) { return 'lang-kr'; }
+  // 日文
+  if (/[\u3040-\u309f\u30a0-\u30ff]/.test(text)) { return 'lang-ja'; }
+  // 中文
+  if (/[\u4e00-\u9fa5]/.test(text)) { return 'lang-zh'; }
+  // 英文/数字/符号
+  return 'lang-en';
+})
 
 // ==========================================
 // 事件处理方法
 // ==========================================
-/**
- * 显示资源选择器
- * @param {string} type - 资源类型 ('bg' 或 'avatar')
- */
+/* 显示资源选择器 */
 const showSourceSelect = (type) => {
   emit('show-source-select', type)
 }
-
-/**
- * 保存主页数据
- */
+/* 保存主页数据 */
 const saveHomeData = () => {
   emit('save-home-data')
 }
-
-/**
- * 处理天气组件点击事件
- * 打开地点输入弹窗并回填上次位置
- */
+/* 处理天气组件点击事件 */
 const handleWeatherClick = () => {
   locationInput.value = localStorage.getItem('lastKnownLocation') || '';
   showLocationModal.value = true;
 }
-
-/**
- * 确认并更新地点
- * 更新 Store 中的天气信息并保存到本地存储
- */
+/* 确认并更新地点 */
 const confirmLocation = () => {
   const location = locationInput.value.trim();
   if (location) {
@@ -105,8 +108,8 @@ const confirmLocation = () => {
     <input 
       type="text" 
       class="custom-text-input" 
-      :value="homeData.text"
-      @input="$emit('update:homeData', { ...homeData, text: $event.target.value })"
+      :class="inputLangClass"
+      v-model="inputValue"
       :placeholder="t('homeScreen.inputPlaceholder')" 
       @blur="saveHomeData"
     >
@@ -236,7 +239,7 @@ const confirmLocation = () => {
 .custom-text-input {
     background: transparent;
     border: none;
-    color: var(--home-text-color, var(--text-darkest));
+    color: var(--home-text-color);
     font-size: 0.79em;
     font-weight: 500;
     text-align: center;
@@ -261,8 +264,25 @@ const confirmLocation = () => {
 }
 
 .custom-text-input::placeholder {
-    color: rgba(255,255,255,0.7);
+    color: var(--home-text-color);
 }
+
+/* --- 语言特定样式 --- */
+/* 英文 */
+.custom-text-input.lang-en {
+    font-family: Segoe UI, serif; font-size: 0.79em; font-style: italic; }
+
+/* 中文 */
+.custom-text-input.lang-zh {
+    font-family: inherit;  font-size: 0.79em; font-style: normal; }
+
+/* 日文 */
+.custom-text-input.lang-ja {
+    font-family: 'Kiwi Maru', serif; font-size: 9.7px; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
+
+/* 韩文 */
+.custom-text-input.lang-kr {
+    font-family: 'Gaegu', cursive; font-size: 13px; font-weight: 700; font-style: normal; letter-spacing: 0.7px; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
 
 /* ==========================================
    小组件容器样式
