@@ -219,7 +219,7 @@ const selectDisplay = (preference) => {
        ======================================================================== -->
   <div class="list-card-wrapper" v-bind="$attrs">
     <div class="list-card-container">
-      <div class="sticker-card todo-card">
+      <div class="sticker-card">
         <!-- 2.1 装饰元素 -->
         <h3 class="handwritten-title">To Do List</h3>
         <div class="black-dot-deco1"></div>
@@ -287,9 +287,9 @@ const selectDisplay = (preference) => {
    ======================================================================== */
 .list-card-wrapper {
     width: 100%;
-    height: 11.5rem; /* Adjust length */
+    height: 12.5rem; /* Adjust length */
     margin-top: auto;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -304,7 +304,7 @@ const selectDisplay = (preference) => {
     height: 100%; 
     /* 3. 整体位置移动 (Move) */
     position: relative;
-    top: -2.7em;   
+    top: -1.5em;   
     left: 0em;   
     --font-serif: 'Georgia', 'Times New Roman', serif;
 }
@@ -383,7 +383,9 @@ const selectDisplay = (preference) => {
 }
 
 .black-dot-deco2 {
-  top: 19em;
+  top: auto;
+  right: auto;
+  bottom: -1.5em;
   left: 3.5em;
   width: 0.65em;
   height: 0.65em;
@@ -667,5 +669,12 @@ const selectDisplay = (preference) => {
   color: var(--text-tertiary);
   padding: 1em;
   font-size: 0.9em;
+}
+
+/* ========================================================================
+   7. 响应式调整 (Responsive Adjustments)
+   ======================================================================== */
+:global(.phone-frame.no-frame .list-card-wrapper) {
+  margin-bottom: 0;
 }
 </style>

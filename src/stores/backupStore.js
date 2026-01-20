@@ -10,7 +10,7 @@ export const useBackupStore = defineStore('backup', () => {
   const lastBackupTime = ref(null);
 
   // 核心：创建备份数据（异步）
-  function createBackupData(options = { chat: true, characters: true, settings: true, appearance: true, worldbook: true }) {
+  function createBackupData(options = { chat: true, characters: true, settings: true, appearance: true, worldbook: true, presets: true }) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const backupData = {};
@@ -80,7 +80,16 @@ export const useBackupStore = defineStore('backup', () => {
 
         // 5. Worldbook
         if (options.worldbook) {
-            const keys = ['worldBooks', 'worldBookNextId', 'api_presets', 'api_activePresetName'];
+            const keys = ['worldBooks', 'worldBookNextId'];
+            keys.forEach(key => {
+                const val = localStorage.getItem(key);
+                if (val !== null) backupData[key] = val;
+            });
+        }
+
+        // 6. Presets
+        if (options.presets) {
+            const keys = ['api_presets', 'api_activePresetName'];
             keys.forEach(key => {
                 const val = localStorage.getItem(key);
                 if (val !== null) backupData[key] = val;

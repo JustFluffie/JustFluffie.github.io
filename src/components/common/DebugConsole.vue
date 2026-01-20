@@ -74,7 +74,7 @@ const startDrag = (event) => {
   initialPos.value = { ...position.value };
 
   document.addEventListener('mousemove', onDrag);
-  document.addEventListener('touchmove', onDrag);
+  document.addEventListener('touchmove', onDrag, { passive: false });
   document.addEventListener('mouseup', stopDrag);
   document.addEventListener('touchend', stopDrag);
 };

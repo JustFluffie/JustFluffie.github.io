@@ -271,8 +271,8 @@
               <svg v-if="exportOptions.settings" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
             <div class="scope-content">
-                <span class="scope-name">API设置</span>
-                <span class="scope-desc">包含API配置、图床、后台设置</span>
+                <span class="scope-name">应用设置</span>
+                <span class="scope-desc">包含图床、后台活动等设置</span>
             </div>
           </div>
           <div class="scope-item" @click="toggleExportOption('appearance')">
@@ -289,8 +289,8 @@
               <svg v-if="exportOptions.worldbook" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
             <div class="scope-content">
-                <span class="scope-name">世界书</span>
-                <span class="scope-desc">包含世界书设定</span>
+                <span class="scope-name">世界书/预设</span>
+                <span class="scope-desc">包含世界书和API预设</span>
             </div>
           </div>
         </div>
@@ -631,11 +631,18 @@ const exportOptions = ref({
   characters: true,
   settings: true,
   appearance: true,
-  worldbook: true
+  worldbook: true,
+  presets: true,
 });
 
 function toggleExportOption(key) {
-  exportOptions.value[key] = !exportOptions.value[key];
+  if (key === 'worldbook') {
+    const newState = !exportOptions.value.worldbook;
+    exportOptions.value.worldbook = newState;
+    exportOptions.value.presets = newState;
+  } else {
+    exportOptions.value[key] = !exportOptions.value[key];
+  }
 }
 
 function handleExport() {
