@@ -213,7 +213,7 @@ const getLangClass = (text) => {
 /* --- 语言特定样式 --- */
 /* 英文 */
 .photo-wall-input.lang-en {
-    font-family: Segoe UI, serif; font-size: 10.7px; font-style: italic; }
+    font-family: 'Open Sans', 'Segoe UI', sans-serif; font-size: 10.7px; font-style: italic; }
 
 /* 中文 */
 .photo-wall-input.lang-zh {
