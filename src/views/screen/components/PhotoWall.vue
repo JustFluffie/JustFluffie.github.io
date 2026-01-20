@@ -1,4 +1,7 @@
 <script setup>
+import { ref } from 'vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+
 defineProps({
   homeData: {
     type: Object,
@@ -11,6 +14,30 @@ const emit = defineEmits(['show-source-select'])
 const showSourceSelect = (type) => {
   emit('show-source-select', type)
 }
+
+const textInputs = ref([
+  { id: 1, class: 'photo-wall-input-1', placeholder: 'about', value: '' },
+  { id: 2, class: 'photo-wall-input-2', placeholder: 'sunshine and fantasy', value: '' },
+  { id: 3, class: 'photo-wall-input-3', placeholder: 'Life is...', value: '' },
+]);
+
+const getLangClass = (text) => {
+  if (!text) return 'lang-en'; // 默认英文（为了让 Placeholder 显示 Georgia 斜体）
+  // 韩文范围
+  if (/[\uac00-\ud7af\u1100-\u11ff]/.test(text)) {
+    return 'lang-kr';
+  }
+  // 日文范围 (平假名/片假名)
+  if (/[\u3040-\u309f\u30a0-\u30ff]/.test(text)) {
+    return 'lang-ja';
+  }
+  // 中文范围
+  if (/[\u4e00-\u9fa5]/.test(text)) {
+    return 'lang-zh';
+  }
+  // 默认英文
+  return 'lang-en';
+};
 </script>
 
 <template>
@@ -22,7 +49,7 @@ const showSourceSelect = (type) => {
         <div class="star s-four pos-1"></div>
         <div class="star s-dot pos-2"></div>
         <div class="star s-four pos-3"></div>
-        <div class="star s-cross pos-4"></div>
+        <SvgIcon name="cross-sparkle" viewBox="0 0 100 100" class="cross-sparkle-icon pos-4" />
         <div class="star s-four pos-5"></div>
         <div class="star s-cross pos-6"></div>
         <div class="star s-dot pos-7"></div>
@@ -37,10 +64,15 @@ const showSourceSelect = (type) => {
         <div class="photo" :style="homeData.photo1 ? { backgroundImage: `url('${homeData.photo1}')` } : {}"></div>
       </div>
 
-      <!-- 字素1 -->
-      <input type="text" class="custom-text-input photo-wall-input1" placeholder="about">
-      <input type="text" class="custom-text-input photo-wall-input2" placeholder="sunshine and fantasy">
-      <input type="text" class="custom-text-input photo-wall-input3" placeholder="Life is...">
+      <!-- 字素 -->
+      <input 
+        v-for="input in textInputs"
+        :key="input.id"
+        type="text" 
+        v-model="input.value"
+        :class="['custom-text-input', 'photo-wall-input', input.class, getLangClass(input.value)]"
+        :placeholder="input.placeholder"
+      >
       
     </div>
   </div>
@@ -81,11 +113,14 @@ const showSourceSelect = (type) => {
 .star { position: absolute; background-color: var(--home-text-color); }
 .s-four { width: 1.4em; height: 1.4em; clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%); }
 
-/* 十字星：背景透明，但线条要用变量色 */
+/* 十字：背景透明，但线条要用变量色 */
 .s-cross { width: 1.2em; height: 1.2em; background: transparent; }
 .s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); }
-.s-cross::before { top: 45%; left: 0; width: 100%; height: 1px; }
-.s-cross::after { top: 0; left: 45%; width: 1px; height: 100%; }
+.s-cross::before { top: 45%; left: 0; width: 100%; height: 1.5px; }
+.s-cross::after { top: 0; left: 45%; width: 1.5px; height: 100%; }
+
+.cross-sparkle-icon {
+  position: absolute; width: 1.2em; height: 1.2em; color: var(--home-text-color); }
 
 /* 圆点：稍微淡一点，增加层次 (用 0.8 透明度) */
 .s-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--home-text-color); }
@@ -94,12 +129,12 @@ const showSourceSelect = (type) => {
 .pos-1 { top: -7%; left: 25%; transform: rotate(-15deg); opacity: 0.7;} 
 .pos-2 { top: 5%; left: 20%; }
 /* 中间那个特别的大星星 */
-.pos-3 { top: 48%; left: 45%; transform: scale(1.2); opacity: 0.8;}
-.pos-4 { top: 40%; left: 51%; transform: rotate(20deg); opacity: 0.7;}
+.pos-3 { top: 48%; left: 45%; transform: scale(1.15); opacity: 0.8;}
+.pos-4 { top: 40%; left: 51%; transform: rotate(10deg); opacity: 0.7;}
 .pos-5 { top: 15%; left: 95%; transform: scale(0.7); }
 .pos-6 { top: 25%; left: 90%; transform: rotate(45deg); opacity: 0.7;}
-.pos-7 { top: 95%; left: 54%; }
-.pos-8 { top: 90%; left: 6%; transform: rotate(10deg); opacity: 0.7;}
+.pos-7 { top: 95%; left: 52.5%; }
+.pos-8 { top: 90%; left: 6%; transform: rotate(10deg); opacity: 0.8;}
 
 /* --- 拍立得卡片 --- */
 .polaroid {
@@ -153,46 +188,50 @@ const showSourceSelect = (type) => {
 }
 
 /* --- 字素1 --- */
-.photo-wall-input1,
-.photo-wall-input2,
-.photo-wall-input3 {
+.photo-wall-input {
     position: absolute;
-    top: 65%;
-    left: 43%;
-    width: 10em; /* 紧凑一点 */
     background: transparent;
     border: none;
     color: var(--home-text-color);
     padding: 5px;
-    font-size: 0.99em; 
     font-weight: 500;
-    font-family: inherit;
-    font-style: italic;
     text-align: left;
     outline: none;
-    z-index: 13; /* 比 p1 和 p2 高 */
+    z-index: 13;
     text-shadow: 0 1px 1px rgba(0,0,0,0.3);
     border-radius: 8px;
     transition: background 0.2s ease;
+    font-family: inherit;
+    font-style: italic; 
+    font-size: 0.99em; 
 }
 
-.photo-wall-input2 { position: absolute; top: 75%; left: 43%; width: 15em;}
-.photo-wall-input3 { position: absolute; top: 14%; left: -10%; text-align: center;}
+.photo-wall-input:focus { box-shadow: none; text-shadow: none; }
 
+.photo-wall-input::placeholder { color: var(--home-text-color); font-style: italic; }
 
-.photo-wall-input1:focus,
-.photo-wall-input2:focus,
-.photo-wall-input3:focus {
-    box-shadow: none;
-    text-shadow: none;
-}
+/* --- 语言特定样式 --- */
+/* 英文：Georgia 斜体 */
+.photo-wall-input.lang-en {
+    font-family: Segoe UI, serif;
+    font-size: 10.7px; font-style: italic; }
 
-.photo-wall-input1::placeholder,
-.photo-wall-input2::placeholder,
-.photo-wall-input3::placeholder {
-    color: var(--home-text-color);
-    font-style: italic;
-}
+/* 中文：思源宋体 (或者你之前用的 ZCOOL KuaiLe) */
+.photo-wall-input.lang-zh {
+    font-family: 'Noto Serif SC', 'SimSun', serif; 
+    font-size: 9px; font-style: normal; }
+
+/* 日文：奇异丸 */
+.photo-wall-input.lang-ja {
+    font-family: 'Kiwi Maru', serif; font-size: 10px; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
+
+/* 韩文：Gaegu */
+.photo-wall-input.lang-kr {
+    font-family: 'Gaegu', cursive; font-size: 11px; font-weight: 700; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
+
+.photo-wall-input-1 { top: 65%; left: 42%; width: 10em; }
+.photo-wall-input-2 { top: 75%; left: 42%; width: 15em; }
+.photo-wall-input-3 { top: 14%; left: -10%; text-align: center; }
 
 /* --- 照片区域样式 --- */
 .photo {

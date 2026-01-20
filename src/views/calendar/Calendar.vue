@@ -65,14 +65,15 @@
 
         <!-- 动态事件卡片 -->
         <div class="cards-container">
-          <!-- 其他事件卡片 -->
-          <div v-for="event in otherEventsForSelectedDate" :key="event.id">
-            <div v-if="event.type === 'countdown'" class="sticker-card count-card">
-              <!-- ... countdown card content ... -->
-            </div>
-            <div v-if="event.type === 'anniversary'" class="sticker-card count-card anniversary">
-              <!-- ... anniversary card content ... -->
-            </div>
+          <!-- 倒数日和纪念日卡片 (常驻显示) -->
+          <div v-for="event in allCountEvents" :key="event.id">
+            <DaysCount 
+              :event="event"
+              :selected-date="selectedDate"
+              @update:polaroidText="(val) => updateEventText(event, val)"
+              @delete="handleDeleteEvent"
+              @upload-photo="handleUploadPhoto"
+            />
           </div>
 
           <!-- 新的待办事项卡片组件 -->
@@ -80,7 +81,7 @@
         </div>
         
         <!-- 无事件提示 -->
-        <div v-if="eventsForSelectedDate.length === 0" class="no-events-placeholder">
+        <div v-if="todosForSelectedDate.length === 0" class="no-events-placeholder">
           <p>今天没有特别的安排</p>
           <span>点击右上角按钮添加一个吧</span>
         </div>
@@ -95,6 +96,19 @@
         @submit-period="handlePeriodSubmit"
       />
 
+      <!-- 删除确认模态框 -->
+      <Modal
+        :visible="isDeleteModalVisible"
+        title="确认删除"
+        @update:visible="isDeleteModalVisible = $event"
+      >
+        <p style="padding: 10px 0; color: #666;">确定要删除这个事件吗？</p>
+        <template #footer>
+          <button class="modal-btn cancel" @click="isDeleteModalVisible = false">取消</button>
+          <button class="modal-btn danger" @click="confirmDelete">删除</button>
+        </template>
+      </Modal>
+
     </div>
   </AppLayout>
 </template>
@@ -105,11 +119,14 @@ import { formatISO } from 'date-fns';
 import { storeToRefs } from 'pinia';
 import AppLayout from '@/components/common/AppLayout.vue';
 import SvgIcon from '@/components/common/SvgIcon.vue';
+import Modal from '@/components/common/Modal.vue';
 import EventFormModal from '@/components/common/EventFormModal.vue';
 import PeriodTrackerCard from '@/views/calendar/components/PeriodTracker.vue';
 import ToDoList from '@/views/calendar/components/ToDoList.vue';
+import DaysCount from '@/views/calendar/components/DaysCount.vue';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { getPeriodStatusForDate } from '@/composables/usePeriodTracking';
+import { useImageUpload } from '@/composables/useImageUpload';
 
 // === Pinia Store ===
 const calendarStore = useCalendarStore();
@@ -124,6 +141,46 @@ const handleEventSubmit = (eventData) => {
 
 const handlePeriodSubmit = (history) => {
   calendarStore.setPeriodHistory(history);
+};
+
+const updateEventText = (event, newText) => {
+  const updatedEvent = { ...event, polaroidText: newText };
+  calendarStore.updateEvent(updatedEvent);
+};
+
+// === Photo Upload ===
+const uploadingEvent = ref(null);
+
+const { triggerFileUpload } = useImageUpload({
+  onComplete: (result) => {
+    if (uploadingEvent.value) {
+      const updatedEvent = { ...uploadingEvent.value, photoUrl: result.content };
+      calendarStore.updateEvent(updatedEvent);
+      uploadingEvent.value = null;
+    }
+  }
+});
+
+const handleUploadPhoto = (event) => {
+  uploadingEvent.value = event;
+  triggerFileUpload();
+};
+
+// === Delete Confirmation ===
+const isDeleteModalVisible = ref(false);
+const eventToDelete = ref(null);
+
+const handleDeleteEvent = (event) => {
+  eventToDelete.value = event;
+  isDeleteModalVisible.value = true;
+};
+
+const confirmDelete = () => {
+  if (eventToDelete.value) {
+    calendarStore.removeEvent(eventToDelete.value.id);
+    eventToDelete.value = null;
+  }
+  isDeleteModalVisible.value = false;
 };
 
 // === Calendar Logic (existing) ===
@@ -171,8 +228,10 @@ const eventsForSelectedDate = computed(() => calendarStore.getEventsByDate(selec
 const todosForSelectedDate = computed(() => 
   eventsForSelectedDate.value.filter(e => e.type === 'todo')
 );
-const otherEventsForSelectedDate = computed(() => 
-  eventsForSelectedDate.value.filter(e => e.type !== 'todo')
+
+// 获取所有倒数日和纪念日事件 (全局显示)
+const allCountEvents = computed(() => 
+  calendarStore.events.filter(e => e.type === 'countdown' || e.type === 'anniversary')
 );
 
 const hasEventsOnDate = (date) => calendarStore.getEventsByDate(date).length > 0;

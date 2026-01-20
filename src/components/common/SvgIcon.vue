@@ -2,7 +2,7 @@
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     :class="svgClass" 
-    viewBox="0 0 24 24" 
+    :viewBox="viewBox" 
     aria-hidden="true" 
     v-bind="$attrs"
     v-html="iconPath"
@@ -21,11 +21,21 @@ const props = defineProps({
   className: {
     type: String,
     default: ''
+  },
+  viewBox: {
+    type: String,
+    default: '0 0 24 24'
   }
 })
 
 // 简单的图标路径字典
 const icons = {
+  'cross-sparkle': `
+    <path d="M 45 9 A 5 5 0 0 1 55 9 Q 60 23 55 37 A 5 5 0 0 1 45 37 Q 40 23 45 9 Z" style="fill: currentColor; stroke: none;" />
+    <path d="M 45 63 A 5 5 0 0 1 55 63 Q 60 77 55 91 A 5 5 0 0 1 45 91 Q 40 77 45 63 Z" style="fill: currentColor; stroke: none;" />
+    <path d="M 9 45 Q 23 40 37 45 A 5 5 0 0 1 37 55 Q 23 60 9 55 A 5 5 0 0 1 9 45 Z" style="fill: currentColor; stroke: none;" />
+    <path d="M 63 45 Q 77 40 91 45 A 5 5 0 0 1 91 55 Q 77 60 63 55 A 5 5 0 0 1 63 45 Z" style="fill: currentColor; stroke: none;" />
+  `,
   'chevron-down': '<path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />',
   'chevron-up': '<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />',
   'chevron-right': '<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />',

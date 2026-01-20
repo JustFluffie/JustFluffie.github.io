@@ -1,19 +1,21 @@
 <script setup>
 // ========================================================================
-// 模块导入
+// 1. 模块导入 (Imports)
 // ========================================================================
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { formatISO, startOfDay, differenceInDays } from 'date-fns';
 import { getPeriodStatusForDate, predictFuturePeriods } from '@/composables/usePeriodTracking';
+import SvgIcon from '@/components/common/SvgIcon.vue';
+import Modal from '@/components/common/Modal.vue';
 
 // ========================================================================
-// Store 初始化
+// 2. Store 初始化 (Store Initialization)
 // ========================================================================
 const calendarStore = useCalendarStore();
 
 // ========================================================================
-// 待办事项 (To-Do List) 逻辑
+// 3. 待办事项逻辑 (To-Do List Logic)
 // ========================================================================
 const todos = computed(() => {
   const todayStr = formatISO(new Date(), { representation: 'date' });
@@ -33,7 +35,7 @@ const formatTime = (dateString) => {
 };
 
 // ========================================================================
-// 经期追踪 (Period Tracker) 逻辑
+// 4. 经期追踪核心逻辑 (Period Tracking Core)
 // ========================================================================
 const periodStatus = computed(() => {
   return getPeriodStatusForDate(formatISO(new Date(), { representation: 'date' }), calendarStore.periodHistory, calendarStore.ongoingPeriod);
@@ -60,7 +62,6 @@ const periodDisplayInfo = computed(() => {
         if (daysUntil > 0) {
           return { prefix: '预计 ', number: daysUntil, suffix: ' 天后' };
         } else if (daysUntil === 0) {
-          // This case might occur if the prediction starts today but isn't 'ongoing' yet.
           return { text: '预测今日开始' };
         }
       }
@@ -80,13 +81,145 @@ const periodTextColor = computed(() => {
   }
 });
 
+// ========================================================================
+// 5. 通用事件显示与交互逻辑 (Event Display & Interaction)
+// ========================================================================
+const showSelectionModal = ref(false);
+const displayPreference = ref({ type: 'period' });
+
+// 5.1 生命周期：加载用户偏好
+onMounted(() => {
+  const saved = localStorage.getItem('homeCardDisplayPreference');
+  if (saved) {
+    try {
+      displayPreference.value = JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse display preference', e);
+    }
+  }
+});
+
+// 5.2 计算属性：筛选候选事件
+const candidateEvents = computed(() => {
+  return calendarStore.events.filter(e =>
+    e.type !== 'todo' &&
+    e.type !== 'period_day' &&
+    e.type !== 'predicted_period_day' &&
+    e.title && e.date
+  );
+});
+
+// 5.3 计算属性：最终显示信息
+const finalDisplayInfo = computed(() => {
+  if (displayPreference.value.type === 'period') {
+    return {
+      ...periodDisplayInfo.value,
+      color: periodTextColor.value
+    };
+  } else if (displayPreference.value.type === 'event') {
+    const event = calendarStore.events.find(e => e.id === displayPreference.value.eventId);
+    if (!event) {
+      return { text: '事件已删除', color: '#999' };
+    }
+    
+    const today = startOfDay(new Date());
+    const eventDate = startOfDay(new Date(event.date));
+    const diff = differenceInDays(today, eventDate);
+    
+    if (diff > 0) {
+      return {
+        prefix: `${event.title} 已经 `,
+        number: diff,
+        suffix: ' 天',
+        color: '#4a90e2' // 蓝色
+      };
+    } else if (diff < 0) {
+      return {
+        prefix: `${event.title} 还有 `,
+        number: Math.abs(diff),
+        suffix: ' 天',
+        color: '#f5a623' // 橙色
+      };
+    } else {
+      return {
+        text: `${event.title} 就是今天`,
+        color: '#e66262' // 红色
+      };
+    }
+  }
+  return { text: '请选择显示内容', color: '#999' };
+});
+
+// 5.4 方法：弹窗控制
+const openSelectionModal = () => {
+  showSelectionModal.value = true;
+};
+
+const selectDisplay = (preference) => {
+  displayPreference.value = preference;
+  localStorage.setItem('homeCardDisplayPreference', JSON.stringify(preference));
+  showSelectionModal.value = false;
+};
+
 </script>
 
 <template>
+  <!-- ========================================================================
+       1. 弹窗组件 (Modal)
+       ======================================================================== -->
+  <Modal 
+    v-model:visible="showSelectionModal" 
+    title="选择显示内容" 
+    :showFooter="false"
+    containerClass="selection-modal-container"
+  >
+    <div class="selection-list">
+      <!-- 选项：经期追踪 -->
+      <div 
+        class="selection-item" 
+        :class="{ active: displayPreference.type === 'period' }"
+        @click="selectDisplay({ type: 'period' })"
+      >
+        <span class="item-icon">🩸</span>
+        <div class="item-content">
+          <span class="item-title">经期追踪</span>
+          <span class="item-desc">显示当前经期状态或预测</span>
+        </div>
+        <div class="item-check" v-if="displayPreference.type === 'period'">✓</div>
+      </div>
+      
+      <div class="divider-small" v-if="candidateEvents.length > 0"></div>
+
+      <!-- 选项：通用事件列表 -->
+      <div 
+        v-for="event in candidateEvents" 
+        :key="event.id"
+        class="selection-item"
+        :class="{ active: displayPreference.type === 'event' && displayPreference.eventId === event.id }"
+        @click="selectDisplay({ type: 'event', eventId: event.id })"
+      >
+        <span class="item-icon">📅</span>
+        <div class="item-content">
+          <span class="item-title">{{ event.title }}</span>
+          <span class="item-desc">{{ event.date }}</span>
+        </div>
+        <div class="item-check" v-if="displayPreference.type === 'event' && displayPreference.eventId === event.id">✓</div>
+      </div>
+
+      <!-- 空状态提示 -->
+      <div v-if="candidateEvents.length === 0" class="no-events-tip">
+        暂无其他事件，请在日历中添加。
+      </div>
+    </div>
+  </Modal>
+
+  <!-- ========================================================================
+       2. 主卡片容器
+       ======================================================================== -->
   <div class="list-card-wrapper">
     <div class="list-card-container">
       <div class="sticker-card todo-card">
-        <!-- 装饰元素 -->
+        <!-- 2.1 装饰元素 -->
         <h3 class="handwritten-title">To Do List</h3>
         <div class="black-dot-deco1"></div>
         <div class="black-dot-deco2"></div>
@@ -95,8 +228,11 @@ const periodTextColor = computed(() => {
           <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" />
         </svg>
         <div class="tape-deco"></div>
+        <div class="cross-sparkle-container">
+          <SvgIcon name="cross-sparkle" viewBox="0 0 100 100" class="cross-sparkle-svg" />
+        </div>
         
-        <!-- 待办事项列表容器 (可滚动) -->
+        <!-- 2.2 待办事项列表区域 -->
         <div class="todo-list-container">
           <ul v-if="todos.length > 0" class="todo-list">
             <li
@@ -112,20 +248,20 @@ const periodTextColor = computed(() => {
           <p v-else class="no-todos">今天没有待办事项</p>
         </div>
 
-        <!-- 分割线 -->
+        <!-- 2.3 分割线 -->
         <div class="divider"></div>
 
-        <!-- 经期追踪容器 -->
-        <div class="period-tracker-container">
+        <!-- 2.4 底部信息展示区域 (经期/事件) -->
+        <div class="period-tracker-container" @click="openSelectionModal">
           <p 
             class="period-text" 
-            :style="{ color: periodTextColor }"
+            :style="{ color: finalDisplayInfo.color }"
           >
-            <template v-if="periodDisplayInfo.number !== undefined">
-              <span class="period-label">{{ periodDisplayInfo.prefix }}</span><span class="period-number">{{ periodDisplayInfo.number }}</span><span class="period-label">{{ periodDisplayInfo.suffix }}</span>
+            <template v-if="finalDisplayInfo.number !== undefined">
+              <span class="period-label">{{ finalDisplayInfo.prefix }}</span><span class="period-number">{{ finalDisplayInfo.number }}</span><span class="period-label">{{ finalDisplayInfo.suffix }}</span>
             </template>
             <template v-else>
-              <span class="period-label">{{ periodDisplayInfo.text }}</span>
+              <span class="period-label">{{ finalDisplayInfo.text }}</span>
             </template>
           </p>
         </div>
@@ -135,6 +271,9 @@ const periodTextColor = computed(() => {
 </template>
 
 <style scoped>
+/* ========================================================================
+   1. 布局容器 (Layout Containers)
+   ======================================================================== */
 .list-card-wrapper {
     width: 100%;
     height: 11.5rem; /* Adjust length */
@@ -146,9 +285,6 @@ const periodTextColor = computed(() => {
     overflow: visible;
 }
 
-/* =========================================================
-   【全局控制台】
-   ========================================================= */
 .list-card-container {
     /* 1. 整体大小 (Zoom) */
     font-size: 10px; 
@@ -163,7 +299,7 @@ const periodTextColor = computed(() => {
 }
 
 /* ========================================================================
-   1. 主卡片布局与背景
+   2. 卡片样式与背景 (Card Styles)
    ======================================================================== */
 .sticker-card {
   background: #ffffff;
@@ -184,7 +320,7 @@ const periodTextColor = computed(() => {
 }
 
 /* ========================================================================
-   2. 装饰元素 (标题、胶带、星星等)
+   3. 装饰元素 (Decorations)
    ======================================================================== */
 .handwritten-title {
   font-family: 'Caveat', cursive;
@@ -206,6 +342,21 @@ const periodTextColor = computed(() => {
   background-color: rgba(220, 220, 220, 0.5);
   backdrop-filter: blur(0.2em);
   z-index: 4;
+}
+
+.cross-sparkle-container {
+  position: absolute;
+  top: -1.5em;
+  right: 2.5em;
+  z-index: 5;
+  transform: rotate(0deg);
+}
+
+.cross-sparkle-svg {
+  width: 1.5em; /* 修改这里调整大小 */
+  height: 1.5em; /* 修改这里调整大小 */
+  color: var(--home-text-color); 
+  opacity: 0.4; 
 }
 
 .black-dot-deco1,.black-dot-deco2 {
@@ -291,14 +442,14 @@ const periodTextColor = computed(() => {
 }
 
 /* ========================================================================
-   3. 内容区域布局与样式
+   4. 待办事项列表样式 (To-Do List Styles)
    ======================================================================== */
-
-/* --- 待办事项列表 --- */
 .todo-list-container {
   flex-grow: 1; 
   overflow-y: auto; 
   min-height: 0;
+  display: flex;        /* 新增：设为 Flex 容器 */
+  flex-direction: column; /* 新增：垂直排列 */
   
   /* 隐藏滚动条的样式 */
   -ms-overflow-style: none;  /* IE and Edge */
@@ -319,7 +470,7 @@ const periodTextColor = computed(() => {
   align-items: center;
   gap: 0.3em;
   margin-bottom: 1.2em;
-  border-bottom: 0.1em dashed #e0e0e0;
+  border-bottom: 0.1em dashed #bebebe;
   font-size: 1em;
 }
 
@@ -370,37 +521,127 @@ const periodTextColor = computed(() => {
 
 /* --- 分割线 --- */
 .divider {
-  border-bottom: 0.1em dashed #e0e0e0;
+  border-bottom: 0.1em dashed #bebebe;
   margin: 1em 0;
   flex-shrink: 0; /* 防止分割线被压缩 */
 }
 
-/* --- 经期追踪 --- */
+/* ========================================================================
+   5. 底部信息区域样式 (Bottom Info Area)
+   ======================================================================== */
 .period-tracker-container {
   flex-shrink: 0; /* 防止此容器被压缩 */
   text-align: center;
   padding: 0; 
   margin: 0 0;
   font-family: 'ZCOOL KuaiLe', cursive;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.period-tracker-container:active {
+  transform: scale(0.98);
 }
 
 .period-text {
-  font-size: 1em;
+  /* --- 整体调整 --- */
+  font-size: 1em; /* [核心] 修改这里可同时调整文字和数字的大小 */
+  
+  /* --- 布局与样式 --- */
   color: #666;
   margin: -5px 0;
   letter-spacing: 0.1em;
+  display: flex;            /* 使用 Flex 布局 */
+  align-items: baseline;    /* 关键：让文字和数字基线对齐 */
+  justify-content: center;  /* 水平居中 */
 }
 
 .period-label {
-  position: relative;
-  top: 0.15em; /* 调整文字高低 */
+  /* --- 文字微调 --- */
+  /* position: relative; top: 0.15em;  <-- 旧的对齐方式，Flex baseline 下通常不需要 */
+  /* 如果字体基线差异大，可用 transform 微调，例如: transform: translateY(-2px); */
 }
 
 .period-number {
-  font-size: 1.8em;
+  /* --- 数字调整 --- */
+  font-size: 1.8em; /* [核心] 修改这里调整数字相对于文字的比例 */
+  
+  /* --- 样式 --- */
   font-weight: bold;
   font-family: var(--font-serif);
   margin: 0 0.3em;
-  vertical-align: -0.15em;
+  /* vertical-align: -0.15em; <-- Flex baseline 下失效，已移除 */
+}
+
+/* ========================================================================
+   6. 选择弹窗样式 (Selection Modal)
+   ======================================================================== */
+.selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.selection-item {
+  display: flex;
+  align-items: center;
+  padding: 0.8em;
+  border-radius: 0.8em;
+  background: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.selection-item:hover {
+  background: #f0f0f0;
+}
+
+.selection-item.active {
+  background: #e6f7ff;
+  border-color: #91d5ff;
+}
+
+.item-icon {
+  font-size: 1.5em;
+  margin-right: 0.5em;
+}
+
+.item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.item-title {
+  font-weight: bold;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.item-desc {
+  font-size: 0.85em;
+  color: #888;
+}
+
+.item-check {
+  color: #1890ff;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.divider-small {
+  height: 1px;
+  background: #eee;
+  margin: 0.2em 0;
+}
+
+.no-events-tip {
+  text-align: center;
+  color: #999;
+  padding: 1em;
+  font-size: 0.9em;
 }
 </style>
