@@ -22,6 +22,7 @@ const router = useRouter()
 
 // 调试模式相关
 const isDebugEnabled = ref(false);
+const isConsoleVisible = ref(true);
 let debugTapCount = 0;
 let debugTapTimer = null;
 
@@ -37,13 +38,18 @@ const handleDebugTrigger = () => {
     debugTapCount = 0;
     const currentState = localStorage.getItem('debug-mode') === 'true';
     if (currentState) {
+      if (!isConsoleVisible.value) {
+        isConsoleVisible.value = true;
+        return;
+      }
       localStorage.removeItem('debug-mode');
       alert('调试模式已禁用。应用即将刷新。');
+      window.location.reload();
     } else {
       localStorage.setItem('debug-mode', 'true');
       alert('调试模式已启用。应用即将刷新。');
+      window.location.reload();
     }
-    window.location.reload();
   }
 };
 
@@ -176,7 +182,7 @@ watch(() => videoCall.value.isMinimized, (newVal, oldVal) => {
     <Loading />
 
     <!-- 调试控制台 -->
-    <DebugConsole v-if="isDebugEnabled" />
+    <DebugConsole v-if="isDebugEnabled" v-show="isConsoleVisible" @hide="isConsoleVisible = false" />
   </div>
 </template>
 

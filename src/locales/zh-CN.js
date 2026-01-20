@@ -179,7 +179,7 @@ export default {
     githubTokenPlaceholder: '请输入Personal Access Token',
     getToken: '获取',
     repoAddress: '仓库地址:',
-    repoAddressPlaceholder: '例如: owner/repo',
+    repoAddressPlaceholder: '格式：用户名/仓库名',
     createRepo: '创建',
     backupNow: '立即备份',
     backingUp: '备份中...',

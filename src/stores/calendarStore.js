@@ -117,7 +117,7 @@ export const useCalendarStore = defineStore('calendar', () => {
 
   const updateCalendarMarkers = () => {
     // 1. Remove all previous period-related markers
-    events.value = events.value.filter(e => !e.type.startsWith('period_'));
+    events.value = events.value.filter(e => !['period_day', 'predicted_period_day'].includes(e.type));
 
     // 2. Add markers for historical periods
     periodHistory.value.forEach(p => {

@@ -83,59 +83,93 @@ const periodTextColor = computed(() => {
 </script>
 
 <template>
-  <div class="sticker-card todo-card">
-    <!-- 装饰元素 -->
-    <h3 class="handwritten-title">To Do List</h3>
-    <div class="black-dot-deco"></div>
-    <div class="star-deco"></div>
-    <div class="tape-deco"></div>
-    
-    <!-- 待办事项列表容器 (可滚动) -->
-    <div class="todo-list-container">
-      <ul v-if="todos.length > 0" class="todo-list">
-        <li
-          v-for="todo in todos"
-          :key="todo.id"
-          :class="{ 'done': todo.done }"
-        >
-          <div class="checkbox" :class="{ 'checked': todo.done }" @click="toggleStatus(todo.id)"></div>
-          <span class="todo-time">{{ formatTime(todo.date) }}</span>
-          <span class="todo-content">{{ todo.content }}</span>
-        </li>
-      </ul>
-      <p v-else class="no-todos">今天没有待办事项</p>
-    </div>
+  <div class="list-card-wrapper">
+    <div class="list-card-container">
+      <div class="sticker-card todo-card">
+        <!-- 装饰元素 -->
+        <h3 class="handwritten-title">To Do List</h3>
+        <div class="black-dot-deco1"></div>
+        <div class="black-dot-deco2"></div>
+        <div class="star-deco"></div>
+        <svg class="circle-deco" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" />
+        </svg>
+        <div class="tape-deco"></div>
+        
+        <!-- 待办事项列表容器 (可滚动) -->
+        <div class="todo-list-container">
+          <ul v-if="todos.length > 0" class="todo-list">
+            <li
+              v-for="todo in todos"
+              :key="todo.id"
+              :class="{ 'done': todo.done }"
+            >
+              <div class="checkbox" :class="{ 'checked': todo.done }" @click="toggleStatus(todo.id)"></div>
+              <span class="todo-time">{{ formatTime(todo.date) }}</span>
+              <span class="todo-content">{{ todo.content }}</span>
+            </li>
+          </ul>
+          <p v-else class="no-todos">今天没有待办事项</p>
+        </div>
 
-    <!-- 分割线 -->
-    <div class="divider"></div>
+        <!-- 分割线 -->
+        <div class="divider"></div>
 
-    <!-- 经期追踪容器 -->
-    <div class="period-tracker-container">
-      <p 
-        class="period-text" 
-        :style="{ color: periodTextColor }"
-      >
-        {{ periodDisplayText }}
-      </p>
+        <!-- 经期追踪容器 -->
+        <div class="period-tracker-container">
+          <p 
+            class="period-text" 
+            :style="{ color: periodTextColor }"
+          >
+            {{ periodDisplayText }}
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.list-card-wrapper {
+    width: 100%;
+    height: 11.5rem; /* Adjust length */
+    margin-top: auto;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* =========================================================
+   【全局控制台】
+   ========================================================= */
+.list-card-container {
+    /* 1. 整体大小 (Zoom) */
+    font-size: 10px; 
+    /* 2. 散布范围 (Spread) */
+    width: 100%;  
+    height: 100%; 
+    /* 3. 整体位置移动 (Move) */
+    position: relative;
+    top: -2.7em;   
+    left: 0em;   
+}
+
 /* ========================================================================
    1. 主卡片布局与背景
    ======================================================================== */
 .sticker-card {
   background: #ffffff;
-  background-image: radial-gradient(circle, rgba(41, 41, 41, 0.08) 1.5px, transparent 1.5px),
-    radial-gradient(circle, rgba(0, 0, 0, 0.08) 1.5px, transparent 1.5px);
-  background-size: 20px 20px;
-  background-position: 0 0, 10px 10px; 
-  padding: 25px 15px 10px;
-  border-radius: 4px;
+  background-image: radial-gradient(circle, rgba(41, 41, 41, 0.08) 0.15em, transparent 0.15em),
+    radial-gradient(circle, rgba(0, 0, 0, 0.08) 0.15em, transparent 0.15em);
+  background-size: 2em 2em;
+  background-position: 0 0, 1em 1em; 
+  padding: 2.5em 1.5em 1em;
+  border-radius: 0.4em;
   box-shadow: 
-    0 1px 2px rgba(0,0,0,0.05), 
-    0 8px 16px rgba(0,0,0,0.08);
+    0 0.1em 0.2em rgba(0,0,0,0.05), 
+    0 0.8em 1.6em rgba(0,0,0,0.08);
   position: relative;
   height: 100%;
   display: flex;
@@ -148,36 +182,44 @@ const periodTextColor = computed(() => {
    ======================================================================== */
 .handwritten-title {
   font-family: 'Caveat', cursive;
-  font-size: 24px;
+  font-size: 2.4em;
   color: #333;
-  margin: -15px -8px 0 -10px;
-  transform: translateX(-2.7rem) rotate(-4deg);
+  margin: -0.625em -0.33em 0 -0.41em;
+  transform: translateX(-1.8em) rotate(-4deg);
   text-align: right;
   flex-shrink: 0; /* 防止标题被压缩 */
 }
 
 .tape-deco {
   position: absolute;
-  top: -10px;
+  top: -1em;
   left: 50%;
   transform: translateX(15%) rotate(10deg);
-  width: 60px;
-  height: 20px;
+  width: 6em;
+  height: 2em;
   background-color: rgba(220, 220, 220, 0.5);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(0.2em);
   z-index: 4;
 }
 
-.black-dot-deco {
+.black-dot-deco1,.black-dot-deco2 {
   position: absolute;
-  top: calc(1% + 4px);
-  right: 10px;
-  width: 17px;
-  height: 17px;
+  top: calc(1% + 0.4em);
+  right: 1em;
+  width: 1.7em;
+  height: 1.7em;
   background: var(--home-text-color);
   border-radius: 50%;
   opacity: 0.8;
   z-index: 5;
+}
+
+.black-dot-deco2 {
+  top: 19em;
+  left: 3.5em;
+  width: 0.65em;
+  height: 0.65em;
+  opacity: 0.7;
 }
 
 .star-deco {
@@ -195,8 +237,8 @@ const periodTextColor = computed(() => {
   content: "";
   position: absolute;
   /* 这里设定大小 */
-  width: 20px; 
-  height: 20px;
+  width: 2em; 
+  height: 2em;
   background-color: var(--home-text-color);
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 C55 35 65 45 100 50 C65 55 55 65 50 100 C45 65 35 55 0 50 C35 45 45 35 50 0 Z' fill='black'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 C55 35 65 45 100 50 C65 55 55 65 50 100 C45 65 35 55 0 50 C35 45 45 35 50 0 Z' fill='black'/%3E%3C/svg%3E");
@@ -210,20 +252,36 @@ const periodTextColor = computed(() => {
 
 .star-deco::before {
   bottom: 2%;
-  left: -5px;  
-  width: 19px;
-  height: 19px;
+  left: -0.82em;  
+  width: 1.9em;
+  height: 1.9em;
   opacity: 0.6;
-  transform: rotate(-15deg);
+  transform: rotate(-22deg);
 }
 
 .star-deco::after {
-  bottom: 80px;
+  bottom: 8em;
   right: 0;
-  width: 12px;
-  height: 12px;
+  width: 1.2em;
+  height: 1.2em;
   opacity: 0.3;
   transform: rotate(10deg);
+}
+
+.circle-deco {
+  position: absolute;
+  bottom: -2.2em;
+  left: -0.5em;
+  width: 3.5em;
+  height: 3.5em;
+  color: var(--home-text-color);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.circle-deco circle {
+  stroke-width: 6; /* 在这里调整线条粗细 */
 }
 
 /* ========================================================================
@@ -247,23 +305,23 @@ const periodTextColor = computed(() => {
 .todo-list {
   list-style: none;
   padding: 0;
-  margin: 6px 0;
+  margin: 0.6em 0;
 }
 
 .todo-list li {
   display: flex;
   align-items: center;
-  gap: 3px;
-  margin-bottom: 12px;
-  border-bottom: 1px dashed #e0e0e0;
-  font-size: 10px;
+  gap: 0.3em;
+  margin-bottom: 1.2em;
+  border-bottom: 0.1em dashed #e0e0e0;
+  font-size: 1em;
 }
 
 .checkbox {
-  width: 11px;
-  height: 11px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
+  width: 1.1em;
+  height: 1.1em;
+  border: 0.2em solid #ddd;
+  border-radius: 0.4em;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -282,7 +340,7 @@ const periodTextColor = computed(() => {
 
 .todo-time {
   color: #999;
-  font-size: 8px;
+  font-size: 0.8em;
   flex-shrink: 0;
 }
 
@@ -291,11 +349,11 @@ const periodTextColor = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 10px;
+  font-size: 1em;
 }
 
 .no-todos {
-  font-size: 12px;
+  font-size: 1.2em;
   text-align: center;
   color: #aaa;
   margin: auto;
@@ -304,8 +362,8 @@ const periodTextColor = computed(() => {
 
 /* --- 分割线 --- */
 .divider {
-  border-bottom: 1px dashed #e0e0e0;
-  margin: 5px 0;
+  border-bottom: 0.1em dashed #e0e0e0;
+  margin: 0.5em 0;
   flex-shrink: 0; /* 防止分割线被压缩 */
 }
 
@@ -313,13 +371,12 @@ const periodTextColor = computed(() => {
 .period-tracker-container {
   flex-shrink: 0; /* 防止此容器被压缩 */
   text-align: center;
-  padding: 0px 0; 
+  padding: 0; 
 }
 
 .period-text {
-  font-size: 10px;
+  font-size: 1em;
   color: #666;
-  font-family: 'Caveat', cursive;
   margin: 0;
 }
 </style>

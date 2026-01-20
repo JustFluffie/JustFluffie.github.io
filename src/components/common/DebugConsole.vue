@@ -1,13 +1,18 @@
 <template>
   <div
     class="debug-console"
-    :style="{ top: position.y + 'px', left: position.x + 'px', width: isCollapsed ? '60px' : '80vw' }"
+    :class="{ 'collapsed': isCollapsed }"
+    :style="{ top: position.y + 'px', left: position.x + 'px' }"
     @mousedown="startDrag"
     @touchstart="startDrag"
   >
     <div class="header">
-      <span @click.stop="toggleCollapse">{{ isCollapsed ? '🐞' : 'Debug Console' }}</span>
-      <button v-if="!isCollapsed" @click.stop="clearLogs">Clear</button>
+      <span @click.stop="toggleCollapse">{{ isCollapsed ? '🧸' : 'Debug Console' }}</span>
+      <div class="controls" v-if="!isCollapsed">
+        <button @click.stop="clearLogs">Clear</button>
+        <button @click.stop="$emit('hide')">Hide</button>
+        <button @click.stop="exitDebugMode" class="exit-btn">Exit</button>
+      </div>
     </div>
     <div v-if="!isCollapsed" class="content" ref="logContainer">
       <div v-for="(log, index) in logs" :key="index" :class="['log-item', log.type]">
@@ -19,6 +24,8 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+
+const emit = defineEmits(['hide']);
 
 const isCollapsed = ref(true);
 const logs = ref([]);
@@ -36,6 +43,13 @@ const toggleCollapse = () => {
 
 const clearLogs = () => {
   logs.value = [];
+};
+
+const exitDebugMode = () => {
+  if (confirm('Close debug mode?')) {
+    localStorage.removeItem('debug-mode');
+    window.location.reload();
+  }
 };
 
 const formatLog = (args) => {
@@ -126,16 +140,25 @@ onUnmounted(() => {
 .debug-console {
   position: fixed;
   z-index: 9999;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: rgb(26, 26, 26);
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  transition: width 0.2s ease, height 0.2s ease;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+  transition: width 0.2s ease, height 0.2s ease, border-radius 0.2s ease;
   height: auto;
   max-height: 300px;
+  width: 80vw;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.debug-console.collapsed {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
 }
 
 .header {
@@ -147,6 +170,13 @@ onUnmounted(() => {
   cursor: move;
   user-select: none;
   height: 40px;
+  width: 100%;
+}
+
+.collapsed .header {
+  padding: 0;
+  justify-content: center;
+  background-color: transparent;
 }
 
 .header span {
@@ -154,13 +184,22 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
+.header .controls {
+  display: flex;
+  gap: 8px;
+}
+
 .header button {
-  background: #444;
-  color: white;
+  background: rgba(255, 255, 255, 0);
+  color: rgb(26, 26, 26);
   border: none;
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.header button.exit-btn {
+  background: rgba(255, 68, 68, 0.521);
 }
 
 .content {

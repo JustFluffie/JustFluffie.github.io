@@ -9,7 +9,7 @@
         <slot name="action"></slot>
       </div>
     </div>
-    <div class="app-content">
+    <div class="app-content" :class="{ 'no-padding': noPadding }">
       <slot></slot>
     </div>
   </div>
@@ -26,6 +26,10 @@ const props = defineProps({
   backAction: {
     type: Function,
     default: null
+  },
+  noPadding: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -139,9 +143,18 @@ function handleBack() {
     overflow-y: auto;
     padding: 10px 15px;
     background: #f5f5f5;
+    /* 隐藏滚动条但允许滚动 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+}
+.app-content::-webkit-scrollbar {
+    width: 0;
+    background: transparent; /* Chrome/Safari/Webkit */
+}
+.app-content.no-padding {
+    padding: 0;
 }
 .app-content > .card:last-child {
     margin-bottom: 0;
 }
 </style>
-

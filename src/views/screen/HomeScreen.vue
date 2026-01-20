@@ -267,7 +267,6 @@ onMounted(() => {
           </div>
 
           <!-- 内容区域模块 -->
-          <HomeListCard class="home-list-card" />
           <div class="content-row">
             <div class="left-column">
               <AppGrid
@@ -275,6 +274,7 @@ onMounted(() => {
                 :app-icons="appIcons"
                 @app-click="handleAppClick"
               />
+              <HomeListCard class="home-list-card" />
             </div>
             <div class="right-column">
               <PhotoWall
@@ -429,16 +429,7 @@ onMounted(() => {
 }
 
 .left-column .app-grid {
-  transform: translateY(15px);
-}
-
-.home-list-card {
-  position: absolute;
-  bottom: 21%;
-  left: 25px; /* Match page padding */
-  width: 9rem; /* Half page width minus some padding */
-  height: 11.5rem; /* Adjust length */
-  z-index: 10;
+  transform: translateY(10px);
 }
 
 .spacer {

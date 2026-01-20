@@ -66,7 +66,7 @@ const showSourceSelect = (type) => {
     height: 14em; 
     /* 3. 整体位置移动 (Move) */
     position: relative;
-    top: -2em;   
+    top: -2.3em;   
     left: 0em;   
 }
 
@@ -103,8 +103,8 @@ const showSourceSelect = (type) => {
 
 /* --- 拍立得卡片 --- */
 .polaroid {
-    width: 5rem; 
-    height: 6.5rem;
+    width: 4.9rem; 
+    height: 6.4rem;
     padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */ 
     margin-left: -5%;
     /* 纸张质感背景：渐变 + SVG噪点纹理 */
@@ -140,14 +140,14 @@ const showSourceSelect = (type) => {
 
 /* 卡片定位 (使用百分比，随容器自适应) */
 .polaroid.p2 { 
-    top: 0%; 
-    left: 52%; /* 稍微调整了下位置以配合星星 */
+    top: -5%; 
+    left: 51%; /* 稍微调整了下位置以配合星星 */
     transform: rotate(10deg); 
     z-index: 12; 
 }
 .polaroid.p1 { 
-    top: 43%; 
-    left: 12%; 
+    top: 38%; 
+    left: 11%; 
     transform: rotate(-10deg); 
     z-index: 11; 
 }
@@ -158,13 +158,13 @@ const showSourceSelect = (type) => {
 .photo-wall-input3 {
     position: absolute;
     top: 65%;
-    left: 45%;
+    left: 43%;
     width: 10em; /* 紧凑一点 */
     background: transparent;
     border: none;
     color: var(--home-text-color);
     padding: 5px;
-    font-size: 1em; 
+    font-size: 0.99em; 
     font-weight: 500;
     font-family: inherit;
     font-style: italic;
@@ -176,7 +176,7 @@ const showSourceSelect = (type) => {
     transition: background 0.2s ease;
 }
 
-.photo-wall-input2 { position: absolute; top: 75%; left: 45%; width: 15em;}
+.photo-wall-input2 { position: absolute; top: 75%; left: 43%; width: 15em;}
 .photo-wall-input3 { position: absolute; top: 14%; left: -10%; text-align: center;}
 
 

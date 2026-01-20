@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="日历">
+  <AppLayout title="日历" :no-padding="true">
     <template #action>
       <button class="header-action-btn" @click="openEventModal">
         <SvgIcon name="plus" />
@@ -60,7 +60,6 @@
             :status="periodStatusForSelectedDate.status"
             :day-count="periodStatusForSelectedDate.dayCount"
             :selected-date="selectedDate"
-            @record="handleRecordPeriod"
           />
         </div>
 
@@ -184,13 +183,6 @@ const periodStatusForSelectedDate = computed(() => {
   return getPeriodStatusForDate(dateString, calendarStore.periodHistory, ongoingPeriod.value);
 });
 
-const handleRecordPeriod = () => {
-  // The card now emits a simple 'record' event.
-  // We use the currently selected date from the calendar's state.
-  const dateString = formatISO(selectedDate.value, { representation: 'date' });
-  calendarStore.recordPeriod(dateString);
-};
-
 
 const eventMarkers = computed(() => {
   const markers = {};
@@ -228,8 +220,6 @@ const getDayMarkerClass = (day) => {
   padding: 20px; 
   font-family: 'Quicksand', sans-serif; 
   color: #333; 
-  margin: -10px -15px; /* 抵消 AppLayout 的 padding */
-  height: calc(100% + 20px); /* 修正高度 */
 }
 .calendar-section { background: #fff; border-radius: 24px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); margin-bottom: 16px; }
 .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
