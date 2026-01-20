@@ -57,7 +57,6 @@ const handleAppClick = (app) => {
     transition: transform 0.2s ease;
 }
 
-.app-icon:hover { transform: scale(1.05); }
 .app-icon:active { transform: scale(0.95); }
 
 .app-icon .icon {

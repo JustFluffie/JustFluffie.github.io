@@ -287,7 +287,7 @@ const selectDisplay = (preference) => {
    ======================================================================== */
 .list-card-wrapper {
     width: 100%;
-    height: 12.5rem; /* Adjust length */
+    height: 12.2rem; /* Adjust length */
     margin-top: auto;
     margin-bottom: 15px;
     display: flex;
@@ -674,7 +674,4 @@ const selectDisplay = (preference) => {
 /* ========================================================================
    7. 响应式调整 (Responsive Adjustments)
    ======================================================================== */
-:global(.phone-frame.no-frame .list-card-wrapper) {
-  margin-bottom: 0;
-}
 </style>

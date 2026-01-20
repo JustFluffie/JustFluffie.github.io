@@ -14,12 +14,9 @@ import { useWeatherStore } from '@/stores/weatherStore'
 
 // 组件
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
-import HomeHeader from './components/HomeHeader.vue'
-import PhotoWall from './components/PhotoWall.vue'
-import AppGrid from './components/AppGrid.vue'
 import DockBar from './components/DockBar.vue'
 import HomeScreen2 from './HomeScreen2.vue'
-import HomeListCard from './components/HomeListCard.vue'
+import WidgetContainer from './components/WidgetContainer.vue'
 
 // ==========================================
 // 初始化与状态管理
@@ -28,7 +25,7 @@ const { t } = useI18n()
 const router = useRouter()
 const themeStore = useThemeStore()
 const weatherStore = useWeatherStore()
-const { themePresets, currentThemePreset, appIcons } = storeToRefs(themeStore)
+const { themePresets, currentThemePreset, appIcons, showFrame } = storeToRefs(themeStore)
 const { homeScreenWeather } = storeToRefs(weatherStore)
 
 // 页面控制状态
@@ -255,40 +252,20 @@ onMounted(() => {
         <!-- ========== 第一页 ========== -->
         <div class="page page-1">
           
-          <!-- 顶部容器模块 -->
-          <div class="header-container">
-            <HomeHeader
-              :homeData="homeData"
-              @update:homeData="newData => Object.assign(homeData, newData)"
-              :current-date="currentDate"
-              :weather-text="weatherText"
-              @show-source-select="showSourceSelect"
-              @save-home-data="saveHomeData"
-            />
-          </div>
-
-          <!-- 内容区域模块 -->
-          <div class="content-row">
-            <div class="left-column">
-              <AppGrid
-                :apps="leftApps"
-                :app-icons="appIcons"
-                @app-click="handleAppClick"
-              />
-              <HomeListCard class="home-list-card" />
-            </div>
-            <div class="right-column">
-              <PhotoWall
-                :home-data="homeData"
-                @show-source-select="showSourceSelect"
-              />
-              <AppGrid
-                :apps="rightApps"
-                :app-icons="appIcons"
-                @app-click="handleAppClick"
-              />
-            </div>
-          </div>
+          <!-- 桌面小组件容器 -->
+          <WidgetContainer
+            :homeData="homeData"
+            :current-date="currentDate"
+            :weather-text="weatherText"
+            :left-apps="leftApps"
+            :right-apps="rightApps"
+            :app-icons="appIcons"
+            :show-frame="showFrame"
+            @update:homeData="newData => Object.assign(homeData, newData)"
+            @show-source-select="showSourceSelect"
+            @save-home-data="saveHomeData"
+            @app-click="handleAppClick"
+          />
 
         </div>
         
@@ -385,58 +362,12 @@ onMounted(() => {
 .page {
     width: 50%;
     height: 100%;
-    padding: 15px 20px 5px 20px; /* 减少底部 padding 从 15px 到 5px */
+    padding: 0; /* 减少底部 padding 从 15px 到 5px */
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.header-container {
-  flex-shrink: 0; /* 防止顶部容器被压缩 */
-  min-height: 38%; /* 强制占据至少三分之一的高度 */
-}
-
-.content-row {
-  display: flex;
-  width: 100%;
-  flex: 1; /* 让中间区域占据剩余空间 */
-  min-height: 0; /* 防止内容溢出导致容器被撑大 */
-}
-
-.left-column {
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 10px 10px 0 0;
-}
-
-.right-column {
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 20px;
-  gap: 20px;
-}
-
-/* 
-   [位置调整] 
-   控制右侧 App (聊天、日历) 的垂直位置
-   修改 translateY 的数值：负数越小越往上
-   使用 transform 避免影响上方 PhotoWall 的居中位置
-*/
-.right-column .app-grid {
-  transform: translateY(-38px);
-}
-
-.left-column .app-grid {
-  transform: translateY(10px);
-}
-
-.spacer {
-  display: none; /* 不再需要 spacer */
-}
 
 
 /* ==========================================

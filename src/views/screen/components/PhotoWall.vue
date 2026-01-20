@@ -116,8 +116,8 @@ const getLangClass = (text) => {
 /* 十字：背景透明，但线条要用变量色 */
 .s-cross { width: 1.2em; height: 1.2em; background: transparent; }
 .s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); }
-.s-cross::before { top: 45%; left: 0; width: 100%; height: 1.5px; }
-.s-cross::after { top: 0; left: 45%; width: 1.5px; height: 100%; }
+.s-cross::before { top: 45%; left: 0; width: 100%; height: 0.1em; }
+.s-cross::after { top: 0; left: 45%; width: 0.1em; height: 100%; }
 
 .cross-sparkle-icon {
   position: absolute; width: 1.2em; height: 1.2em; color: var(--home-text-color); }
@@ -138,8 +138,8 @@ const getLangClass = (text) => {
 
 /* --- 拍立得卡片 --- */
 .polaroid {
-    width: 4.9rem; 
-    height: 6.4rem;
+    width: 6.5em; 
+    height: 8.5em;
     padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */ 
     margin-left: -5%;
     /* 纸张质感背景：渐变 + SVG噪点纹理 */
@@ -176,12 +176,12 @@ const getLangClass = (text) => {
 /* 卡片定位 (使用百分比，随容器自适应) */
 .polaroid.p2 { 
     top: -5%; 
-    left: 51%; /* 稍微调整了下位置以配合星星 */
+    left: 53%; /* 稍微调整了下位置以配合星星 */
     transform: rotate(10deg); 
     z-index: 12; 
 }
 .polaroid.p1 { 
-    top: 38%; 
+    top: 42%; 
     left: 11%; 
     transform: rotate(-10deg); 
     z-index: 11; 
@@ -213,19 +213,19 @@ const getLangClass = (text) => {
 /* --- 语言特定样式 --- */
 /* 英文 */
 .photo-wall-input.lang-en {
-    font-family: 'Open Sans', 'Segoe UI', sans-serif; font-size: 10.7px; font-style: italic; }
+    font-family: 'Open Sans', 'Segoe UI', sans-serif; font-size: 0.98em; font-style: italic; }
 
 /* 中文 */
 .photo-wall-input.lang-zh {
-    font-family: 'Noto Serif SC', 'SimSun', serif;  font-size: 9px; font-style: normal; }
+    font-family: 'Noto Serif SC', 'SimSun', serif;  font-size: 0.82em; font-style: normal; }
 
 /* 日文 */
 .photo-wall-input.lang-ja {
-    font-family: 'Kiwi Maru', serif; font-size: 9.7px; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
+    font-family: 'Kiwi Maru', serif; font-size: 0.88em; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
 
 /* 韩文 */
 .photo-wall-input.lang-kr {
-    font-family: 'Gaegu', cursive; font-size: 13px; font-weight: 700; font-style: normal; letter-spacing: 0.7px; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
+    font-family: 'Gaegu', cursive; font-size: 1.18em; font-weight: 700; font-style: normal; letter-spacing: 0.05em; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
 
 .photo-wall-input-1 { top: 65%; left: 42%; width: 10em; }
 .photo-wall-input-2 { top: 75%; left: 42%; width: 15em; }
