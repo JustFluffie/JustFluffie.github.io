@@ -55,7 +55,7 @@ export const useBackupStore = defineStore('backup', () => {
         // 3. Settings
         if (options.settings) {
             const keys = [
-                'api_presets', 'api_activePresetName', 'api_imageHostProvider', 'api_imgbbApiKey', 'api_catboxUserHash',
+                'api_imageHostProvider', 'api_imgbbApiKey', 'api_catboxUserHash',
                 'aiPhoneGlobalBackgroundActivity', 'aiPhoneGlobalProactiveScope', 'aiPhoneGlobalProactiveInterval', 
                 'aiPhoneGlobalProactiveCooldown', 'aiPhoneGlobalProactiveDailyLimit', 'aiPhoneGlobalTriggerMode', 
                 'aiPhoneGlobalProactiveIdleTime'
@@ -80,7 +80,7 @@ export const useBackupStore = defineStore('backup', () => {
 
         // 5. Worldbook
         if (options.worldbook) {
-            const keys = ['worldBooks', 'worldBookNextId'];
+            const keys = ['worldBooks', 'worldBookNextId', 'api_presets', 'api_activePresetName'];
             keys.forEach(key => {
                 const val = localStorage.getItem(key);
                 if (val !== null) backupData[key] = val;
@@ -260,7 +260,7 @@ export const useBackupStore = defineStore('backup', () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `phone_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `JF-Phone_backup_${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
