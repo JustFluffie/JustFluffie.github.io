@@ -270,7 +270,7 @@ const confirmLocation = () => {
 /* --- 语言特定样式 --- */
 /* 英文 */
 .custom-text-input.lang-en {
-    font-family: Segoe UI, serif; font-size: 0.79em; font-style: italic; }
+    font-family: Segoe UI, serif; font-size: 0.95em; font-style: italic; }
 
 /* 中文 */
 .custom-text-input.lang-zh {
@@ -278,11 +278,11 @@ const confirmLocation = () => {
 
 /* 日文 */
 .custom-text-input.lang-ja {
-    font-family: 'Kiwi Maru', serif; font-size: 9.7px; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
+    font-family: 'Kiwi Maru', serif; font-size: 1em; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
 
 /* 韩文 */
 .custom-text-input.lang-kr {
-    font-family: 'Gaegu', cursive; font-size: 13px; font-weight: 700; font-style: normal; letter-spacing: 0.7px; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
+    font-family: 'Gaegu', cursive; font-size: 1.1em; font-weight: 700; font-style: normal; letter-spacing: 0.7px; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
 
 /* ==========================================
    小组件容器样式
