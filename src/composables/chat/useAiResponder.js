@@ -61,20 +61,49 @@ export function useAiResponder(charId, apiStore) {
       
       if (responseText) {
         // --- 新增：处理待办事项 ---
-        const todoPattern = /\[待办：(?:(\d{1,2}:\d{2})\s)?(.+?)\]/g;
+        // 支持格式：[待办：YYYY-MM-DD HH:mm 内容] 或 [待办：HH:mm 内容] 或 [待办：YYYY-MM-DD 内容]
+        const todoPattern = /\[待办：(?:((?:\d{4}-\d{2}-\d{2}\s)?\d{1,2}:\d{2}|\d{4}-\d{2}-\d{2})\s)?(.+?)\]/g;
         let match;
         while ((match = todoPattern.exec(responseText)) !== null) {
-          const time = match[1] || new Date().toTimeString().slice(0, 5); // 如果匹配到时间则使用，否则用当前时间
+          const dateTimeStr = match[1];
           const todoContent = match[2].trim();
+          
+          let targetDate = new Date();
+          let timeStr = '';
+
+          if (dateTimeStr) {
+             if (dateTimeStr.includes('-')) {
+                 // 包含日期
+                 if (dateTimeStr.includes(':')) {
+                     // YYYY-MM-DD HH:mm
+                     const [datePart, timePart] = dateTimeStr.split(/\s+/);
+                     targetDate = new Date(datePart);
+                     timeStr = timePart;
+                 } else {
+                     // YYYY-MM-DD
+                     targetDate = new Date(dateTimeStr);
+                     timeStr = ''; // 全天或无具体时间
+                 }
+             } else {
+                 // 只有时间 HH:mm
+                 timeStr = dateTimeStr;
+                 // targetDate 保持为今天
+             }
+          } else {
+              // 无时间，默认为今天，无具体时间
+              timeStr = new Date().toTimeString().slice(0, 5);
+          }
+
           if (todoContent) {
             calendarStore.addEvent({
               type: 'todo',
               title: todoContent,
-              date: formatISO(new Date(), { representation: 'date' }),
+              content: todoContent, // 兼容 UI 组件使用 content 字段
+              date: formatISO(targetDate, { representation: 'date' }),
               done: false,
-              time: time
+              time: timeStr
             });
-            console.log(`[useAiResponder] Added new todo: "${todoContent}" at ${time}`);
+            console.log(`[useAiResponder] Added new todo: "${todoContent}" at ${timeStr} on ${formatISO(targetDate, { representation: 'date' })}`);
           }
         }
         // 从回复中移除待办事项指令，以免显示在聊天中

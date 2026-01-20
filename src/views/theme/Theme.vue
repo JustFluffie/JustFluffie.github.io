@@ -1,19 +1,11 @@
 ﻿<template>
-  <div class="app-screen active" id="themeSettingsApp">
-    <!-- ==================== 顶部导航栏 ==================== -->
-    <div class="app-header">
-      <div class="back-btn" @click="goBack">
-        <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </div>
-      <div class="title">{{ $t('theme.title') }}</div>
-      <div class="action-btn">
-        <button class="header-save-btn" @click="saveCurrentThemeSettings">{{ $t('save') }}</button>
-      </div>
-    </div>
+  <AppLayout :title="$t('theme.title')" :backAction="goBack" id="themeSettingsApp">
+    <template #action>
+      <button class="header-save-btn" @click="saveCurrentThemeSettings">{{ $t('save') }}</button>
+    </template>
 
-    <div class="app-content theme-content">
-      <!-- ==================== 1. 边框设置模块 ==================== -->
-      <div class="card theme-section">
+    <!-- ==================== 1. 边框设置模块 ==================== -->
+    <div class="card theme-section">
         <div class="card-content">
           <div class="theme-item no-icon">
             <div class="item-content">
@@ -194,8 +186,6 @@
         </div>
       </div>
 
-    </div>
-
     <!-- ==================== 弹窗组件区域 ==================== -->
     <ImageUploadModal
       v-model:visible="isUploadModalVisible"
@@ -206,7 +196,7 @@
       @upload-complete="handleWallpaperUploadComplete"
     />
 
-  </div>
+  </AppLayout>
 </template>
 
 <script setup>
@@ -221,6 +211,7 @@ import { storeToRefs } from 'pinia'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import Modal from '@/components/common/Modal.vue'
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
+import AppLayout from '@/components/common/AppLayout.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -766,11 +757,6 @@ function saveCurrentThemeSettings() {
 
 <style scoped>
 /* ==================== 主题页面基础布局 ==================== */
-.theme-content {
-    flex: 1;
-    overflow-y: auto;
-}
-
 .theme-section {
     margin-bottom: 15px;
 }

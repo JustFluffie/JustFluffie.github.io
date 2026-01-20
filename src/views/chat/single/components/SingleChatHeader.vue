@@ -1,17 +1,14 @@
 <template>
-  <div class="chat-room-header">
-    <!-- 左侧图标组 -->
-    <div class="left-icons">
-      <div class="btn-icon back-btn" @click="goBack">
-        <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </div>
+  <div>
+    <!-- 左侧图标组：传送到父组件的左侧区域 -->
+    <Teleport to="#chatRoomLeftArea" v-if="isMounted">
       <div class="btn-icon bell-btn" @click="$emit('trigger-ai')" ref="bellBtn">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
       </div>
-    </div>
+    </Teleport>
     
-    <!-- 中间标题和状态 -->
-    <div class="center-container">
+    <!-- 中间标题和状态：传送到父组件的标题区域 -->
+    <Teleport to="#chatRoomTitleArea" v-if="isMounted">
       <div class="header-title-area">
         <div class="chat-room-title" v-if="!isTyping">{{ charName }}</div>
         <div class="typing-indicator" v-else>
@@ -28,17 +25,19 @@
         <span>{{ charStatus.icon || '✨' }}</span>
         <span>{{ charStatus.text || t('chat.singleChat.addStatus') }}</span>
       </div>
-    </div>
+    </Teleport>
 
-    <!-- 右侧图标组 -->
-    <div class="right-icons">
-      <div class="btn-icon memory-btn" @click="openMemoryBank">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+    <!-- 右侧图标组：传送到父组件的右侧区域 -->
+    <Teleport to="#chatRoomActionArea" v-if="isMounted">
+      <div class="right-icons-group">
+        <div class="btn-icon memory-btn" @click="openMemoryBank">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <div class="btn-icon more-btn" @click="$emit('open-settings')">
+          <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        </div>
       </div>
-      <div class="btn-icon more-btn" @click="$emit('open-settings')">
-        <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-      </div>
-    </div>
+    </Teleport>
 
     <!-- 弹窗：状态设置 -->
     <Modal v-model:visible="showStatusModal" :title="t('chat.singleChat.setStatus')">
@@ -60,7 +59,7 @@
 // 模块导入
 // ================================================================================================
 // Vue
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 // Pinia
@@ -107,20 +106,15 @@ const themeStore = useThemeStore()
 const showStatusModal = ref(false)
 const statusIconInput = ref('')
 const statusTextInput = ref('')
+const isMounted = ref(false)
+
+onMounted(() => {
+  isMounted.value = true
+})
 
 // ================================================================================================
 // 方法
 // ================================================================================================
-/**
- * @description 返回上一页或聊天列表
- */
-const goBack = () => {
-  if (router.options.history.state.back) {
-    router.back()
-  } else {
-    router.push('/chat')
-  }
-}
 
 /**
  * @description 打开状态编辑弹窗
@@ -161,47 +155,6 @@ const openMemoryBank = () => {
 </script>
 
 <style scoped>
-/* --- 根容器 --- */
-.chat-room-header {
-    position: relative;
-    z-index: 300;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    height: 70px;
-    padding: 30px 15px 8px;
-    background: rgba(245, 245, 245, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-}
-
-/* --- 布局与对齐 --- */
-.chat-room-header .left-icons,
-.chat-room-header .right-icons {
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.chat-room-header .right-icons {
-    margin-left: auto;
-    margin-right: 0px;
-}
-
-.chat-room-header .center-container {
-    position: absolute;
-    left: 50%;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    max-width: 60%;
-    transform: translateX(-50%);
-}
-
 /* --- 组件样式 --- */
 .header-title-area {
     display: flex;
@@ -225,6 +178,7 @@ const openMemoryBank = () => {
     display: flex;
     gap: 2px;
     align-items: center;
+    justify-content: center;
     font-size: 9px;
     margin-top: 2px;
     color: #999;
@@ -232,24 +186,40 @@ const openMemoryBank = () => {
 }
 
 /* --- 按钮与图标 --- */
-.chat-room-header .bell-btn {
-    margin-left: 10px; 
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #1a1a1a;
 }
-.chat-room-header .more-btn {
-    margin-left: 10px; 
+
+.bell-btn {
+    margin-left: 5px; 
 }
-.chat-room-header .memory-btn {
+
+.right-icons-group {
+    display: flex;
+    align-items: center;
+}
+
+.more-btn {
+    margin-left: 5px; 
+}
+.memory-btn {
     margin-right: 0;
 }
 
-.chat-room-header .bell-btn svg,
-.chat-room-header .memory-btn svg {
+.bell-btn svg,
+.memory-btn svg {
     width: 20px;
     height: 20px;
     stroke-width: 2;
 }
 
-.chat-room-header .more-btn svg {
+.more-btn svg {
     width: 23px;
     height: 23px;
     fill: currentColor;
@@ -260,11 +230,12 @@ const openMemoryBank = () => {
     position: relative;
     display: flex;
     align-items: baseline;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: normal;
     position: relative;
     left: 6px; 
     color: #333;
+    margin-top: 9px; 
 }
 
 .typing-indicator .dots {

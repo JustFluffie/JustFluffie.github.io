@@ -2,7 +2,7 @@
   <div class="app-screen active">
     <div class="app-header">
       <div class="back-btn" @click="handleBack">
-        <svg-icon name="chevron-left" />
+        <svg-icon name="back-btn" />
       </div>
       <div class="title">{{ title }}</div>
       <div class="action-btn">
@@ -84,30 +84,26 @@ function handleBack() {
     align-items: center;
     justify-content: space-between;
     position: relative;
+    flex-shrink: 0;
 }
 .app-header .back-btn {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--text-primary);
-    border-radius: 50%;
-    transition: background 0.2s;
+    color: #1a1a1a;
 }
-.app-header .back-btn svg {
-    width: 24px;
-    height: 24px;
-    stroke-width: 2;
-}
+/* .app-header .back-btn svg 样式已移除，使用全局 .svg-icon 样式 */
+
 .app-header .title {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #1a1a1a;
     text-align: center;
     width: 60%;
     white-space: nowrap;
@@ -121,15 +117,9 @@ function handleBack() {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--text-primary);
-    border-radius: 50%;
-    transition: background 0.2s;
+    color: #1a1a1a;
 }
-.app-header .action-btn svg {
-    width: 24px;
-    height: 24px;
-    stroke-width: 1.5;
-}
+/* .app-header .action-btn svg 样式已移除，使用全局 .svg-icon 样式 */
 
 /*
  * 模块：应用通用内容区 (App Content)

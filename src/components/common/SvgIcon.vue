@@ -40,6 +40,7 @@ const icons = {
   'chevron-up': '<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />',
   'chevron-right': '<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />',
   'chevron-left': '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />',
+  'back-btn': '<polyline points="15 18 9 12 15 6"></polyline>',
   'x-mark': '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />',
   'check': '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />',
   'success': '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
@@ -77,8 +78,8 @@ const svgClass = computed(() => {
 
 <style scoped>
 .svg-icon {
-  width: 25px;
-  height: 25px;
+  width: 24px;
+  height: 24px;
   vertical-align: -0.15em;
   fill: none;/* 默认不填充，因为很多图标是 stroke */
   stroke: currentColor;
