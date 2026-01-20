@@ -36,7 +36,6 @@
           >
             <span class="week-txt">{{ day.week }}</span>
             <span class="day-num">{{ day.day }}</span>
-            <div :class="getMarkerClassForDate(day.date)"></div>
           </div>
         </div>
         <div class="month-view" v-else>

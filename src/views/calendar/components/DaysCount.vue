@@ -1,7 +1,6 @@
 <template>
   <div 
-    class="sticker-card count-card" 
-    :class="{ anniversary: isAnniversary }"
+    :class="['base-card', isAnniversary ? 'anniversary-card' : 'countdown-card']"
     @touchstart="startPress"
     @touchend="cancelPress"
     @touchmove="cancelPress"
@@ -10,43 +9,66 @@
     @mouseleave="cancelPress"
   >
     
-    <!-- 拍立得组件 (仅纪念日显示) -->
-    <div class="polaroid-wrapper" v-if="isAnniversary">
-      <!-- 胶带 -->
-      <div class="tape-small"></div>
-      
-      <!-- 照片区域 -->
-      <div class="photo-area" @click.stop="$emit('upload-photo', event)">
-        <img v-if="event.photoUrl" :src="event.photoUrl" class="polaroid-img" />
-        <div v-else class="placeholder-text">点击<br>上传</div>
+    <!-- ========================================
+         2. 纪念日卡片 - 拍立得风格
+    ======================================== -->
+    <template v-if="isAnniversary">
+      <!-- 拍立得组件 -->
+      <div class="polaroid-wrapper">
+        <div class="tape"></div>
+        <div class="photo-area" @click.stop="$emit('upload-photo', event)">
+          <img v-if="event.photoUrl" :src="event.photoUrl" class="polaroid-img" />
+          <div v-else class="placeholder">点击<br>上传</div>
+        </div>
+        <div class="caption">
+          <input 
+            type="text" 
+            :value="event.polaroidText"
+            @input="$emit('update:polaroidText', $event.target.value)"
+            placeholder="写点什么..."
+            @click.stop
+          >
+        </div>
       </div>
-      
-      <!-- 可编辑的手写文字 -->
-      <div class="handwriting-container">
-        <input 
-          type="text" 
-          :value="event.polaroidText"
-          @input="$emit('update:polaroidText', $event.target.value)"
-          class="polaroid-input" 
-          placeholder="点击输入"
-        />
-      </div>
-    </div>
 
-    <!-- 右侧信息 -->
-    <div class="content">
-      <span class="label">{{ event.title || defaultLabel }}</span>
-      <div class="big-days">
-        {{ daysCount }} <span class="unit">Days</span>
+      <!-- 右侧信息 -->
+      <div class="info">
+        <div class="tag">ANNIVERSARY</div>
+        <div class="label">{{ event.title || '纪念日' }}</div>
+        <div class="days-row">
+          <span class="big-num">{{ daysCount }}</span>
+          <span class="unit">Days</span>
+        </div>
+        <span class="date-tag">Since {{ formattedDate }}</span>
       </div>
-      <span class="target-date">{{ datePrefix }} {{ formattedDate }}</span>
-    </div>
+    </template>
+
+    <!-- ========================================
+         3. 倒计时卡片 - 简约线框风格
+    ======================================== -->
+    <template v-else>
+      <div class="corner-line"></div>
+      <span class="star-deco">✦</span>
+      <div class="left">
+        <div class="tag-line">
+          <span class="tag">COUNTDOWN</span>
+          <span class="line"></span>
+        </div>
+        <h2 class="title">{{ event.title || '倒计时' }}</h2>
+        <p class="date">{{ formattedDateWithWeekday }}</p>
+      </div>
+      <div class="days-block">
+        <span class="num">{{ daysCount }}</span>
+        <span class="unit">days</span>
+      </div>
+    </template>
+
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 
 const props = defineProps({
   event: {
@@ -78,10 +100,6 @@ const cancelPress = () => {
 
 const isAnniversary = computed(() => props.event.type === 'anniversary');
 
-const defaultLabel = computed(() => isAnniversary.value ? 'Anniversary' : 'Countdown');
-
-const datePrefix = computed(() => isAnniversary.value ? 'Since' : 'Target');
-
 const daysCount = computed(() => {
   if (!props.event.date) return 0;
   const target = new Date(props.event.date);
@@ -92,64 +110,95 @@ const daysCount = computed(() => {
 const formattedDate = computed(() => {
   if (!props.event.date) return '';
   const d = new Date(props.event.date);
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  return format(d, 'yyyy.MM.dd');
+});
+
+const formattedDateWithWeekday = computed(() => {
+  if (!props.event.date) return '';
+  const d = new Date(props.event.date);
+  return format(d, 'yyyy.MM.dd EEEE');
 });
 </script>
 
 <style scoped>
-.sticker-card { 
-  background: #fff; 
-  border-radius: 16px; 
-  padding: 20px; 
-  padding-bottom: 10px;
-  margin-bottom: 11px; 
-  position: relative; 
-  box-shadow: 0 4px 15px rgba(0,0,0,0.02); 
-  border: 1px solid #f2f2f2; 
+/* 引入字体 (如果全局未引入，这里作为备用，实际项目中通常在 index.html 或全局 CSS 中引入) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Caveat&family=Quicksand:wght@500;700&display=swap');
+
+/* 变量定义 */
+.base-card {
+  width: 100%;
+  position: relative;
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  /* 基础阴影 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-.count-card {
+/* ========================================
+   2. 纪念日卡片 - 拍立得风格
+======================================== */
+.anniversary-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 10px;
+  border: 3.9px dotted var(--border-color);
+  padding: 10px 20px;
   overflow: visible;
 }
 
-/* 拍立得容器 */
+/* 角落小十字装饰 */
+.anniversary-card::before {
+  content: '+';
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 10px;
+  color: #ddd;
+  font-weight: 300;
+}
+
+.anniversary-card::after {
+  content: '+';
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 10px;
+  color: #ddd;
+  font-weight: 300;
+}
+
+/* 拍立得 */
 .polaroid-wrapper {
   position: relative;
   background: #fff;
-  padding: 8px 8px 25px 8px;
-  box-shadow: 2px 4px 15px rgba(0,0,0,0.1);
-  transform: translate(20%, -5%) rotate(-4deg);
-  transition: transform 0.3s;
-  z-index: 5;
+  padding: 5px 5px 18px 5px;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.06);
+  transform: rotate(-3deg);
+  margin-left: 10px;
+  flex-shrink: 0;
 }
 
-/* 照片胶带 */
-.tape-small {
+.polaroid-wrapper .tape {
   position: absolute;
-  top: -8px; left: 50%; transform: translateX(-50%) rotate(2deg);
-  width: 30px; height: 10px;
-  background: rgba(248, 232, 143, 0.4);
-  backdrop-filter: blur(1px);
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
+  width: 24px;
+  height: 8px;
+  background: rgba(255, 224, 123, 0.65);
 }
 
-/* 照片灰底区域 */
-.photo-area {
-  width: 70px; height: 70px;
+.polaroid-wrapper .photo-area {
+  width: 70px;
+  height: 70px;
   background: #f4f4f4;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-}
-
-.placeholder-text { 
-  font-size: 12px; 
-  color: #ddd; 
-  text-align: center; 
-  line-height: 1.2; 
+  overflow: hidden;
 }
 
 .polaroid-img {
@@ -158,36 +207,212 @@ const formattedDate = computed(() => {
   object-fit: cover;
 }
 
-/* 手写输入框 */
-.handwriting-container {
+.polaroid-wrapper .placeholder {
+  font-size: 9px;
+  color: #ccc;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.polaroid-wrapper .caption {
   position: absolute;
-  bottom: 2px; left: 0; width: 100%;
+  bottom: 2px;
+  left: 0;
+  width: 100%;
   text-align: center;
 }
 
-.polaroid-input {
+.polaroid-wrapper .caption input {
   width: 90%;
-  border: none; background: transparent; outline: none;
+  border: none;
+  background: transparent;
+  outline: none;
   font-family: 'Caveat', cursive;
-  font-size: 16px;
-  color: #555;
+  font-size: 11px;
+  color: #666;
   text-align: center;
   padding: 0;
 }
-.polaroid-input::placeholder { color: #ddd; }
 
-/* 右侧信息 */
-.content { flex: 1; text-align: right; z-index: 1; }
-.label { 
-  font-family: 'ZCOOL KuaiLe', cursive; 
-  font-size: 16px; 
-  color: #999; 
-  margin-right: 4px;
-  /* 使用相对定位微调位置，不影响布局 */
-  position: relative;
-  top: -5px; /* 向上移动 2px，您可以调整这个值 */
+.polaroid-wrapper .caption input::placeholder {
+  color: #ccc;
 }
-.big-days { font-family: 'Quicksand', sans-serif; font-size: 40px; font-weight: 700; color: #333; line-height: 1; margin: 5px 0; }
-.unit { font-size: 14px; font-weight: 500; color: #666; }
-.target-date { font-size: 10px; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; color: #888; letter-spacing: 0.5px; }
+
+/* 纪念日右侧 */
+.anniversary-card .info {
+  flex: 1;
+  text-align: right;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.anniversary-card .tag {
+  font-size: 0.55rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.anniversary-card .label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.anniversary-card .days-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.anniversary-card .big-num {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--text-darkest);
+  line-height: 1;
+}
+
+.anniversary-card .unit {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.anniversary-card .date-tag {
+  font-size: 0.6rem;
+  background: var(--bg-light);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  display: inline-block;
+}
+
+/* ========================================
+   3. 倒计时卡片 - 简约线框风格
+======================================== */
+.countdown-card {
+  padding: 22px 24px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 左上角线条装饰 */
+.countdown-card .corner-line {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 18px;
+  height: 18px;
+  border-left: 1.5px solid #e0e0e0;
+  border-top: 1.5px solid #e0e0e0;
+}
+
+/* 右下角小星星 */
+.countdown-card .star-deco {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 8px;
+  color: #ddd;
+}
+
+.countdown-card .left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.countdown-card .tag-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.countdown-card .tag {
+  font-size: 0.5rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: var(--bg-light);
+  padding: 2px 8px;
+  border-radius: 8px;
+  position: relative;
+  top: -3px;
+}
+
+.countdown-card .line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #eee, transparent);
+  max-width: 60px;
+}
+
+.countdown-card .title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-darkest);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.countdown-card .title::before {
+  content: '—';
+  color: #ccc;
+  font-weight: 300;
+}
+
+.countdown-card .date {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  padding-left: 16px;
+  position: relative;
+  top: 9px;
+}
+
+/* 倒计时数字块 */
+.countdown-card .days-block {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: var(--bg-light);
+  padding: 10px 14px;
+  border-radius: 10px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.countdown-card .days-block::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  right: 6px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e5e5e5, transparent);
+}
+
+.countdown-card .num {
+  font-family: 'Space Mono', monospace;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-darkest);
+  line-height: 1;
+}
+
+.countdown-card .unit {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
 </style>

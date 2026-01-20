@@ -27,7 +27,7 @@
 
     <!-- 右侧：信息内容区 -->
     <div class="content-wrapper">
-      <h3 class="item-title">经期追踪</h3>
+      <h3 class="item-title">Period</h3>
       
       <!-- 主要状态显示 -->
       <p class="status-text" v-if="displayParts.number !== null">
