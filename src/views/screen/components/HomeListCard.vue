@@ -43,28 +43,28 @@ const futurePredictions = computed(() => {
   return predictFuturePeriods(calendarStore.periodHistory, calendarStore.ongoingPeriod, 1);
 });
 
-const periodDisplayText = computed(() => {
+const periodDisplayInfo = computed(() => {
   const { status, dayCount } = periodStatus.value;
 
   switch (status) {
     case 'actual':
     case 'ongoing':
-      return `经期第 ${dayCount} 天`;
+      return { prefix: '经期第 ', number: dayCount, suffix: ' 天' };
     case 'predicted':
-      return `预测第 ${dayCount} 天`;
+      return { prefix: '预测第 ', number: dayCount, suffix: ' 天' };
     default:
       if (futurePredictions.value.length > 0) {
         const nextStart = startOfDay(new Date(futurePredictions.value[0].start));
         const today = startOfDay(new Date());
         const daysUntil = differenceInDays(nextStart, today);
         if (daysUntil > 0) {
-          return `预计 ${daysUntil} 天后`;
+          return { prefix: '预计 ', number: daysUntil, suffix: ' 天后' };
         } else if (daysUntil === 0) {
           // This case might occur if the prediction starts today but isn't 'ongoing' yet.
-          return '预测今日开始';
+          return { text: '预测今日开始' };
         }
       }
-      return '添加历史记录以开始预测';
+      return { text: '添加历史记录以开始预测' };
   }
 });
 
@@ -121,7 +121,12 @@ const periodTextColor = computed(() => {
             class="period-text" 
             :style="{ color: periodTextColor }"
           >
-            {{ periodDisplayText }}
+            <template v-if="periodDisplayInfo.number !== undefined">
+              <span class="period-label">{{ periodDisplayInfo.prefix }}</span><span class="period-number">{{ periodDisplayInfo.number }}</span><span class="period-label">{{ periodDisplayInfo.suffix }}</span>
+            </template>
+            <template v-else>
+              <span class="period-label">{{ periodDisplayInfo.text }}</span>
+            </template>
           </p>
         </div>
       </div>
@@ -154,6 +159,7 @@ const periodTextColor = computed(() => {
     position: relative;
     top: -2.7em;   
     left: 0em;   
+    --font-serif: 'Georgia', 'Times New Roman', serif;
 }
 
 /* ========================================================================
@@ -349,11 +355,13 @@ const periodTextColor = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 1em;
+  font-size: 0.9em;
+  font-family: "Noto Serif SC", serif;
 }
 
 .no-todos {
-  font-size: 1.2em;
+  font-size: 1em;
+  font-family: "Noto Serif SC", serif;
   text-align: center;
   color: #aaa;
   margin: auto;
@@ -363,7 +371,7 @@ const periodTextColor = computed(() => {
 /* --- 分割线 --- */
 .divider {
   border-bottom: 0.1em dashed #e0e0e0;
-  margin: 0.5em 0;
+  margin: 1em 0;
   flex-shrink: 0; /* 防止分割线被压缩 */
 }
 
@@ -372,11 +380,27 @@ const periodTextColor = computed(() => {
   flex-shrink: 0; /* 防止此容器被压缩 */
   text-align: center;
   padding: 0; 
+  margin: 0 0;
+  font-family: 'ZCOOL KuaiLe', cursive;
 }
 
 .period-text {
   font-size: 1em;
   color: #666;
-  margin: 0;
+  margin: -5px 0;
+  letter-spacing: 0.1em;
+}
+
+.period-label {
+  position: relative;
+  top: 0.15em; /* 调整文字高低 */
+}
+
+.period-number {
+  font-size: 1.8em;
+  font-weight: bold;
+  font-family: var(--font-serif);
+  margin: 0 0.3em;
+  vertical-align: -0.15em;
 }
 </style>
