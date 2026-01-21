@@ -48,8 +48,8 @@ export default {
       calendar: '日历',
       apiSettings: 'API设置',
       theme: '主题',
-      spy: '',
-      check:'',
+      spy: '占位符1',
+      check: '占位符2',
     },
     modalTitles: {
       setBg: '设置主页背景',

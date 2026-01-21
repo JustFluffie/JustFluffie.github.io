@@ -59,8 +59,8 @@ const currentDate = ref('--/--/--  --')
 // [提示] 修改下方的 leftApps 和 rightApps 数组来调整 App 的位置
 // leftApps 显示在左侧（Header下方），rightApps 显示在右侧（PhotoWall下方）
 const leftApps = computed(() => [
-  { id: 'placeholder-1', label: '', action: () => {} },
-  { id: 'placeholder-2', label: '', action: () => {} }
+  { id: 'spy', label: '', action: () => {} },
+  { id: 'check', label: '', action: () => {} }
 ])
 
 const rightApps = computed(() => [
