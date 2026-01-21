@@ -80,11 +80,15 @@ const getLangClass = (text) => {
 
 <style scoped>
 .section-bottom-left {
-    flex: 1;
+    /* 【修改 1】撑满父容器分配的空间 */
+    width: 100%;
+    height: 100%; 
     display: flex;
     align-items: center;
     justify-content: center;
+    /* 允许装饰物溢出到 padding 区域，但不溢出屏幕 (由外部控制) */
     overflow: visible; 
+    container-type: size;
 }
 
 /* =========================================================
@@ -92,14 +96,17 @@ const getLangClass = (text) => {
    ========================================================= */
 .polaroid-container {
     /* 1. 整体大小 (Zoom) */
-    font-size: 11px; 
+    /* 建议：在有边框模式下，稍微把这个值改小一点，比如 1.6vh，以防挤压 */
+    font-size: 9cqmin;
     /* 2. 散布范围 (Spread) */
+    /* 我们定义一个固定的“画布区域”，让里面的绝对定位元素以此为基准 */
     width: 16em;  
     height: 14em; 
-    /* 3. 整体位置移动 (Move) */
+    /* 3. 【重要修改】位置复位 */
+    /* 不需要手动偏移了，Flexbox 会帮你居中 */
     position: relative;
-    top: -2.3em;   
-    left: 0em;   
+    top: 0;   /* 原来是 -2.3em */
+    left: 0;  
 }
 
 /* --- 装饰层（星星） --- */
@@ -140,20 +147,18 @@ const getLangClass = (text) => {
 .polaroid {
     width: 6.5em; 
     height: 8.5em;
-    padding: 0.5em 0.5em 1.8em 0.5em; /* 底部留白加大 */ 
-    margin-left: -5%;
-    /* 纸张质感背景：渐变 + SVG噪点纹理 */
+    padding: 0.5em 0.5em 1.8em 0.5em; 
+    margin-left: -5%; /* 这个负 margin 是为了视觉重叠效果，可以保留 */
     background-color: #ffffff;
     background-image: 
         linear-gradient(145deg, #ffffff 0%, #f8f8f8 50%, #f0f0f0 100%),
         url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");    
-    /* 高级阴影 */
+    
     box-shadow: 
         0 1px 3px rgba(0,0,0,0.08),
         0 3px 6px rgba(0,0,0,0.06),
         inset 0 1px 0 rgba(255,255,255,0.8);
     position: absolute;
-    /* 丝滑的贝塞尔曲线过渡 */
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
                 z-index 0s,
                 box-shadow 0.3s ease;

@@ -287,9 +287,7 @@ const selectDisplay = (preference) => {
    ======================================================================== */
 .list-card-wrapper {
     width: 100%;
-    height: 12.2rem; /* Adjust length */
-    margin-top: auto;
-    margin-bottom: 15px;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -298,14 +296,15 @@ const selectDisplay = (preference) => {
 
 .list-card-container {
     /* 1. 整体大小 (Zoom) */
-    font-size: 10px; 
+    /* 提示：如果切到有边框模式觉得卡片太大，可以把这个 1.6vh稍微改小一点，比如 1.4vh */
+    font-size: 1.2vh; 
     /* 2. 散布范围 (Spread) */
     width: 100%;  
     height: 100%; 
     /* 3. 整体位置移动 (Move) */
     position: relative;
-    top: -1.5em;   
-    left: 0em;   
+    top: 0;   /* 原来是 -1.5em */
+    left: 0;  /* 原来是 0em */
     --font-serif: 'Georgia', 'Times New Roman', serif;
 }
 
@@ -328,6 +327,9 @@ const selectDisplay = (preference) => {
   display: flex;
   flex-direction: column;
   color: #333;
+  box-sizing: border-box; 
+  width: 100%;
+  height: 100%; 
 }
 
 /* ========================================================================
@@ -335,11 +337,11 @@ const selectDisplay = (preference) => {
    ======================================================================== */
 .handwritten-title {
   font-family: 'Caveat', cursive;
-  font-size: 2.4em;
+  font-size: 2.7em;
   color: #333;
   margin: -0.625em -0.33em 0 -0.41em;
-  transform: translateX(-1.8em) rotate(-4deg);
-  text-align: right;
+  transform: translateX(1%) translateY(-10%) rotate(-4deg);
+  text-align: left;
   flex-shrink: 0; /* 防止标题被压缩 */
 }
 
@@ -358,7 +360,7 @@ const selectDisplay = (preference) => {
 .cross-sparkle-container {
   position: absolute;
   top: -1.5em;
-  right: 2.5em;
+  right: 3em;
   z-index: 5;
   transform: rotate(0deg);
 }
@@ -475,7 +477,7 @@ const selectDisplay = (preference) => {
 .todo-list {
   list-style: none;
   padding: 0;
-  margin: 0.6em 0;
+  margin: 0.7em 0;
 }
 
 .todo-list li {
@@ -484,7 +486,8 @@ const selectDisplay = (preference) => {
   gap: 0.3em;
   margin-bottom: 1.2em;
   border-bottom: 0.1em dashed #bebebe;
-  font-size: 1em;
+  padding-bottom: 0.35em;
+  font-size: 1.2em;
 }
 
 .checkbox {

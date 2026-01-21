@@ -92,7 +92,7 @@ const confirmLocation = () => {
     <!-- 磨砂玻璃遮罩 -->
     <div class="glass-mask"></div>
 
-    <!-- 内部内容容器 (固定大小，用于锁定布局) -->
+    <!-- 内部内容容器 (使用百分比布局) -->
     <div class="header-inner-container">
       <!-- ==========================================
            用户头像
@@ -160,7 +160,7 @@ const confirmLocation = () => {
     -webkit-backdrop-filter: blur(10px);
     border: none;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-soft);
+    box-shadow: none; 
     position: relative;
     overflow: hidden;
     background-size: cover;
@@ -207,30 +207,26 @@ const confirmLocation = () => {
 }
 
 .header-inner-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 10em;  /* 固定宽度 */
-    height: 10em; /* 固定高度 */
-    z-index: 2;
-    font-size: 1.5em; /* 继承父级字体大小并放大，作为新的内部基准 (24/16=1.5) */
-    /* background: rgba(0, 255, 0, 0.1); */ /* 调试辅助 */
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 /* ==========================================
    头像样式
    ========================================== */
 .profile-avatar {
-    width: 3.5em;
-    height: 3.5em;
+    width: 21.8%; /* 相对容器的百分比宽度 */
+    padding-top: 21.8%; /* 使用 padding-top 技巧创建正方形 */
+    height: 0;
     border-radius: 50%;
     background-color: var(--bg-white);
     background-size: cover;
     background-position: center;
-    box-shadow: 0 0.33em 0.83em rgba(0,0,0,0.15);
+    box-shadow: 0 0.5vh 1.2vh rgba(0,0,0,0.15);
+    z-index: 2;
     position: absolute;
-    top: 56%; /* 相对于内部容器定位 */
+    top: 58%;
     left: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
@@ -246,18 +242,19 @@ const confirmLocation = () => {
     background: transparent;
     border: none;
     color: var(--home-text-color);
-    font-size: 0.6em;
+    font-size: 0.85em; /* 相对根容器缩放 */
     font-weight: 500;
     text-align: center;
-    width: 100%;
+    width: 90%;
     outline: none;
-    text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.3);
+    text-shadow: 0 0.02em 0.02em rgba(0,0,0,0.3);
+    z-index: 2;
     font-family: inherit;
-    padding: 0.2em;
-    border-radius: 0.33em;
+    padding: 1%;
+    border-radius: 8px; /* 固定圆角可能效果更好 */
     transition: background 0.2s;
     position: absolute;
-    top: 73%; /* 相对于内部容器定位 */
+    top: 75.5%;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -274,20 +271,13 @@ const confirmLocation = () => {
 
 /* --- 语言特定样式 --- */
 /* 英文 */
-.custom-text-input.lang-en {
-    font-family: Segoe UI, serif; font-size: 0.6em; font-style: italic; top: 73.2% }
-
+.custom-text-input.lang-en { font-family: Segoe UI, serif; font-style: italic; font-size: 1em; }
 /* 中文 */
-.custom-text-input.lang-zh {
-    font-family: inherit;  font-size: 0.5em; font-style: normal; top: 74% }
-
+.custom-text-input.lang-zh { font-family: inherit; font-style: normal; top: 76%}
 /* 日文 */
-.custom-text-input.lang-ja {
-    font-family: 'Kiwi Maru', serif; font-size: 0.55em; font-weight: 450; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
-
+.custom-text-input.lang-ja { font-family: 'Kiwi Maru', serif; font-weight: 450; font-style: normal; font-size: 0.9em; }
 /* 韩文 */
-.custom-text-input.lang-kr {
-    font-family: 'Gaegu', cursive; font-size: 0.72em; font-weight: 600; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
+.custom-text-input.lang-kr { font-family: 'Gaegu', cursive; font-weight: 600; font-style: normal; font-size: 1.05em; }
 
 /* ==========================================
    小组件容器样式
@@ -295,24 +285,26 @@ const confirmLocation = () => {
 .widgets-container {
     display: flex;
     justify-content: space-between;
-    width: 136.5%;
+    width: 95%;
+    z-index: 2;
     position: absolute;
-    bottom: 0.6em; /* 相对于内部容器定位 */
-    left: -18%;
+    bottom: 2.5%;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .mini-widget-capsule {
     background: transparent;
-    padding: 0.25em 0.33em; /* 6px 8px */
-    border-radius: 0.83em; /* 20px */
+    padding: 0.4em 0.6em;
+    border-radius: 1em;
     border: none;
     color: var(--home-text-color, var(--text-darkest));
-    font-size: 0.45em;
+    font-size: 0.7em; /* 相对根容器缩放 */
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.2); /* 1px */
+    text-shadow: 0 0.05em 0.05em rgba(0,0,0,0.2);
     cursor: pointer;
 }
 </style>

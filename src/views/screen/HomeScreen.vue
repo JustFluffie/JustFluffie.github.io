@@ -250,7 +250,7 @@ onMounted(() => {
       <div class="pages-wrapper" :class="{ 'page-2': currentPage === 2 }">
         
         <!-- ========== 第一页 ========== -->
-        <div class="page page-1">
+        <div class="page page-1" @click.self="$emit('background-click')">
           
           <!-- 桌面小组件容器 -->
           <WidgetContainer
@@ -266,16 +266,19 @@ onMounted(() => {
             @save-home-data="saveHomeData"
             @app-click="handleAppClick"
           />
-
         </div>
         
+        
         <!-- ========== 第二页 ========== -->
-        <HomeScreen2 
-          :homeData="homeData"
-          @update:homeData="newData => Object.assign(homeData, newData)"
-          @show-source-select="showSourceSelect"
-          @save-home-data="saveHomeData"
-        />
+        <div class="page page-2"> 
+          <HomeScreen2 
+            :homeData="homeData"
+            @update:homeData="newData => Object.assign(homeData, newData)"
+            @show-source-select="showSourceSelect"
+            @save-home-data="saveHomeData"
+            style="max-width: 100%; height: 100%;" 
+          />
+        </div>  
 
       </div>
     </div>
@@ -315,6 +318,15 @@ onMounted(() => {
   </div>
 </template>
 
+<style>
+/* 注意这里没有 scoped，或者是用 :root */
+:root {
+  --global-icon-size: 6.5vh;
+  --global-icon-font: 3.2vh;
+  --global-icon-radius: 1.6vh;
+}
+</style>
+
 <style scoped>
 /* ==========================================
    1. 主屏幕布局 (Layout)
@@ -332,6 +344,7 @@ onMounted(() => {
     background-repeat: no-repeat;
     background-color: var(--bg-white);
     color: var(--home-text-color, var(--text-darkest));
+    overflow: hidden; 
 }
 
 .home-screen.hidden {
@@ -342,17 +355,29 @@ onMounted(() => {
 
 .pages-container {
     height: 100%;
-    padding-top: 21px;
-    padding-bottom: 120px;
+    /* --- 核心修改 1：顶部避让摄像头 --- */
+    /* S23 Ultra 顶部有挖孔，状态栏高度约 40-50px */
+    /* 使用 env() 自动适配，同时设置最小值 50px 保证不贴顶 */
+    padding-top: max(30px, env(safe-area-inset-top) + 20px);
+    /* --- 核心修改 2：底部避让 Dock 栏 --- */
+    /* Dock 高约 90px + 底部间距 30px = 120px */
+    /* 我们留 150px 确保最后一排图标不会被 Dock 挡住 */
+    padding-bottom: 150px;
     overflow: hidden;
     position: relative;
+    box-sizing: border-box; /* 确保 padding 不会撑破 height: 100% */
 }
 
 .pages-wrapper {
     display: flex;
+    flex-direction: row; /* 强制横向 */
+    /* 核心：靠左对齐！ */
+    /* 如果这里是 center 或 space-between，你的第一页就会跑偏 */
+    justify-content: flex-start; 
+    align-items: flex-start;
     width: 200%;
     height: 100%;
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .pages-wrapper.page-2 {
@@ -360,12 +385,16 @@ onMounted(() => {
 }
 
 .page {
+    /* 再次确认：不许缩放，死死锁定 50% */
+    flex: 0 0 50%; 
     width: 50%;
     height: 100%;
-    padding: 0; /* 减少底部 padding 从 15px 到 5px */
+    /* 页面内部布局 */
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: center; /* 让 Widget 居中 */
+    padding: 0 15px;
+    box-sizing: border-box;
 }
 
 
@@ -375,26 +404,36 @@ onMounted(() => {
    ========================================== */
 .page-indicator {
     position: absolute;
-    bottom: 125px;
+    /* --- 核心修改 3：位置调整 --- */
+    /* 放在 Dock 栏正上方。Dock 大约占据底部 120px 空间 */
+    bottom: 108px; 
     left: 50%;
     transform: translateX(-50%);
-    display: none;
-    gap: 8px;
+    /* 把它显示出来！原来是 none */
+    display: flex; 
+    gap: 10px; /* 稍微拉开点间距 */
     z-index: 50;
+    /* 增加一个半透明胶囊背景，让白点在浅色壁纸上也能看清 */
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0);
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
 }
 
 .dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.5); /* 默认半透明白 */
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .dot.active {
-    background: var(--text-primary);
-    width: 20px;
+    background: #fff; /* 激活纯白 */
+    width: 6px; /* S23 屏幕大，指示条可以稍微长一点 */
     border-radius: 4px;
+    box-shadow: 0 0 8px rgba(255,255,255,0.6); /* 加点发光效果 */
 }
+
 </style>
