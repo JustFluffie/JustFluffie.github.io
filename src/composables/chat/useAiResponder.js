@@ -8,8 +8,9 @@ import { parseAiResponse } from '@/utils/messageParser';
 import { formatISO } from 'date-fns'; // 引入日期格式化工具
 
 // 心声生成的Prompt
-const getInnerVoicePrompt = (char, chatHistory) => {
+const getInnerVoicePrompt = (char, chatHistory, nextIndex) => {
   const historyText = chatHistory.map(msg => `${msg.role === 'user' ? '用户' : char.name}: ${msg.content}`).join('\n');
+  const indexStr = nextIndex.toString().padStart(2, '0');
 
   return `
 你正在扮演角色“${char.name}”，你需要根据以下设定和最近的对话，生成一段角色的实时“心声”。
@@ -28,7 +29,7 @@ ${historyText}
 - **姿态 (posture)**: 描述角色当前的姿态或小动作，应在一定时间内保持稳定，15字以内。
 - **内心独白 (innerVoice)**: 角色此刻具体的内心想法，50字以内。
 - **没说出口的话 (unspokenWords)**: 一句角色想说但没说出口的话，风格可以多变（如阴暗、腹黑、酸涩、色情等），必须符合人设，15字以内。
-- **标题 (title)**: 为这次心声生成一个简短的小标题，例如“#01 初次见面”。
+- **标题 (title)**: 为这次心声生成一个简短的小标题，格式固定为“#${indexStr} 标题内容”，例如“#${indexStr} 初次见面”。
 
 **输出格式 (必须是可被解析的JSON):**
 {
@@ -37,7 +38,7 @@ ${historyText}
   "posture": "...",
   "innerVoice": "...",
   "unspokenWords": "...",
-  "title": "..."
+  "title": "#${indexStr} ..."
 }
 `;
 };
@@ -209,9 +210,26 @@ export function useAiResponder(charId, apiStore) {
       const character = singleStore.getCharacter(charId.value);
       if (!character) return;
 
+      // 计算序号
+      const voices = singleStore.innerVoices[charId.value] || [];
+      let nextIndex = 1;
+      if (voices.length > 0) {
+        const lastTitle = voices[0].title;
+        if (lastTitle) {
+            const match = lastTitle.match(/#(\d+)/);
+            if (match) {
+                nextIndex = parseInt(match[1], 10) + 1;
+            } else {
+                nextIndex = voices.length + 1;
+            }
+        } else {
+             nextIndex = voices.length + 1;
+        }
+      }
+
       // 获取最近的对话用于生成心声
       const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 10);
-      const prompt = getInnerVoicePrompt(character, recentMessages);
+      const prompt = getInnerVoicePrompt(character, recentMessages, nextIndex);
 
       // 使用通用API调用
       const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);

@@ -192,7 +192,7 @@ export const useMomentsStore = defineStore('moments', {
         const prompt = `你正在扮演角色“${character.name}”。${contextDesc}，内容如下：\n“${contentDisplay}”\n\n现在请你根据你的角色性格，从以下三个选项中选择一个进行回应：\n1. 在聊天中私下回复他/她。\n2. 只给这条动态点赞。\n3. 点赞并评论这条动态。\n\n你的任务是返回一个JSON对象来指明你的选择。请严格遵循以下格式，不要添加任何额外的解释：\n- 如果选择聊天，返回: {"action": "chat", "response": "你想在聊天里说的话"}\n- 如果选择只点赞，返回: {"action": "like"}\n- 如果选择点赞并评论，返回: {"action": "comment", "response": "你的评论内容"}`;
 
         const messages = [
-            { role: 'system', content: `你是一个角色扮演引擎。你将扮演“${character.name}”，并根据用户提供的场景和指示，以指定的JSON格式做出回应。你的性格设定是：${character.charPersona || '友好、乐于助人'}` },
+            { role: 'system', content: `你正在进行角色扮演。你的身份是“${character.name}”。请根据你的人设和当前情境，以指定的JSON格式做出回应。你的性格设定是：${character.charPersona || '友好、乐于助人'}` },
             { role: 'user', content: prompt }
         ];
 
@@ -304,7 +304,7 @@ export const useMomentsStore = defineStore('moments', {
             const prompt = `你正在扮演角色“${character.name}”。${context}\n\n请根据你的角色性格进行简短的回复（朋友圈评论风格）。\n请直接返回回复内容，不要包含任何解释或JSON格式。`;
 
             const messages = [
-                { role: 'system', content: `你是一个角色扮演引擎。你将扮演“${character.name}”。你的性格设定是：${character.charPersona || '友好'}` },
+                { role: 'system', content: `你正在进行角色扮演。你的身份是“${character.name}”。你的性格设定是：${character.charPersona || '友好'}。请以角色口吻回复评论。` },
                 { role: 'user', content: prompt }
             ];
 
@@ -421,19 +421,19 @@ export const useMomentsStore = defineStore('moments', {
         
         你可以选择以下三种形式之一：
         1. 纯文字动态。
-        2. 文字 + 图片动态。
-        3. 纯图片动态（用文字描述图片内容）。
+        2. 文字 + 图片动态（图片必须是“文字生图”的形式，即提供一段画面描述）。
+        3. 纯图片动态（仅提供画面描述）。
 
         请返回一个 JSON 对象，格式如下：
         {
             "text": "动态的文字内容（如果是纯图片动态，此项留空）",
-            "imageDescription": "图片内容的详细画面描述（如果没有图片，此项留空）"
+            "imageDescription": "图片的详细画面描述（例如：'清晨的阳光洒在咖啡杯上，旁边放着一本书'。注意：这段文字将被直接用于生成图片，请描写具体的视觉画面，而不要写抽象的感觉。如果没有图片，此项留空）"
         }
         
         请严格返回 JSON 格式，不要包含其他解释。`;
         
         const messages = [
-            { role: 'system', content: `你是一个角色扮演引擎。你将扮演“${character.name}”，并根据用户提供的场景和指示，返回 JSON 格式的结果。你的性格设定是：${character.charPersona || '友好、乐于助人'}` },
+            { role: 'system', content: `你正在进行角色扮演。你的身份是“${character.name}”。请根据你的人设和生活状态，构思一条朋友圈动态，并返回 JSON 格式的结果。你的性格设定是：${character.charPersona || '友好、乐于助人'}` },
             { role: 'user', content: prompt }
         ];
 

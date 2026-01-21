@@ -5,7 +5,9 @@ import { useThemeStore } from '@/stores/themeStore';
 import { useWorldBookStore } from '@/stores/worldBookStore';
 import { usePresetStore } from '@/stores/presetStore';
 import { useCalendarStore } from '@/stores/calendarStore';
-import { formatISO, parseISO, differenceInDays, isWithinInterval } from 'date-fns';
+import { useMomentsStore } from '@/stores/chat/momentsStore';
+import { formatISO, parseISO, differenceInDays, isWithinInterval, formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 export const useApiStore = defineStore('api', () => {
   // --- 持久化逻辑 ---
@@ -159,6 +161,7 @@ export const useApiStore = defineStore('api', () => {
     const worldBookStore = useWorldBookStore();
     const presetStore = usePresetStore();
     const calendarStore = useCalendarStore();
+    const momentsStore = useMomentsStore();
     
     let systemPrompt = "";
 
@@ -172,7 +175,84 @@ export const useApiStore = defineStore('api', () => {
     const memories = character.memories || [];
     if (memories.length > 0) {
         const sortedMemories = [...memories].reverse();
-        systemPrompt += "【长期记忆/故事总结】:\n" + sortedMemories.map(m => m.content).join("\n") + "\n\n";
+        systemPrompt += "【长期记忆与共同经历（Memory Bank）】\n" +
+            "以下是你们之间过去发生的重要事件、对话总结或关键信息。请务必记住这些经历，并在对话中体现出互动的连贯性，不要出现记忆断层或矛盾：\n" + 
+            sortedMemories.map(m => m.content).join("\n") + "\n\n";
+    }
+
+    // 1.5 朋友圈社交动态 (Moments & Interactions)
+    const recentMoments = momentsStore.moments.slice(0, 5); // 获取最近5条
+    if (recentMoments.length > 0) {
+        let momentsContext = "【朋友圈社交动态与互动】\n" +
+            "以下是最近的社交圈动态及你们的互动情况。请将这些作为聊天的话题或背景，保持社交行为的连贯性（例如：如果你刚评论了用户的动态，可以在聊天中继续这个话题）：\n";
+        
+        let hasImportantInteraction = false;
+
+        recentMoments.forEach(m => {
+            let authorName = '';
+            let isUserAuthor = false;
+            let isMeAuthor = false;
+
+            if (m.userId === 'user') {
+                authorName = '用户';
+                isUserAuthor = true;
+            } else if (m.userId === character.id) {
+                authorName = '我(你)';
+                isMeAuthor = true;
+            } else {
+                const author = singleStore.getCharacter(m.userId);
+                authorName = author ? author.name : '其他好友';
+            }
+            
+            const timeStr = formatDistanceToNow(m.time, { addSuffix: true, locale: zhCN });
+            const content = m.content || '';
+            const images = m.images && m.images.length > 0 ? `[图片${m.images.length}张]` : '';
+            
+            momentsContext += `- [${authorName}] (${timeStr}): ${content} ${images}\n`;
+
+            // 互动详情分析
+            const myLikes = m.likes.includes(character.id);
+            const userLikes = m.likes.includes('user');
+            const myComments = m.comments.filter(c => c.userId === character.id);
+            const userComments = m.comments.filter(c => c.userId === 'user');
+            
+            // 1. 如果是用户发的
+            if (isUserAuthor) {
+                if (m.remind && m.remind.includes(character.id)) {
+                    momentsContext += `  * [重要] 用户在这条动态中**提到了你(@)**。\n`;
+                    hasImportantInteraction = true;
+                }
+                if (myLikes) momentsContext += `  * 你点赞了这条动态。\n`;
+                if (myComments.length > 0) {
+                    const lastComment = myComments[myComments.length - 1];
+                    momentsContext += `  * 你评论过：“${lastComment.content}”\n`;
+                    // 检查用户是否回复了我的评论
+                    const userReply = userComments.find(c => c.replyTo && c.replyTo.id === character.id && c.time > lastComment.time);
+                    if (userReply) {
+                        momentsContext += `  * [新消息] 用户回复了你的评论：“${userReply.content}”\n`;
+                        hasImportantInteraction = true;
+                    }
+                }
+            }
+            // 2. 如果是我发的
+            else if (isMeAuthor) {
+                if (userLikes) momentsContext += `  * 用户点赞了你的这条动态。\n`;
+                if (userComments.length > 0) {
+                    // 检查是否有未回复的用户评论
+                    const lastUserComment = userComments[userComments.length - 1];
+                    // 简单的逻辑：如果最后一条是用户的评论，且我还没回复（或者这是最新的），提示一下
+                    momentsContext += `  * 用户评论了你的动态：“${lastUserComment.content}”\n`;
+                    hasImportantInteraction = true;
+                }
+            }
+            momentsContext += "\n";
+        });
+
+        if (hasImportantInteraction) {
+            momentsContext += "【社交提示】：你与用户在朋友圈有最近的互动（如上所示），这些互动**已经发生**。请在当前的聊天中自然地提及或回应这些内容，保持话题的连贯性。\n";
+        }
+
+        systemPrompt += momentsContext + "\n";
     }
 
     // 2. 角色人设
@@ -298,7 +378,7 @@ export const useApiStore = defineStore('api', () => {
         : "2. (当前无可用表情包，请勿发送表情包)\n";
 
     systemPrompt += "【格式指令】:\n" +
-        "1. 如果你想发送图片，请使用格式：[图片：图片描述或URL]\n" +
+        "1. 如果你想发送图片，请使用格式：[图片：图片描述]（注意：只能发送图片描述，系统会自动根据描述生成图片。严禁发送URL链接。）\n" +
         stickerInstruction +
         "3. 如果你想发送语音，请使用格式：[语音：语音内容]\n" +
         "4. 如果你想发送位置，请使用格式：[位置：位置名称]\n" +
@@ -320,7 +400,11 @@ export const useApiStore = defineStore('api', () => {
 
         if (character.preset && character.preset.length > 0) {
             const presetContent = presetStore.getPresetContext(character.preset);
-            if (presetContent) systemPrompt += "【预设/补充设定】:\n" + presetContent + "\n\n";
+            if (presetContent) {
+                systemPrompt += "【线下互动情景与行为规范（Preset）】\n" +
+                    "以下内容定义了当前线下互动的具体场景、剧本走向以及对你回复行为的特殊约束。请将其视为当前模式下的核心指令严格执行：\n" + 
+                    presetContent + "\n\n";
+            }
         }
     } else {
         // --- 线上模式 ---
@@ -335,7 +419,9 @@ export const useApiStore = defineStore('api', () => {
     if (worldBookIds.length > 0) {
         const worldBookContent = worldBookStore.getWorldBookContext(worldBookIds);
         if (worldBookContent) {
-            systemPrompt += "【世界书/设定参考】:\n" + worldBookContent + "\n\n";
+            systemPrompt += "【世界观设定与对话准则（World Book）】\n" +
+                "以下内容包含了角色所处世界的详细设定、背景故事，以及额外的对话提示词或回复约束。请在生成回复时严格遵循这些设定与规范：\n" + 
+                worldBookContent + "\n\n";
         }
     }
 
