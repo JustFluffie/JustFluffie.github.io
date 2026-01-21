@@ -36,7 +36,6 @@ const touchEndX = ref(0)
 // 弹窗与图片选择状态
 const showImageModal = ref(false)
 const currentSourceType = ref('') // 当前正在修改图片的类型 (bg, avatar, cdCover, etc.)
-const fileInput = ref(null) // (保留引用，虽然主要使用 Modal)
 
 // 主页核心数据
 let homeData = reactive({
@@ -203,19 +202,6 @@ const handleImageSelected = (imageData) => {
   }
 }
 
-// (保留旧的文件上传处理，以防万一)
-const handleHomeUpload = (event) => {
-  const file = event.target.files[0]
-  if (!file) return
-
-  const reader = new FileReader()
-  reader.onload = async (e) => {
-    await updateHomeImage(e.target.result)
-  }
-  reader.readAsDataURL(file)
-  event.target.value = '' // 重置 input
-}
-
 const updateHomeImage = async (url) => {
   if (homeData.hasOwnProperty(currentSourceType.value)) {
     homeData[currentSourceType.value] = url
@@ -303,9 +289,6 @@ onMounted(() => {
     <!-- ==========================================
          辅助组件
          ========================================== -->
-    <!-- 隐藏的文件输入 (保留) -->
-    <input type="file" ref="fileInput" class="hidden-input" accept="image/*" @change="handleHomeUpload">
-
     <!-- 图片上传弹窗 -->
     <ImageUploadModal
       v-model:visible="showImageModal"

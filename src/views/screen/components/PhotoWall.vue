@@ -121,10 +121,10 @@ const getLangClass = (text) => {
 .s-four { width: 1.4em; height: 1.4em; clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%); }
 
 /* 十字：背景透明，但线条要用变量色 */
-.s-cross { width: 1.2em; height: 1.2em; background: transparent; }
-.s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); }
-.s-cross::before { top: 45%; left: 0; width: 100%; height: 0.1em; }
-.s-cross::after { top: 0; left: 45%; width: 0.1em; height: 100%; }
+.s-cross { width: 1.3em; height: 1.3em; background: transparent; position: relative;}
+.s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); border-radius: 99px; }
+.s-cross::before { top: 45%; left: 0; width: 100%; height: 0.25em; transform: translateY(-50%); opacity: 0.7;}
+.s-cross::after { top: 0; left: 45%; width: 0.25em; height: 100%; transform: translateX(-50%); opacity: 0.7;}
 
 .cross-sparkle-icon {
   position: absolute; width: 1.2em; height: 1.2em; color: var(--home-text-color); }
@@ -138,10 +138,10 @@ const getLangClass = (text) => {
 /* 中间那个特别的大星星 */
 .pos-3 { top: 48%; left: 45%; transform: scale(1.15); opacity: 0.8;}
 .pos-4 { top: 40%; left: 51%; transform: rotate(10deg); opacity: 0.7;}
-.pos-5 { top: 15%; left: 95%; transform: scale(0.7); }
-.pos-6 { top: 25%; left: 90%; transform: rotate(45deg); opacity: 0.7;}
-.pos-7 { top: 95%; left: 52.5%; }
-.pos-8 { top: 90%; left: 6%; transform: rotate(10deg); opacity: 0.8;}
+.pos-5 { top: 15%; left: 105%; transform: scale(0.7); }
+.pos-6 { top: 25%; left: 100%; transform: rotate(45deg); opacity: 0.7;}
+.pos-7 { top: 99%; left: 20%; }
+.pos-8 { top: 75%; left: 5%; transform: rotate(10deg); opacity: 0.8;}
 
 /* --- 拍立得卡片 --- */
 .polaroid {
@@ -199,16 +199,16 @@ const getLangClass = (text) => {
     border: none;
     color: var(--home-text-color);
     padding: 5px;
-    font-weight: 500;
+    font-weight: 600;
     text-align: left;
     outline: none;
     z-index: 13;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 3px rgba(0,0,0,0.3);
     border-radius: 8px;
     transition: background 0.2s ease;
     font-family: inherit;
     font-style: italic; 
-    font-size: 0.99em; 
+    font-size: 0.9em; 
 }
 
 .photo-wall-input:focus { box-shadow: none; text-shadow: none; }
@@ -218,23 +218,23 @@ const getLangClass = (text) => {
 /* --- 语言特定样式 --- */
 /* 英文 */
 .photo-wall-input.lang-en {
-    font-family: 'Open Sans', 'Segoe UI', sans-serif; font-size: 0.98em; font-style: italic; }
+    font-family: 'Open Sans', 'Segoe UI', sans-serif; font-size: 0.9em; font-weight: 600; font-style: italic; }
 
 /* 中文 */
 .photo-wall-input.lang-zh {
-    font-family: 'Noto Serif SC', 'SimSun', serif;  font-size: 0.82em; font-style: normal; }
+    font-family: 'Noto Serif SC', 'SimSun', serif;  font-size: 0.8em; font-style: normal; }
 
 /* 日文 */
 .photo-wall-input.lang-ja {
-    font-family: 'Kiwi Maru', serif; font-size: 0.88em; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
+    font-family: 'Kiwi Maru', serif; font-size: 0.79em; font-weight: 400; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.2); }
 
 /* 韩文 */
 .photo-wall-input.lang-kr {
-    font-family: 'Gaegu', cursive; font-size: 1.18em; font-weight: 700; font-style: normal; letter-spacing: 0.05em; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
+    font-family: 'Gaegu', cursive; font-size: 1.05em; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
 
-.photo-wall-input-1 { top: 65%; left: 42%; width: 10em; }
-.photo-wall-input-2 { top: 75%; left: 42%; width: 15em; }
-.photo-wall-input-3 { top: 14%; left: -10%; text-align: center; }
+.photo-wall-input-1 { top: 75%; left: 49%; width: 10em; }
+.photo-wall-input-2 { top: 85%; left: 49%; width: 15em; }
+.photo-wall-input-3 { top: 14%; left: -22%; text-align: center; }
 
 /* --- 照片区域样式 --- */
 .photo {
