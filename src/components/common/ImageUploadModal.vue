@@ -270,6 +270,27 @@ const handleLocalUpload = () => {
   close();
 };
 
+// 处理图片链接，支持多种图床分享链接的转换
+const processImageUrl = (url) => {
+  // 1. 检测 imgbb 分享链接格式 (https://ibb.co/xxxxx)
+  const imgbbSharePattern = /^https?:\/\/ibb\.co\/([a-zA-Z0-9]+)$/;
+  if (imgbbSharePattern.test(url)) {
+    themeStore.showToast('检测到 ImgBB 分享链接，请使用直接图片链接（格式：https://i.ibb.co/xxx/image.jpg）', 'warning');
+    // 返回原链接，让用户知道需要使用正确格式
+    return url;
+  }
+  
+  // 2. 检测是否已经是 imgbb 直接图片链接
+  const imgbbDirectPattern = /^https?:\/\/i\.ibb\.co\/[a-zA-Z0-9]+\/[^"'\s<>]+$/;
+  if (imgbbDirectPattern.test(url)) {
+    return url; // 已经是正确格式
+  }
+  
+  // 3. 其他常见图床的处理可以在这里添加
+  
+  return url;
+};
+
 const handleConfirm = () => {
   if (props.type === 'sticker-import') {
     handleStickerImportConfirm();
@@ -283,12 +304,14 @@ const handleConfirm = () => {
     // 文字生成图片
     const image = createImageFromText(val);
     if (image) {
-      emit('send-image', image);
+      emit('upload-complete', image);
       close();
     }
   } else {
     // URL 模式 (Basic 或 Special-URL)
-    emit('send-image', { type: 'url', content: val });
+    // 处理图片链接（检测并提示 imgbb 分享链接等）
+    const processedUrl = processImageUrl(val);
+    emit('upload-complete', { type: 'url', content: processedUrl });
     close();
   }
 };

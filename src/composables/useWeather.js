@@ -13,22 +13,72 @@ const weatherCodes = {
 export function useWeather() {
   const themeStore = useThemeStore();
 
-  const fetchLocationWeather = async (realLocationName, virtualLocationName = '') => {
+  // 带超时的 fetch 函数
+  const fetchWithTimeout = async (url, timeout = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('请求超时，请检查网络连接');
+      }
+      throw error;
+    }
+  };
+
+  // 重试函数
+  const fetchWithRetry = async (url, retries = 2, timeout = 10000) => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await fetchWithTimeout(url, timeout);
+      } catch (error) {
+        if (i === retries) throw error;
+        // 等待一段时间后重试
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
+  };
+
+  // silentError: 是否静默错误（不显示 toast）
+  const fetchLocationWeather = async (realLocationName, virtualLocationName = '', showLoading = false, silentError = false) => {
     if (!realLocationName) {
-      themeStore.showToast('请输入真实地名', 'error');
+      if (!silentError) {
+        themeStore.showToast('请输入真实地名', 'error');
+      }
       return null;
     }
 
-    themeStore.showLoading();
+    // 只在明确要求时才显示加载遮罩
+    if (showLoading) {
+      themeStore.showLoading();
+    }
+    
     try {
       // 1. Geocoding (使用 Open-Meteo Geocoding API)
       const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(realLocationName)}&count=1&language=zh&format=json`;
-      const geoResponse = await fetch(geocodingUrl);
-      if (!geoResponse.ok) throw new Error(`Geocoding failed: ${geoResponse.statusText}`);
+      
+      let geoResponse;
+      try {
+        geoResponse = await fetchWithRetry(geocodingUrl);
+      } catch (error) {
+        if (error.message.includes('超时')) {
+          throw new Error('网络连接超时，请检查网络设置');
+        }
+        throw new Error('无法连接到天气服务，请检查网络连接');
+      }
+      
+      if (!geoResponse.ok) {
+        throw new Error(`地理位置查询失败 (${geoResponse.status})`);
+      }
       
       const geoData = await geoResponse.json();
       if (!geoData.results || geoData.results.length === 0) {
-        throw new Error('找不到该位置');
+        throw new Error('找不到该位置，请检查地名是否正确');
       }
 
       const result = geoData.results[0];
@@ -39,8 +89,21 @@ export function useWeather() {
 
       // 2. Get Weather
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&timezone=auto`;
-      const weatherResponse = await fetch(weatherUrl);
-      if (!weatherResponse.ok) throw new Error(`Weather API failed: ${weatherResponse.statusText}`);
+      
+      let weatherResponse;
+      try {
+        weatherResponse = await fetchWithRetry(weatherUrl);
+      } catch (error) {
+        if (error.message.includes('超时')) {
+          throw new Error('天气数据获取超时，请稍后重试');
+        }
+        throw new Error('无法获取天气数据，请检查网络连接');
+      }
+      
+      if (!weatherResponse.ok) {
+        throw new Error(`天气数据获取失败 (${weatherResponse.status})`);
+      }
+      
       const weatherData = await weatherResponse.json();
       
       const { current, timezone } = weatherData;
@@ -77,7 +140,9 @@ export function useWeather() {
 
     } catch (error) {
       console.error('Failed to fetch location weather:', error);
-      themeStore.showToast(`获取信息失败: ${error.message}`, 'error');
+      if (!silentError) {
+        themeStore.showToast(`获取信息失败: ${error.message}`, 'error');
+      }
       return null;
     } finally {
       themeStore.hideLoading();

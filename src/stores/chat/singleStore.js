@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia';
 import LZString from 'lz-string';
 import { useApiStore } from '@/stores/apiStore';
-import { useAiResponder } from '@/composables/chat/useAiResponder';
-import { ref } from 'vue';
 import { parseAiResponse } from '@/utils/messageParser';
 import { useNotificationStore } from '@/stores/notificationStore';
 import router from '@/router';
@@ -468,8 +466,22 @@ export const useSingleStore = defineStore('singleChat', {
             content = `[位置：${msg.content}]`;
             break;
           case 'transfer':
-            // 转账
-            content = `[转账：${msg.content}]`;
+            // 转账：区分发送转账和收款
+            if (msg.isReceived) {
+              if (msg.sender === 'user') {
+                // 用户收款（用户收取了角色发送的转账）
+                content = `[用户收取了转账：¥${msg.content}]`;
+              } else {
+                // 角色收款（角色收取了用户发送的转账）
+                content = `[角色收取了用户的转账：¥${msg.content}]`;
+              }
+            } else if (msg.sender === 'user') {
+              // 用户发送转账
+              content = `[用户发送转账：¥${msg.content}${msg.note ? `，备注：${msg.note}` : ''}]`;
+            } else {
+              // 角色发送转账
+              content = `[转账：¥${msg.content}${msg.note ? `，备注：${msg.note}` : ''}]`;
+            }
             break;
           case 'call_summary':
             // 通话总结
@@ -490,8 +502,13 @@ export const useSingleStore = defineStore('singleChat', {
       try {
           const character = this.getCharacter(charId);
           if (!character) return;
+
+          // 获取待处理的转账信息（但不立即处理，稍后混杂在消息中处理）
+          const pendingTransfers = this.getPendingUserTransfers(charId);
+          console.log('[SingleStore] Pending transfers to accept:', pendingTransfers.length);
   
           const responseText = await apiStore.getChatCompletion(charId);
+          console.log('[SingleStore] AI Response:', responseText);
           
           if (responseText) {
               if (!this.messages[charId]) this.messages[charId] = [];
@@ -506,6 +523,10 @@ export const useSingleStore = defineStore('singleChat', {
                   segments.push(...subSegments);
               });
   
+              // 决定在哪个位置插入收款气泡（如果有待处理转账）
+              const insertTransferAfterIndex = pendingTransfers.length > 0 ? 0 : -1;
+              let transferInserted = false;
+
               for (let i = 0; i < segments.length; i++) {
                   const segment = segments[i];
                   
@@ -532,6 +553,11 @@ export const useSingleStore = defineStore('singleChat', {
                   if (type === 'image' && !content.startsWith('http') && !content.startsWith('data:')) {
                       isTextGenerated = true;
                   }
+
+                  // 为转账消息添加 pending 状态
+                  if (type === 'transfer') {
+                      extraData.status = 'pending';
+                  }
   
                   this.messages[charId].push({
                       id: Date.now().toString() + i,
@@ -543,6 +569,14 @@ export const useSingleStore = defineStore('singleChat', {
                       timestamp: Date.now(),
                       blocked: isCharBlocked
                   });
+
+                  // 在指定位置插入收款气泡（第一条消息发送后）
+                  if (i === insertTransferAfterIndex && !transferInserted && pendingTransfers.length > 0) {
+                      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+                      this.autoAcceptPendingTransfers(charId);
+                      transferInserted = true;
+                      console.log('[SingleStore] Transfer acceptance inserted after message', i);
+                  }
 
                   // 增加未读计数
                   this.incrementUnreadCount(charId);
@@ -565,6 +599,14 @@ export const useSingleStore = defineStore('singleChat', {
                       );
                   }
               }
+              
+              // 如果消息处理完毕但还没插入收款气泡
+              if (!transferInserted && pendingTransfers.length > 0) {
+                  await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+                  this.autoAcceptPendingTransfers(charId);
+                  console.log('[SingleStore] Transfer acceptance inserted at the end');
+              }
+              
               this.saveData();
           }
       } catch (error) {
@@ -684,17 +726,84 @@ export const useSingleStore = defineStore('singleChat', {
       if (!msgs) return;
 
       const transferMsg = msgs.find(m => m.id === messageId);
-      if (transferMsg && transferMsg.type === 'transfer' && transferMsg.status === 'pending') {
+      
+      // 注意：status 为 undefined 或 'pending' 都视为待处理状态
+      const isPending = transferMsg?.status === 'pending' || transferMsg?.status === undefined;
+      
+      if (transferMsg && transferMsg.type === 'transfer' && isPending) {
         transferMsg.status = 'accepted';
-
-        // 添加系统通知
-        const notificationContent = transferMsg.sender === 'user'
-          ? `你已领取${this.getCharacter(charId)?.name}的转账`
-          : `${this.getCharacter(charId)?.name}已领取你的转账`;
-          
-        this.sendSystemNotification(charId, notificationContent);
+        
+        if (transferMsg.sender !== 'user') {
+          // 角色发送的转账被用户收取：添加用户收款的消息气泡
+          this.messages[charId].push({
+            id: Date.now().toString(),
+            sender: 'user',
+            type: 'transfer',
+            content: transferMsg.content, // 金额
+            note: transferMsg.note || '',
+            status: 'accepted', // 已收款状态
+            isReceived: true, // 标记这是收款消息，不是发送转账
+            timestamp: Date.now()
+          });
+        }
+        
         this.saveData();
       }
+    },
+
+    // 获取用户发送的待处理转账列表（不修改状态）
+    getPendingUserTransfers(charId) {
+      const msgs = this.messages[charId];
+      if (!msgs) return [];
+      
+      return msgs.filter(
+        m => m.type === 'transfer' && m.sender === 'user' && m.status === 'pending'
+      );
+    },
+
+    // 自动收取用户发送的待处理转账（角色收取）
+    // 返回是否有转账被收取
+    autoAcceptPendingTransfers(charId) {
+      const msgs = this.messages[charId];
+      if (!msgs) {
+        console.log('[SingleStore] autoAcceptPendingTransfers: No messages found for charId', charId);
+        return false;
+      }
+
+      // 查找所有用户发送的待处理转账
+      const allTransfers = msgs.filter(m => m.type === 'transfer');
+      console.log('[SingleStore] All transfers:', allTransfers.map(t => ({ id: t.id, sender: t.sender, status: t.status, content: t.content })));
+      
+      const pendingTransfers = msgs.filter(
+        m => m.type === 'transfer' && m.sender === 'user' && m.status === 'pending'
+      );
+      console.log('[SingleStore] Pending transfers from user:', pendingTransfers.length);
+
+      if (pendingTransfers.length > 0) {
+        const now = Date.now();
+        
+        pendingTransfers.forEach((transferMsg, index) => {
+          // 将用户发送的转账标记为已接收
+          transferMsg.status = 'accepted';
+          
+          // 添加角色收款的消息气泡
+          // 使用稍早的时间戳确保收款消息在 AI 响应之前
+          this.messages[charId].push({
+            id: `${now}-receive-${index}-${Math.random().toString(36).substr(2, 9)}`,
+            sender: 'char',
+            type: 'transfer',
+            content: transferMsg.content, // 金额
+            note: transferMsg.note || '',
+            status: 'accepted', // 已收款状态
+            isReceived: true, // 标记这是收款消息，不是发送转账
+            timestamp: now + index // 确保每个收款消息有唯一的时间戳
+          });
+        });
+        
+        this.saveData();
+        return true;
+      }
+      return false;
     },
   }
 });

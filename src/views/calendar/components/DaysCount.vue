@@ -18,7 +18,10 @@
         <div class="tape"></div>
         <div class="photo-area" @click.stop="$emit('upload-photo', event)">
           <img v-if="event.photoUrl" :src="event.photoUrl" class="polaroid-img" />
-          <div v-else class="placeholder">点击<br>上传</div>
+          <div v-else class="placeholder">
+            <SvgIcon name="camera" className="camera-icon" />
+            <span class="upload-text">点击上传</span>
+          </div>
         </div>
         <div class="caption">
           <input 
@@ -69,6 +72,7 @@
 <script setup>
 import { computed } from 'vue';
 import { differenceInDays, format } from 'date-fns';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const props = defineProps({
   event: {
@@ -208,10 +212,23 @@ const formattedDateWithWeekday = computed(() => {
 }
 
 .polaroid-wrapper .placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #ccc;
+}
+
+.placeholder .camera-icon {
+  width: 24px;
+  height: 24px;
+  color: #ddd;
+}
+
+.placeholder .upload-text {
   font-size: 9px;
   color: #ccc;
-  text-align: center;
-  line-height: 1.3;
 }
 
 .polaroid-wrapper .caption {
@@ -223,12 +240,12 @@ const formattedDateWithWeekday = computed(() => {
 }
 
 .polaroid-wrapper .caption input {
-  width: 90%;
+  width: 100%;
   border: none;
   background: transparent;
   outline: none;
   font-family: 'Caveat', cursive;
-  font-size: 11px;
+  font-size: 16px;
   color: #666;
   text-align: center;
   padding: 0;

@@ -58,7 +58,13 @@ export function useAiResponder(charId, apiStore) {
     isTyping.value = true;
     try {
       const character = singleStore.getCharacter(charId.value);
+      
+      // 获取待处理的转账信息（但不立即处理，稍后混杂在消息中处理）
+      const pendingTransfers = singleStore.getPendingUserTransfers(charId.value);
+      console.log('[useAiResponder] Pending transfers to accept:', pendingTransfers.length);
+      
       let responseText = await apiStore.getChatCompletion(charId.value);
+      console.log('[useAiResponder] AI Response:', responseText);
       
       if (responseText) {
         // --- 新增：处理待办事项 ---
@@ -134,7 +140,12 @@ export function useAiResponder(charId, apiStore) {
             segments.push(...subSegments);
         });
 
-        // 2. 依次处理每条消息
+        // 2. 决定在哪个位置插入收款气泡（如果有待处理转账）
+        // 策略：在第一条消息之后插入，这样看起来像是角色先回复了一句话，然后收取了转账
+        const insertTransferAfterIndex = pendingTransfers.length > 0 ? 0 : -1;
+        let transferInserted = false;
+
+        // 3. 依次处理每条消息
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             
@@ -179,6 +190,17 @@ export function useAiResponder(charId, apiStore) {
             });
             singleStore.saveData();
 
+            // 在指定位置插入收款气泡（第一条消息发送后）
+            if (i === insertTransferAfterIndex && !transferInserted && pendingTransfers.length > 0) {
+              // 延迟一下再插入收款气泡，模拟自然的收款动作
+              await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+              
+              // 调用收取转账方法
+              singleStore.autoAcceptPendingTransfers(charId.value);
+              transferInserted = true;
+              console.log('[useAiResponder] Transfer acceptance inserted after message', i);
+            }
+
             // 如果当前不在该角色的聊天页面，增加未读计数并触发通知
             if (route.path !== `/chat/room/${charId.value}`) {
               singleStore.incrementUnreadCount(charId.value);
@@ -194,6 +216,12 @@ export function useAiResponder(charId, apiStore) {
                 type
               );
             }
+        }
+        // 如果消息处理完毕但还没插入收款气泡（比如只有一条消息的情况）
+        if (!transferInserted && pendingTransfers.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+          singleStore.autoAcceptPendingTransfers(charId.value);
+          console.log('[useAiResponder] Transfer acceptance inserted at the end');
         }
       }
     } catch (error) {

@@ -95,15 +95,25 @@
                   <img src="https://files.catbox.moe/uryae6.png" alt="地图"><div class="location-pin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
               </div>
           </div>
-          <div v-else-if="msg.type === 'transfer'" class="transfer-msg">
+          <div v-else-if="msg.type === 'transfer'" 
+               class="transfer-msg"
+               :class="transferMsgClass"
+               @click.stop="handleTransferClick">
               <div class="transfer-content">
-                  <div class="transfer-icon">¥</div>
+                  <div class="transfer-icon">
+                    <svg v-if="msg.status === 'accepted'" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                    <span v-else>¥</span>
+                  </div>
                   <div class="transfer-info">
                       <div class="transfer-amount">¥{{ msg.content }}</div>
-                      <div class="transfer-desc">{{ msg.note || (msg.sender === 'user' ? `转账给${charName}` : '转账给你') }}</div>
+                      <div class="transfer-desc">{{ transferDesc }}</div>
                   </div>
               </div>
-              <div class="transfer-footer">微信转账</div>
+              <div class="transfer-footer">
+                {{ transferFooter }}
+              </div>
           </div>
           <div v-else-if="msg.type === 'call_summary'" class="call-summary-msg">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 0 1 0-1.35c2.93-2.94 6.86-4.73 11.21-4.73s8.28 1.79 11.21 4.73c.38.38.38 1.02 0 1.4l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.27 11.27 0 0 0-2.66-1.85.995.995 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
@@ -151,7 +161,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'save-edit', 'cancel-edit', 'toggle-selection',
-  'long-press', 'cancel-long-press', 'touch-move', 'click-msg', 'show-thought'
+  'long-press', 'cancel-long-press', 'touch-move', 'click-msg', 'show-thought', 'accept-transfer'
 ])
 
 const previewStore = usePreviewStore();
@@ -169,11 +179,69 @@ const editedContent = ref('')
 const isEditing = computed(() => props.editingMessageId === props.msg.id);
 const bubbleClass = computed(() => {
   const type = props.msg.type;
+  const isTransferAccepted = type === 'transfer' && props.msg.status === 'accepted';
   return {
     'no-style': ['image', 'sticker', 'location', 'transfer'].includes(type),
     'has-location': type === 'location',
-    'has-transfer': type === 'transfer'
+    'has-transfer': type === 'transfer',
+    'accepted': isTransferAccepted
   }
+});
+
+// 转账消息的样式类
+const transferMsgClass = computed(() => {
+  if (props.msg.type !== 'transfer') return {};
+  
+  const isAccepted = props.msg.status === 'accepted';
+  const isSender = props.msg.sender === 'user'; // 用户是发送方
+  
+  return {
+    // 发送方（转账发起者）：被接收后变灰
+    'accepted-sender': isAccepted && isSender,
+    // 接收方（收款者）：收款后保持橙色
+    'accepted-receiver': isAccepted && !isSender,
+    // 待处理状态
+    'pending': !isAccepted
+  };
+});
+
+// 转账描述文字
+const transferDesc = computed(() => {
+  if (props.msg.type !== 'transfer') return '';
+  
+  const isSender = props.msg.sender === 'user';
+  const isAccepted = props.msg.status === 'accepted';
+  const isReceived = props.msg.isReceived; // 收款消息气泡
+  
+  // 如果有备注，始终显示备注
+  if (props.msg.note) return props.msg.note;
+  
+  // 收款消息气泡（角色或用户收款后生成的气泡）
+  if (isReceived) {
+    return '已收款';
+  }
+  
+  // 没有备注时：根据状态显示
+  if (isAccepted) {
+    // 已被接收的转账
+    return '已被接收';
+  }
+  
+  // 待处理的转账
+  if (isSender) {
+    return `转账给${props.charName}`;
+  } else {
+    return '转账给你';
+  }
+});
+
+// 转账底部文字（用来显示状态）
+const transferFooter = computed(() => {
+  if (props.msg.type !== 'transfer') return '';
+  
+  if (props.msg.isReceived) return '已收款';
+  if (props.msg.status === 'accepted') return '已被领取';
+  return '微信转账';
 });
 
 // ================================================================================================
@@ -225,6 +293,17 @@ const getSystemMessageText = () => {
     return `"${props.msg.sender === 'user' ? '你' : props.charName}" 撤回了一条消息`;
   }
   return '';
+}
+
+const handleTransferClick = () => {
+  // 只有角色发送的转账才能被用户点击收取
+  // 用户发送的转账由角色自动收取（通过 autoAcceptPendingTransfers）
+  // 注意：status 为 undefined 或 'pending' 都视为待处理状态
+  const isPending = props.msg.status === 'pending' || props.msg.status === undefined;
+  
+  if (isPending && props.msg.sender !== 'user' && !props.isSelectionMode) {
+    emit('accept-transfer', props.msg.id);
+  }
 }
 </script>
 
@@ -300,6 +379,9 @@ const getSystemMessageText = () => {
 .message.received .msg-bubble.has-location::before { border-right-color: white; }
 .message.sent .msg-bubble.has-transfer::after { border-left-color: #FA9D3B; }
 .message.received .msg-bubble.has-transfer::before { border-right-color: #FA9D3B; }
+/* 已接收的转账小三角也使用浅橙色 */
+.message.sent .msg-bubble.has-transfer.accepted::after { border-left-color: #FBD4A4; }
+.message.received .msg-bubble.has-transfer.accepted::before { border-right-color: #FBD4A4; }
 
 .image-msg img {
   max-width: 100%;
@@ -393,9 +475,17 @@ const getSystemMessageText = () => {
 .location-map { width: 100%; height: 100px; background: #EEE; position: relative; }
 .location-map img { width: 100%; height: 100%; object-fit: cover; }
 .location-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; color: #FF3B30; }
-.transfer-msg { width: 200px; background: #FA9D3B; border-radius: 4px; padding: 12px !important; color: white; }
+.transfer-msg { width: 200px; background: #FA9D3B; border-radius: 4px; padding: 12px !important; color: white; cursor: pointer; transition: all 0.2s; }
+/* 已接收的转账使用浅橙色背景 */
+.transfer-msg.accepted-sender,
+.transfer-msg.accepted-receiver { 
+  background: #FBD4A4; 
+  cursor: default; 
+}
+.transfer-msg:not(.accepted-sender):not(.accepted-receiver):active { opacity: 0.9; }
 .transfer-content { display: flex; align-items: center; gap: 10px; }
-.transfer-icon { width: 36px; height: 36px; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.transfer-icon { width: 36px; height: 36px; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.transfer-icon svg { width: 25px;  /* 打勾图标宽度 */ height: 25px; /* 打勾图标高度 */ }
 .transfer-info { display: flex; flex-direction: column; }
 .transfer-amount { font-size: 16px; font-weight: 500; }
 .transfer-desc { font-size: 12px; opacity: 0.9; }

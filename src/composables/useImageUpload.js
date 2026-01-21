@@ -176,8 +176,14 @@ export function useImageUpload(callbacks, options = {}) {
 
         // 3. 如果图床失败，回退到 Base64 压缩
         console.log('图床上传失败或未配置，回退到 Base64 编码。');
-        if (onPreview) { // 只有在有预览时才显示这个toast，避免普通上传也显示
-          themeStore.showToast('图床未配置或上传失败，转为本地图片', 'warning');
+        
+        // 根据不同情况显示不同的提示信息
+        if (provider && provider !== 'none') {
+          // 用户配置了图床但上传失败
+          themeStore.showToast('图床上传失败，已回退至本地存储', 'warning');
+        } else {
+          // 用户未配置图床
+          themeStore.showToast('未配置图床，图片将以本地数据存储', 'info');
         }
         
         // 优先使用运行时传入的选项，其次是初始化选项，最后是默认值

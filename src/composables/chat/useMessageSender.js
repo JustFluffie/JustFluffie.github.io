@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 
-export function useMessageSender(chatStore, charId, themeStore, activePanel) {
+export function useMessageSender(chatStore, charId, themeStore, activePanel, options = {}) {
   const inputText = ref('');
   const quotingMessage = ref(null);
 

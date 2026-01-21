@@ -290,12 +290,12 @@ onMounted(() => {
          辅助组件
          ========================================== -->
     <!-- 图片上传弹窗 -->
-    <ImageUploadModal
+<ImageUploadModal
       v-model:visible="showImageModal"
       type="basic"
       :biz-type="currentSourceType"
       :title="modalTitle"
-      @send-image="handleImageSelected"
+      @upload-complete="handleImageSelected"
     />
 
   </div>

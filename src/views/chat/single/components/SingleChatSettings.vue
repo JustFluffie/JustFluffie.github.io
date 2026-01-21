@@ -331,6 +331,7 @@
                   <div class="avatar-controls" style="width: 100%;">
                     <button class="btn btn-secondary" @click="openChatBgModal">{{ t('chat.singleChat.settings.setChatBackground') }}</button>
                     <button class="btn btn-secondary" @click="applyBgToAll" style="margin-top: 5px;">{{ t('chat.singleChat.settings.applyToAll') }}</button>
+                    <button class="btn btn-danger" @click="clearChatBackground" style="margin-top: 5px;">清除当前背景</button>
                   </div>
                 </div>
               </div>
@@ -927,30 +928,30 @@ const handleImageUploadConfirm = (image) => {
     const url = image.content;
     const target = currentUploadTarget.value;
 
-    // Logic for things that save immediately (character avatar, backgrounds)
-    if (target === 'avatar' || target === 'chatBg' || target === 'videoBg') {
-        const updates = {
-            avatar: { obj: character.value, key: 'avatar', toast: t('chat.singleChat.settings.toast.avatarUpdated') },
-            chatBg: { obj: character.value, key: 'chatBackground', toast: t('chat.singleChat.settings.toast.backgroundUpdated'), localRef: chatBackground },
-            videoBg: { obj: character.value, key: 'videoBg', toast: t('chat.singleChat.settings.toast.charImageUpdated'), localRef: videoBg },
-        };
-        if (updates[target]) {
-            updates[target].obj[updates[target].key] = url;
-            if (updates[target].localRef) updates[target].localRef.value = url; // 确保最终的高清图也更新到UI
-            singleStore.saveData();
-            themeStore.showToast(updates[target].toast);
+    const updates = {
+        avatar: { obj: character.value, key: 'avatar', toast: t('chat.singleChat.settings.toast.avatarUpdated') },
+        chatBg: { obj: character.value, key: 'chatBackground', toast: t('chat.singleChat.settings.toast.backgroundUpdated'), localRef: chatBackground },
+        videoBg: { obj: character.value, key: 'videoBg', toast: t('chat.singleChat.settings.toast.charImageUpdated'), localRef: videoBg },
+        userPersonaAvatar: { obj: null, key: 'userPersonaAvatar', toast: t('chat.singleChat.settings.toast.avatarUpdated') },
+        userVideoImg: { obj: null, key: 'userVideoImg', toast: t('chat.singleChat.settings.toast.userImageUpdated') },
+    };
+
+    if (updates[target]) {
+        const updateInfo = updates[target];
+        if (updateInfo.obj) {
+            updateInfo.obj[updateInfo.key] = url;
+            if (updateInfo.localRef) updateInfo.localRef.value = url;
+        } else {
+            // Handle userPersonaAvatar and userVideoImg
+            if (target === 'userPersonaAvatar') {
+                userPersonaAvatar.value = url;
+            }
+            if (target === 'userVideoImg') {
+                userVideoImg.value = url;
+            }
         }
-    }
-    // Logic for things that are just previews and saved with the main save button
-    else if (target === 'userPersonaAvatar' || target === 'userVideoImg') {
-        if (target === 'userPersonaAvatar') {
-            userPersonaAvatar.value = url;
-        }
-        if (target === 'userVideoImg') {
-            userVideoImg.value = url;
-        }
-        // 这里不立即保存，等待用户点击顶部的“保存”按钮
-        themeStore.showToast(t('chat.singleChat.settings.toast.imageReadyToSave'));
+        singleStore.saveData();
+        themeStore.showToast(updateInfo.toast);
     }
     
     showImageUploadModal.value = false;
@@ -962,6 +963,21 @@ const applyBgToAll = () => {
         singleStore.applyChatBackgroundToAll(chatBackground.value);
         themeStore.showToast(t('chat.singleChat.settings.toast.appliedToAll'));
     });
+};
+
+const clearChatBackground = () => {
+  if (!chatBackground.value) {
+    themeStore.showToast('当前没有聊天背景');
+    return;
+  }
+  themeStore.showConfirm('清除背景', '你确定要清除当前背景吗？', () => {
+    chatBackground.value = '';
+    if (character.value) {
+      character.value.chatBackground = '';
+      singleStore.saveData();
+      themeStore.showToast('背景已清除');
+    }
+  });
 };
 
 // --- 6.6 模式与总结逻辑 (Mode & Summary Logic) ---

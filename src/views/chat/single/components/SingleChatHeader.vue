@@ -167,7 +167,7 @@ const openMemoryBank = () => {
 .chat-room-title {
     max-width: 100%;
     overflow: hidden;
-    font-size: 18px;
+    font-size: 16.5px;
     font-weight: normal;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -179,7 +179,7 @@ const openMemoryBank = () => {
     gap: 2px;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: 10px;
     margin-top: 2px;
     color: #999;
     cursor: pointer;
@@ -230,7 +230,7 @@ const openMemoryBank = () => {
     position: relative;
     display: flex;
     align-items: baseline;
-    font-size: 18px;
+    font-size: 16.5px;
     font-weight: normal;
     position: relative;
     left: 6px; 

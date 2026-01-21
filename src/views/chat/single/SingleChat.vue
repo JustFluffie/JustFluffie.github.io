@@ -35,6 +35,7 @@
       @click-msg="handleClick"
       @unblock="unblockCharacter"
       @show-thought="showCharacterThought"
+      @accept-transfer="handleAcceptTransfer"
     />
 
     <!-- 底部输入与工具栏 (非多选模式下显示) -->
@@ -432,6 +433,11 @@ const sendTransfer = () => {
 const handleSendTransfer = ({ amount, note }) => {
   sendTransferMessage(amount, note);
   showMoneyPacket.value = false;
+};
+
+// 处理转账接收
+const handleAcceptTransfer = (messageId) => {
+  singleStore.acceptTransfer(props.charId, messageId);
 };
 </script>
 

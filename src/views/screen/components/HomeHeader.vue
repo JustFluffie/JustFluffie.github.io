@@ -74,7 +74,8 @@ const handleWeatherClick = () => {
 const confirmLocation = () => {
   const location = locationInput.value.trim();
   if (location) {
-    weatherStore.updateHomeScreenWeather(location);
+    // 用户手动点击，传递 isManual = true，显示加载遮罩
+    weatherStore.updateHomeScreenWeather(location, true, true);
     localStorage.setItem('lastKnownLocation', location);
   }
   showLocationModal.value = false;
