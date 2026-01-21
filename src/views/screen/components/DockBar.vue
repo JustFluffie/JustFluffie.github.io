@@ -58,9 +58,9 @@ const handleAppClick = (app) => {
     padding: 0 10px;  /* 减小内边距，让 justify-content 发挥作用 */
     box-sizing: border-box; /* 确保 padding 不撑大盒子 */
     /* --- 视觉质感 (S23 Ultra 屏幕通透，这里要加强质感) --- */
-    background: rgba(255, 255, 255, 0.1); /* 稍微调高不透明度 */
-    backdrop-filter: blur(3px) saturate(150%); /* 高斯模糊 + 增加饱和度(让背景色透过来更鲜艳) */
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    background: rgba(255, 255, 255, 0.05); /* 稍微调高不透明度 */
+    backdrop-filter: blur(2px) saturate(150%); /* 高斯模糊 + 增加饱和度(让背景色透过来更鲜艳) */
+    -webkit-backdrop-filter: blur(2px) saturate(150%);
     border-radius: 36px; /* 更加圆润 */
     box-shadow: 
         0 4px 6px rgba(0, 0, 0, 0.05),

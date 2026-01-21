@@ -3,7 +3,14 @@
     <template #action>
       <svg-icon name="plus" @click="worldBookStore.addNewWorldBook" class="header-action-icon" />
     </template>
-    <draggable v-model="worldBooks" item-key="id" handle=".book-drag-handle" @end="onBookDragEnd">
+    <draggable 
+      v-model="worldBooks" 
+      item-key="id" 
+      handle=".book-drag-handle" 
+      @end="onBookDragEnd"
+      animation="200"
+      ghost-class="ghost-card"
+    >
       <template #item="{ element: book, index: bookIndex }">
         <div class="card">
           <div class="card-header">
@@ -40,7 +47,14 @@
                 </button>
               </div>
             </div>
-            <draggable v-model="book.entries" item-key="id" handle=".entry-drag-handle" @end="onEntryDragEnd(bookIndex, $event)">
+            <draggable 
+              v-model="book.entries" 
+              item-key="id" 
+              handle=".entry-drag-handle" 
+              @end="onEntryDragEnd(bookIndex, $event)"
+              animation="200"
+              ghost-class="ghost-entry"
+            >
               <template #item="{ element: entry, index: entryIndex }">
                 <div class="entry-item" :class="{ 'disabled': !book.enabled }">
                   <div class="entry-header">
@@ -318,4 +332,15 @@ const onBookDragEnd = (event) => {
   font-size: 1.1em;
 }
 
+.ghost-card {
+  opacity: 0.5;
+  background: var(--bg-light);
+  border: 2px dashed var(--primary-color);
+}
+
+.ghost-entry {
+  opacity: 0.5;
+  background: var(--bg-light);
+  border: 1px dashed var(--primary-color);
+}
 </style>

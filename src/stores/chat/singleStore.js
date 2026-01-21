@@ -342,9 +342,12 @@ export const useSingleStore = defineStore('singleChat', {
             ? `视频通话已结束，时长 ${timeStr}`
             : `通话时长 ${timeStr}`;
 
+        // 确定发送者：谁发起的通话，谁发送总结消息
+        const summarySender = initiatedBy === 'character' ? 'char' : 'user';
+
         this.messages[charId].push({
             id: Date.now().toString(),
-            sender: 'system',
+            sender: summarySender,
             type: 'call_summary',
             content: summaryContent,
             timestamp: Date.now()
@@ -443,6 +446,10 @@ export const useSingleStore = defineStore('singleChat', {
           case 'transfer':
             // 转账
             content = `[转账：${msg.content}]`;
+            break;
+          case 'call_summary':
+            // 通话总结
+            content = `[通话记录：${msg.content}]`;
             break;
           // text 类型保持不变
         }

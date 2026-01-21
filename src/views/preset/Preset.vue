@@ -3,7 +3,14 @@
     <template #action>
       <svg-icon name="plus" @click="presetStore.addNewPreset" class="header-action-icon" />
     </template>
-    <draggable v-model="presets" item-key="id" handle=".book-drag-handle" @end="onPresetDragEnd">
+    <draggable 
+      v-model="presets" 
+      item-key="id" 
+      handle=".book-drag-handle" 
+      @end="onPresetDragEnd"
+      animation="200"
+      ghost-class="ghost-card"
+    >
       <template #item="{ element: preset, index: presetIndex }">
         <div class="card">
           <div class="card-header">
@@ -44,7 +51,14 @@
                 </button>
               </div>
             </div>
-            <draggable v-model="preset.entries" item-key="id" handle=".entry-drag-handle" @end="onEntryDragEnd(presetIndex, $event)">
+            <draggable 
+              v-model="preset.entries" 
+              item-key="id" 
+              handle=".entry-drag-handle" 
+              @end="onEntryDragEnd(presetIndex, $event)"
+              animation="200"
+              ghost-class="ghost-entry"
+            >
               <template #item="{ element: entry, index: entryIndex }">
                 <div class="entry-item" :class="{ 'disabled': !preset.enabled }">
                   <div class="entry-header">
@@ -321,4 +335,15 @@ const onPresetDragEnd = (event) => {
   font-size: 1.1em;
 }
 
+.ghost-card {
+  opacity: 0.5;
+  background: var(--bg-light);
+  border: 2px dashed var(--primary-color);
+}
+
+.ghost-entry {
+  opacity: 0.5;
+  background: var(--bg-light);
+  border: 1px dashed var(--primary-color);
+}
 </style>

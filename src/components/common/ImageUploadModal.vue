@@ -265,7 +265,8 @@ const close = () => {
 };
 
 const handleLocalUpload = () => {
-  triggerFileUpload();
+  // 传递当前的 uploadOptions 给 triggerFileUpload，确保使用最新的配置（如压缩参数）
+  triggerFileUpload(uploadOptions.value);
   close();
 };
 

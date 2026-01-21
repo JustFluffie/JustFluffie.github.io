@@ -92,14 +92,14 @@ export function useImageUpload(callbacks, options = {}) {
   };
 
   // 触发隐藏的文件输入框
-  const triggerFileUpload = () => {
+  const triggerFileUpload = (runtimeOptions = {}) => {
     const inputEl = document.createElement('input');
     inputEl.type = 'file';
     inputEl.accept = 'image/*';
     inputEl.style.display = 'none';
 
     const handleFileAndCleanup = (event) => {
-      handleFileChange(event);
+      handleFileChange(event, runtimeOptions);
       if (inputEl.parentNode) {
         document.body.removeChild(inputEl);
       }
@@ -120,7 +120,7 @@ export function useImageUpload(callbacks, options = {}) {
   };
 
   // 处理文件选择、上传或转换
-  const handleFileChange = (event) => {
+  const handleFileChange = (event, runtimeOptions = {}) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
     const file = files[0];
@@ -180,8 +180,16 @@ export function useImageUpload(callbacks, options = {}) {
           themeStore.showToast('图床未配置或上传失败，转为本地图片', 'warning');
         }
         
-        const defaultCompressOptions = { maxWidth: 512, maxHeight: 512, quality: 0.8 };
-        const compressOptions = { ...defaultCompressOptions, ...(options.compress || {}) };
+        // 优先使用运行时传入的选项，其次是初始化选项，最后是默认值
+        const defaultCompressOptions = { maxWidth: 2048, maxHeight: 2048, quality: 0.85 };
+        const initCompressOptions = options.compress || {};
+        const runtimeCompressOptions = runtimeOptions.compress || {};
+        
+        const compressOptions = { 
+          ...defaultCompressOptions, 
+          ...initCompressOptions,
+          ...runtimeCompressOptions
+        };
 
         const fullCanvas = document.createElement('canvas');
         const fullCtx = fullCanvas.getContext('2d');

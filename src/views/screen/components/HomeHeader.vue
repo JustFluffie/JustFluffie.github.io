@@ -85,9 +85,9 @@ const confirmLocation = () => {
   <!-- ==========================================
        顶部区域容器
        ========================================== -->
-  <div class="section-top" id="topComponent" :style="homeData.headerBg ? { backgroundImage: `url('${homeData.headerBg}')` } : {}">
+  <div class="section-top" id="topComponent" :style="homeData.headerBg ? { backgroundImage: `url('${homeData.headerBg}')` } : {}" @click="showSourceSelect('headerBg')">
     <!-- 背景点击触发器 -->
-    <div class="section-top-bg-trigger" @click="showSourceSelect('headerBg')"></div>
+    <div class="section-top-bg-trigger"></div>
     
     <!-- 磨砂玻璃遮罩 -->
     <div class="glass-mask"></div>
@@ -114,12 +114,13 @@ const confirmLocation = () => {
         v-model="inputValue"
         :placeholder="t('homeScreen.inputPlaceholder')" 
         @blur="saveHomeData"
+        @click.stop
       >
       
       <!-- ==========================================
            底部小组件 (日期/天气)
            ========================================== -->
-      <div class="widgets-container">
+      <div class="widgets-container" @click.stop>
         <div class="mini-widget-capsule">
           <span>{{ currentDate }}</span>
         </div>
@@ -210,6 +211,10 @@ const confirmLocation = () => {
     position: relative;
     width: 100%;
     height: 100%;
+    pointer-events: none;
+}
+.header-inner-container > * {
+    pointer-events: auto;
 }
 
 /* ==========================================

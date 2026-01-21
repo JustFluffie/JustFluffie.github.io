@@ -316,7 +316,7 @@ const toggleLocationInput = () => {
 };
 
 // --- 6.3. 媒体与图片处理 (Media & Image Handling) ---
-const { createImageFromText, triggerFileUpload } = useImageUpload(onImageReadyForUpload);
+const { createImageFromText, triggerFileUpload } = useImageUpload({ onComplete: onImageReadyForUpload });
 
 function onImageReadyForUpload(image) {
   addImage(image);

@@ -194,6 +194,7 @@
       type="basic"
       @preview-ready="handleWallpaperPreview"
       @upload-complete="handleWallpaperUploadComplete"
+      @send-image="handleWallpaperUploadComplete"
     />
 
   </AppLayout>
@@ -386,6 +387,7 @@ function toggleSetting(settingKey) {
   if (settingKey === 'showFrame' || settingKey === 'showStatusBar') {
     themeStore.updateThemeSetting(settingKey, newValue);
   }
+  saveCurrentThemeSettings(); // 立即保存
 }
 
 // ==========================================
@@ -410,11 +412,17 @@ function handleWallpaperPreview(image) {
 
 function handleWallpaperUploadComplete(image) {
   const url = image.content;
-  if (currentWallpaperType.value === 'home') {
-    pendingThemeSettings.bg = url;
-  } else if (currentWallpaperType.value === 'lock') {
-    pendingThemeSettings.lockbg = url;
+
+  if (currentWallpaperType.value) {
+    if (currentWallpaperType.value === 'home') {
+      pendingThemeSettings.bg = url;
+    } else if (currentWallpaperType.value === 'lock') {
+      pendingThemeSettings.lockbg = url;
+    }
+  } else if (currentIconKey.value) {
+    updateAppIcon(currentIconKey.value, url);
   }
+  
   isUploadModalVisible.value = false;
 }
 
@@ -430,15 +438,10 @@ function updateThemeWallpaper(type, url) {
 // 7. App图标设置模块逻辑
 // ==========================================
 function showAppIconOptions(key) {
+  currentWallpaperType.value = null; // 清除壁纸类型，防止干扰
   currentIconKey.value = key;
   const appName = apps.value.find(a => a.key === key)?.name || '';
   uploadModalConfig.title = t('theme.setAppIcon', { appName });
-  // For App Icons, we don't need the preview logic, so we can still use onConfirm.
-  uploadModalConfig.onConfirm = (image) => {
-    const url = image.content;
-    updateAppIcon(key, url);
-    isUploadModalVisible.value = false; // Close modal on confirm
-  };
   uploadModalConfig.bizType = 'avatar'; // Use a smaller compression for icons
   isUploadModalVisible.value = true;
 }
@@ -448,6 +451,7 @@ function updateAppIcon(key, url) {
   const newIcons = { ...(pendingThemeSettings.appIcons || {}) };
   newIcons[key] = url;
   pendingThemeSettings.appIcons = newIcons;
+  saveCurrentThemeSettings(); // 立即保存
 }
 
 function handleImageUpload(image) {

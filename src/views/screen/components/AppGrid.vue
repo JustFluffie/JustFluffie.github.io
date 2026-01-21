@@ -84,7 +84,7 @@ const handleAppClick = (app) => {
 }
 
 .app-icon .label {
-    font-size: 0.2em; /* 相对图标大小缩放 */
+    font-size: 0.17em; /* 相对图标大小缩放 */
     color: var(--home-text-color, var(--text-darkest));
     text-align: center;
     white-space: nowrap; 

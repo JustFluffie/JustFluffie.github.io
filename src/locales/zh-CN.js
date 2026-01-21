@@ -441,6 +441,7 @@ export default {
           backgroundUpdated: '背景已更新',
           charImageUpdated: '角色形象已更新',
           userImageUpdated: '用户形象已更新',
+          imageReadyToSave: '图片已就绪，请点击保存生效',
           upload: '上传图片',
           setCharAvatar: '设置角色头像',
           setUserAvatar: '设置用户头像',
