@@ -113,12 +113,9 @@ export const usePresetStore = defineStore('preset', {
       }
     },
     reorderEntries(sortedIndex, { oldIndex, newIndex }) {
-        const preset = this._findPresetBySortedIndex(sortedIndex);
-        if (preset) {
-            const [movedItem] = preset.entries.splice(oldIndex, 1);
-            preset.entries.splice(newIndex, 0, movedItem);
-            this._saveToLocalStorage();
-        }
+        // v-model in the component already updates the array order.
+        // We just need to save the new state.
+        this._saveToLocalStorage();
     },
     onPresetDragEnd({ oldIndex, newIndex }) {
       if (oldIndex === newIndex) return;

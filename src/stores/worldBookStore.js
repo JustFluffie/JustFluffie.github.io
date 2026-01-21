@@ -115,12 +115,9 @@ export const useWorldBookStore = defineStore('worldBook', {
       }
     },
     reorderEntries(sortedIndex, { oldIndex, newIndex }) {
-        const book = this._findBookBySortedIndex(sortedIndex);
-        if (book) {
-            const [movedItem] = book.entries.splice(oldIndex, 1);
-            book.entries.splice(newIndex, 0, movedItem);
-            this._saveToLocalStorage();
-        }
+        // v-model in the component already updates the array order.
+        // We just need to save the new state.
+        this._saveToLocalStorage();
     },
     onBookDragEnd({ oldIndex, newIndex }) {
       if (oldIndex === newIndex) return;

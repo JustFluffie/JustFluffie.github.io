@@ -10,6 +10,7 @@
       @end="onPresetDragEnd"
       animation="200"
       ghost-class="ghost-card"
+      :force-fallback="true"
     >
       <template #item="{ element: preset, index: presetIndex }">
         <div class="card">
@@ -58,6 +59,7 @@
               @end="onEntryDragEnd(presetIndex, $event)"
               animation="200"
               ghost-class="ghost-entry"
+              :force-fallback="true"
             >
               <template #item="{ element: entry, index: entryIndex }">
                 <div class="entry-item" :class="{ 'disabled': !preset.enabled }">

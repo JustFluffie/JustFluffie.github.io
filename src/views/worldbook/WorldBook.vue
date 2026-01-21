@@ -10,6 +10,7 @@
       @end="onBookDragEnd"
       animation="200"
       ghost-class="ghost-card"
+      :force-fallback="true"
     >
       <template #item="{ element: book, index: bookIndex }">
         <div class="card">
@@ -54,6 +55,7 @@
               @end="onEntryDragEnd(bookIndex, $event)"
               animation="200"
               ghost-class="ghost-entry"
+              :force-fallback="true"
             >
               <template #item="{ element: entry, index: entryIndex }">
                 <div class="entry-item" :class="{ 'disabled': !book.enabled }">
