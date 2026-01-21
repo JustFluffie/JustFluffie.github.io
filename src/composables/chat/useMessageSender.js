@@ -96,11 +96,13 @@ export function useMessageSender(chatStore, charId, themeStore, activePanel) {
   };
 
   /**
-   * 发送转账 (模拟)
+   * 发送转账
+   * @param {string} amount - 转账金额
+   * @param {string} note - 转账说明
    */
-  const sendTransfer = () => {
-    console.log('[useMessageSender] sendTransfer triggered');
-    sendMsg('transfer', '88.88');
+  const sendTransfer = (amount, note) => {
+    console.log('[useMessageSender] sendTransfer triggered', amount, note);
+    sendMsg('transfer', amount, { note, status: 'pending' });
   };
 
   return {

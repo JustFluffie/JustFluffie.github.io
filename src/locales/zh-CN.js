@@ -180,6 +180,8 @@ export default {
     repoAddress: '仓库地址:',
     repoAddressPlaceholder: '格式：用户名/仓库名',
     createRepo: '创建',
+    verifying: '正在验证...',
+    verifySuccess: '验证成功',
     backupNow: '立即备份',
     backingUp: '备份中...',
     restoring: '恢复中...',

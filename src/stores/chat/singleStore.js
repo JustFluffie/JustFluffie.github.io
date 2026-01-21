@@ -4,6 +4,8 @@ import { useApiStore } from '@/stores/apiStore';
 import { useAiResponder } from '@/composables/chat/useAiResponder';
 import { ref } from 'vue';
 import { parseAiResponse } from '@/utils/messageParser';
+import { useNotificationStore } from '@/stores/notificationStore';
+import router from '@/router';
 
 const defaultStickers = [];
 
@@ -352,6 +354,28 @@ export const useSingleStore = defineStore('singleChat', {
             content: summaryContent,
             timestamp: Date.now()
         });
+
+        if (summarySender === 'char') {
+            this.incrementUnreadCount(charId);
+            
+            const notificationStore = useNotificationStore();
+            const currentRoute = router.currentRoute.value;
+            const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
+            
+            if (!isCurrentChat) {
+                const char = this.getCharacter(charId);
+                notificationStore.triggerNotification(
+                    char ? char.name : '未知角色',
+                    summaryContent,
+                    char ? char.avatar : '',
+                    () => {
+                        router.push({ name: 'single-chat', params: { id: charId } });
+                    },
+                    3000,
+                    'call_summary'
+                );
+            }
+        }
         
         this.saveData();
 
@@ -519,6 +543,27 @@ export const useSingleStore = defineStore('singleChat', {
                       timestamp: Date.now(),
                       blocked: isCharBlocked
                   });
+
+                  // 增加未读计数
+                  this.incrementUnreadCount(charId);
+
+                  // 触发通知
+                  const notificationStore = useNotificationStore();
+                  const currentRoute = router.currentRoute.value;
+                  const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
+
+                  if (!isCurrentChat) {
+                      notificationStore.triggerNotification(
+                          character.name,
+                          content,
+                          character.avatar,
+                          () => {
+                              router.push({ name: 'single-chat', params: { id: charId } });
+                          },
+                          3000,
+                          type
+                      );
+                  }
               }
               this.saveData();
           }
@@ -546,6 +591,25 @@ export const useSingleStore = defineStore('singleChat', {
       });
 
       this.incrementUnreadCount(charId);
+
+      // 触发通知
+      const notificationStore = useNotificationStore();
+      const currentRoute = router.currentRoute.value;
+      const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
+
+      if (!isCurrentChat) {
+          notificationStore.triggerNotification(
+              character.name,
+              content,
+              character.avatar,
+              () => {
+                  router.push({ name: 'single-chat', params: { id: charId } });
+              },
+              3000,
+              'text'
+          );
+      }
+
       this.saveData();
     },
 
@@ -612,6 +676,24 @@ export const useSingleStore = defineStore('singleChat', {
       } catch (error) {
         console.error('[Summary] Failed to generate memory:', error);
         return { success: false, message: '生成摘要时发生错误' };
+      }
+    },
+
+    acceptTransfer(charId, messageId) {
+      const msgs = this.messages[charId];
+      if (!msgs) return;
+
+      const transferMsg = msgs.find(m => m.id === messageId);
+      if (transferMsg && transferMsg.type === 'transfer' && transferMsg.status === 'pending') {
+        transferMsg.status = 'accepted';
+
+        // 添加系统通知
+        const notificationContent = transferMsg.sender === 'user'
+          ? `你已领取${this.getCharacter(charId)?.name}的转账`
+          : `${this.getCharacter(charId)?.name}已领取你的转账`;
+          
+        this.sendSystemNotification(charId, notificationContent);
+        this.saveData();
       }
     },
   }

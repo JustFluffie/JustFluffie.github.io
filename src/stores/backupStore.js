@@ -158,6 +158,48 @@ export const useBackupStore = defineStore('backup', () => {
     }
   }
 
+  // 验证备份仓库
+  async function verifyBackupRepo() {
+    githubToken.value = localStorage.getItem('github_token') || '';
+    githubRepo.value = localStorage.getItem('github_repo') || '';
+
+    if (!githubToken.value) {
+      throw new Error('请先设置 GitHub Token！');
+    }
+    if (!githubRepo.value) {
+      throw new Error('请先设置仓库地址！');
+    }
+
+    try {
+      const [owner, repo] = githubRepo.value.split('/');
+      if (!owner || !repo) {
+          throw new Error('仓库地址格式不正确，应为 username/repo');
+      }
+
+      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: {
+          'Authorization': `token ${githubToken.value}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (response.ok) {
+        return true;
+      } else {
+        if (response.status === 401) {
+          throw new Error('GitHub Token 无效或过期 (401)');
+        } else if (response.status === 404) {
+          throw new Error('仓库不存在或无权访问 (404)');
+        } else {
+          throw new Error(`验证失败: ${response.statusText}`);
+        }
+      }
+    } catch (error) {
+      console.error('Verify repo failed:', error);
+      throw error;
+    }
+  }
+
   // 备份到 GitHub
   async function backupToGitHub() {
     // 从 localStorage 加载最新的 token 和 repo
@@ -393,5 +435,6 @@ export const useBackupStore = defineStore('backup', () => {
     exportBackupFile,
     importBackupFile,
     createBackupRepo,
+    verifyBackupRepo,
   };
 });

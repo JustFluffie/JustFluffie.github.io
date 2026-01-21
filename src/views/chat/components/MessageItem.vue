@@ -100,7 +100,7 @@
                   <div class="transfer-icon">¥</div>
                   <div class="transfer-info">
                       <div class="transfer-amount">¥{{ msg.content }}</div>
-                      <div class="transfer-desc">{{ msg.sender === 'user' ? `转账给${charName}` : '转账给你' }}</div>
+                      <div class="transfer-desc">{{ msg.note || (msg.sender === 'user' ? `转账给${charName}` : '转账给你') }}</div>
                   </div>
               </div>
               <div class="transfer-footer">微信转账</div>

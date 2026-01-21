@@ -167,8 +167,9 @@
             <div class="api-item-col">
                 <label class="form-label" for="github-repo">{{ t('api.repoAddress') }}</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="github-repo" class="base-input" v-model="localGithubRepo" :placeholder="t('api.repoAddressPlaceholder')" style="flex: 1;" autocomplete="new-password" />
-                    <button v-if="!localGithubRepo" class="btn btn-secondary btn-sm" @click="handleCreateRepo" :disabled="!localGithubToken">{{ t('api.createRepo') }}</button>
+                    <input type="text" id="github-repo" class="base-input" v-model="localGithubRepo" :placeholder="t('api.repoAddressPlaceholder')" style="flex: 1; min-width: 0;" autocomplete="new-password" />
+                    <button class="btn btn-secondary btn-sm" @click="handleConfirmRepo" style="white-space: nowrap;">{{ t('confirm') }}</button>
+                    <button class="btn btn-secondary btn-sm" @click="handleCreateRepo" :disabled="!localGithubToken" style="white-space: nowrap;">{{ t('api.createRepo') }}</button>
                 </div>
             </div>
             <div class="api-item-row">
@@ -568,6 +569,20 @@ const handleCreateRepo = async () => {
     await backupStore.createBackupRepo();
     // 创建成功后，同步 Repo 回本地状态
     localGithubRepo.value = backupStore.githubRepo;
+};
+
+const handleConfirmRepo = async () => {
+    // 先同步设置到 store
+    backupStore.githubToken = localGithubToken.value;
+    backupStore.githubRepo = localGithubRepo.value;
+    
+    themeStore.showToast(t('api.verifying'));
+    try {
+        await backupStore.verifyBackupRepo();
+        themeStore.showToast(t('api.verifySuccess'));
+    } catch (error) {
+        themeStore.showToast(error.message, 'error');
+    }
 };
 
 const handleBackupNow = async () => {

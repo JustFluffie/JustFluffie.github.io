@@ -108,6 +108,14 @@
       :charId="props.charId"
       @close="isStatusModalVisible = false"
     />
+
+    <!-- 转账弹窗 -->
+    <MoneyPacket
+      v-model:visible="showMoneyPacket"
+      :targetName="charName"
+      :targetAvatar="charAvatar"
+      @confirm="handleSendTransfer"
+    />
   </div>
 </template>
 
@@ -139,6 +147,7 @@ import LocationInputModal from '../components/LocationInput.vue'
 import Modal from '@/components/common/Modal.vue'
 import ForwardSelectionModal from '../components/ForwardSelection.vue'
 import SingleCharStatus from './components/SingleCharStatus.vue'
+import MoneyPacket from '../components/MoneyPacket.vue'
 
 // ==========================================
 // 2. 路由与状态管理 (Router & Stores)
@@ -180,6 +189,7 @@ const showVoiceInputModal = ref(false)
 const showLocationInput = ref(false)
 const isStatusModalVisible = ref(false)
 const statusThoughtText = ref('')
+const showMoneyPacket = ref(false)
 
 // ==========================================
 // 4. 计算属性 (Computed)
@@ -231,7 +241,7 @@ const {
   sendVoiceMessage: sendVoice,
   handleSendImage,
   confirmSendLocation: confirmSendLoc,
-  sendTransfer,
+  sendTransfer: sendTransferMessage,
 } = useMessageSender(singleStore, toRef(props, 'charId'), themeStore, activePanel)
 
 const {
@@ -282,6 +292,12 @@ watch(isSettingsVisible, (newValue) => {
     isSettingsVisible.value = false; // 重置以避免返回时再次触发
   }
 });
+
+// 监听消息列表长度变化，如果在当前聊天页面，则清除未读数
+watch(() => singleStore.messages[props.charId]?.length, () => {
+  singleStore.clearUnreadCount(props.charId)
+});
+
 // 滚动逻辑已下沉到 MessageList 组件
 
 // ==========================================
@@ -405,6 +421,17 @@ const startVideoCall = () => {
 // 显示角色内心想法
 const showCharacterThought = () => {
   isStatusModalVisible.value = true;
+};
+
+// 打开转账弹窗
+const sendTransfer = () => {
+  showMoneyPacket.value = true;
+};
+
+// 处理转账确认
+const handleSendTransfer = ({ amount, note }) => {
+  sendTransferMessage(amount, note);
+  showMoneyPacket.value = false;
 };
 </script>
 
