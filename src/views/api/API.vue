@@ -172,10 +172,12 @@
                 </div>
             </div>
             <div class="api-item-row">
-                <button class="btn btn-secondary" style="flex: 1;" @click="handleBackupNow" :disabled="backupStore.isBackingUp">
+                <button class="btn btn-secondary" style="flex: 1;" @click="handleBackupNow" :disabled="backupStore.isBackingUp || backupStore.isRestoring">
                     {{ backupStore.isBackingUp ? t('api.backingUp') : t('api.backupNow') }}
                 </button>
-                <button class="btn btn-secondary" style="flex: 1;" @click="backupStore.restoreFromGitHub">{{ t('api.restoreBackup') }}</button>
+                <button class="btn btn-secondary" style="flex: 1;" @click="backupStore.restoreFromGitHub" :disabled="backupStore.isBackingUp || backupStore.isRestoring">
+                    {{ backupStore.isRestoring ? t('api.restoring') : t('api.restoreBackup') }}
+                </button>
             </div>
             <p v-if="backupStore.lastBackupTime" style="font-size: 12px; color: var(--text-tertiary); margin-top: 10px;">{{ t('api.lastBackup') }} {{ new Date(backupStore.lastBackupTime).toLocaleString() }}</p>
         </div>

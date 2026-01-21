@@ -153,31 +153,13 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
-  async function getChatCompletion(charId) {
+  // --- 内部辅助函数：构建 System Prompt ---
+  function buildSystemPrompt(character) {
     const singleStore = useSingleStore();
     const worldBookStore = useWorldBookStore();
     const presetStore = usePresetStore();
-    const themeStore = useThemeStore();
-    const calendarStore = useCalendarStore(); // 实例化日历 store
-    const character = singleStore.getCharacter(charId);
-    const activePreset = getActivePreset();
-
-    if (!activePreset || !activePreset.apiUrl || !activePreset.apiKey) {
-      themeStore.showToast('请先在API设置中配置有效的URL和Key', 'error');
-      return null;
-    }
-
-    const modelToUse = activePreset.model;
-    if (!modelToUse) {
-      themeStore.showToast('请先在API设置中选择一个模型', 'error');
-      return null;
-    }
-
-    // 去除 URL 末尾的斜杠
-    const baseUrl = activePreset.apiUrl.replace(/\/+$/, '');
-
-    // --- 构建 System Prompt ---
-    // 顺序建议：长期记忆 -> 角色人设 -> 预设(线下) -> 世界书
+    const calendarStore = useCalendarStore();
+    
     let systemPrompt = "";
 
     // 0. 拉黑状态处理 (最高优先级)
@@ -187,10 +169,8 @@ export const useApiStore = defineStore('api', () => {
     }
 
     // 1. 长期记忆 (Memory Bank)
-    // 假设 memories 是按时间倒序存储的(最新的在前)，我们需要按时间正序提供给AI
     const memories = character.memories || [];
     if (memories.length > 0) {
-        // 简单的去重或截断逻辑可以加在这里，目前全部读取
         const sortedMemories = [...memories].reverse();
         systemPrompt += "【长期记忆/故事总结】:\n" + sortedMemories.map(m => m.content).join("\n") + "\n\n";
     }
@@ -217,16 +197,13 @@ export const useApiStore = defineStore('api', () => {
         "   - **视频通话意愿**：如果你想见用户，或者想展示你现在的环境，请主动提出视频通话的请求（口头询问，如“方便视频吗？”）。\n" +
         "   - **打破僵局**：如果对话陷入沉默，或者你觉得用户心情不好，请主动开启新话题，或者用表情包/语音来活跃气氛。\n\n";
 
-
-    // 2.1. 新增：生理周期与待办事项
+    // 2.1. 生理周期与待办事项
     const today = new Date();
     const todayISO = formatISO(today, { representation: 'date' });
     
     systemPrompt += `【当前日期】:\n${todayISO}\n\n`;
 
     let periodStatusText = '';
-
-    // 检查是否在经期中
     const lastPeriod = calendarStore.periodHistory.length > 0 ? calendarStore.periodHistory[calendarStore.periodHistory.length - 1] : null;
     if (lastPeriod && isWithinInterval(today, { start: parseISO(lastPeriod.start), end: parseISO(lastPeriod.end) })) {
         periodStatusText = '（注意：用户目前正处于生理期，请在对话中适当表现出关心，例如提醒多喝热水、注意休息等，但不要过于生硬。）';
@@ -243,11 +220,9 @@ export const useApiStore = defineStore('api', () => {
 
     const todayEvents = calendarStore.getEventsByDate(todayISO);
     const todoList = todayEvents.filter(e => e.type === 'todo' && !e.done);
-
-    // 获取过期未完成的待办事项
     const overdueTodos = calendarStore.events.filter(e => {
         if (e.type !== 'todo' || e.done) return false;
-        return e.date < todayISO; // 日期早于今天
+        return e.date < todayISO;
     });
 
     if (todoList.length > 0) {
@@ -258,7 +233,6 @@ export const useApiStore = defineStore('api', () => {
     }
 
     if (overdueTodos.length > 0) {
-        // 只取最近的 3 条，避免上下文过长
         const overdueText = overdueTodos
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 3)
@@ -289,7 +263,7 @@ export const useApiStore = defineStore('api', () => {
             }
 
             const parts = [`位置：${locationName}`, timeStr, weatherStr].filter(Boolean);
-            if (parts.length <= 1) return ''; // 如果只有位置信息，则不显示
+            if (parts.length <= 1) return '';
 
             return `${header}\n${parts.join('\n')}\n\n`;
         };
@@ -304,14 +278,19 @@ export const useApiStore = defineStore('api', () => {
     }
     
     // 2.3 格式指令
-    systemPrompt += "【待办指令】:\n" +
+    systemPrompt += "【待办指令（重要：仅记录用户的日程）】:\n" +
         "1. 当用户让你帮忙记录事项，或者**你主动想约用户做某事/提醒用户做某事**时，请在回复的末尾加上隐藏指令：[待办：YYYY-MM-DD HH:mm 任务内容] 或 [待办：HH:mm 任务内容] 或 [待办：任务内容]。\n" +
+        "   - **注意：此指令是向【用户的日程表】添加事项，代表【用户】需要做的事情。**\n" +
+        "   - **禁止**将你（角色）自己的行为（如“我去洗澡”、“我正在思考”）记录为待办。\n" +
+        "   - **禁止**将你要对用户做的动作（如“提醒用户吃饭”）记录为待办，而是直接在对话中提醒，或者记录为用户要做的事（如“吃饭”）。\n" +
         "   - 这是一个系统指令，会被自动隐藏，用户看不到它。因此，你必须同时根据你的人设，用自然的语言符合人设的语气来回复用户。\n" +
         "   - 场景示例1（用户请求）：\n" +
         "     用户：提醒我下午两点开会。\n" +
         "     你：好的，我已经帮你记在日程表里了，下午两点开会，别忘了哦。[待办：14:00 开会]\n" +
-        "   - 场景示例2（角色主动）：\n" +
-        "     你：这周日我们去游乐园玩吧？好久没去了！[待办：2023-10-27 游乐园约会] (请根据当前日期计算具体日期)\n\n";
+        "   - 场景示例2（角色主动约用户）：\n" +
+        "     你：这周日我们去游乐园玩吧？好久没去了！[待办：2023-10-27 和我(角色名)去游乐园] (请根据当前日期计算具体日期)\n" +
+        "   - 错误示例（角色自己的行为）：\n" +
+        "     你：我去给你做饭。[待办：做饭] <--- 错误！这是角色做的事，不需要用户记录。\n\n";
         
     const availableStickers = singleStore.stickers.map(e => e.name).filter(Boolean);
     const stickerInstruction = availableStickers.length > 0 
@@ -330,19 +309,25 @@ export const useApiStore = defineStore('api', () => {
         "- 如果你想连续发送多条消息（例如先发图片再发文字，或分段发送长文本），请在消息之间使用字符串 '|||' 作为分隔符。\n" +
         "- 例如：[图片：一只猫]|||这就我家猫，可爱吧？|||哈哈\n\n";
 
-    // 3. 预设 (仅线下模式)
-    // 假设 character.isOnline === false 时为线下模式
+    // 3. 模式状态 (线上/线下)
     if (character.isOnline === false) {
+        // --- 线下模式 ---
         systemPrompt += "【当前状态：线下见面中】\n" +
             "你现在正与用户面对面在一起（线下模式）。\n" +
             "1. **场景感知**：请根据对话内容或预设场景，想象你们所处的环境（如家里、咖啡厅、公园等），并在回复中自然地体现出环境互动（如“递给你一杯水”、“看着你的眼睛”）。\n" +
             "2. **沉浸式描写**：你的回复不再是手机短信，而是面对面的互动。请使用小说式的描写手法，详细描述你的表情、动作、语气以及心理活动，让用户有身临其境的感觉。\n" +
-            `3. **回复长度控制**：请严格遵守用户设定的回复长度目标：${character.replyLength || '200-500'}字。请在此字数范围内分配对话和描写的内容。如果用户设定了较短的长度，请精简描写；如果设定了较长的长度，请丰富细节。\n\n`;
+            `3. **回复长度控制**：请严格遵守用户设定的回复长度目标：${character.replyLength || '100-200'}字。请在此字数范围内分配对话和描写的内容。如果用户设定了较短的长度，请精简描写；如果设定了较长的长度，请丰富细节。\n\n`;
 
         if (character.preset && character.preset.length > 0) {
             const presetContent = presetStore.getPresetContext(character.preset);
             if (presetContent) systemPrompt += "【预设/补充设定】:\n" + presetContent + "\n\n";
         }
+    } else {
+        // --- 线上模式 ---
+        systemPrompt += "【当前状态：手机聊天中（线上模式）】\n" +
+            "你现在正通过手机与用户聊天。你们**不**在一起。\n" +
+            "1. **回复风格**：请保持自然的聊天风格，就像在微信/短信上聊天一样。不要使用小说式的长篇大论或过多的动作描写。\n" +
+            "2. **环境隔离**：你和用户不在同一个物理空间。你只能通过文字、语音、图片等方式交流。如果之前的对话中有面对面的描写，请忽略它，假设你们已经分开了，现在回到了手机聊天状态。\n\n";
     }
 
     // 4. 世界书
@@ -354,20 +339,47 @@ export const useApiStore = defineStore('api', () => {
         }
     }
 
-    // 5. 视频通话特殊Prompt处理 (追加在最后或人设后)
+    // 5. 视频通话特殊Prompt处理
     if (singleStore.videoCall.isActive && 
         singleStore.videoCall.status === 'connected' && 
-        singleStore.videoCall.characterId === charId &&
+        singleStore.videoCall.characterId === character.id &&
         character.isOnline !== false) {
         
         systemPrompt += `\n【当前状态：视频通话中】\n` +
-            `你正在与用户进行视频通话。请注意：\n` +
-            `1. 这是一个实时视频通话场景，你可以看见对方，对方也能看见你。\n` +
+            `你正在与用户进行线上视频通话，视频通话是线上聊天的特殊形式。请注意：\n` +
+            `1. 这是一个实时的线上视频通话场景，你可以看见对方，对方也能看见你。\n` +
             `2. 你的回复不应是短信格式，而是视频通话中的口语对话。\n` +
             `3. 必须包含场景和人物动态描写（如你的样貌、表情、穿着、动作、姿态、所处环境等）。\n` +
             `4. 描写应自然融入对话或用括号标记。\n` +
             `5. 注意屏幕视野有限，不要描述视野外不可见的事物。`;
+            "6. 回复长度控制：请严格遵守用户设定的回复长度目标：30-50字。请在此字数范围内分配对话和描写的内容。\n\n"
     }
+
+    return systemPrompt;
+  }
+
+  async function getChatCompletion(charId) {
+    const singleStore = useSingleStore();
+    const themeStore = useThemeStore();
+    const character = singleStore.getCharacter(charId);
+    const activePreset = getActivePreset();
+
+    if (!activePreset || !activePreset.apiUrl || !activePreset.apiKey) {
+      themeStore.showToast('请先在API设置中配置有效的URL和Key', 'error');
+      return null;
+    }
+
+    const modelToUse = activePreset.model;
+    if (!modelToUse) {
+      themeStore.showToast('请先在API设置中选择一个模型', 'error');
+      return null;
+    }
+
+    // 去除 URL 末尾的斜杠
+    const baseUrl = activePreset.apiUrl.replace(/\/+$/, '');
+
+    // 使用公共函数构建 System Prompt
+    const systemPrompt = buildSystemPrompt(character);
 
     const memoryCount = character.memoryCount || 10;
     // 使用 singleStore 的格式化方法处理不同类型的消息 (短期记忆)
@@ -523,9 +535,6 @@ export const useApiStore = defineStore('api', () => {
 
   async function getProactiveMessage(charId) {
     const singleStore = useSingleStore();
-    const worldBookStore = useWorldBookStore();
-    const presetStore = usePresetStore();
-    const themeStore = useThemeStore();
     const character = singleStore.getCharacter(charId);
     const activePreset = getActivePreset();
 
@@ -538,35 +547,10 @@ export const useApiStore = defineStore('api', () => {
     // 去除 URL 末尾的斜杠
     const baseUrl = activePreset.apiUrl.replace(/\/+$/, '');
 
-    // --- 构建 System Prompt ---
-    let systemPrompt = "";
+    // 使用公共函数构建 System Prompt
+    let systemPrompt = buildSystemPrompt(character);
 
-    // 1. 长期记忆
-    const memories = character.memories || [];
-    if (memories.length > 0) {
-        const sortedMemories = [...memories].reverse();
-        systemPrompt += "【长期记忆/故事总结】:\n" + sortedMemories.map(m => m.content).join("\n") + "\n\n";
-    }
-
-    // 2. 角色人设
-    systemPrompt += "【角色人设】:\n" + (character.charPersona || '你是一个友好的人工智能助手。') + "\n\n";
-
-    // 3. 预设 (仅线下)
-    if (character.isOnline === false && character.preset && character.preset.length > 0) {
-        const presetContent = presetStore.getPresetContext(character.preset);
-        if (presetContent) systemPrompt += "【预设/补充设定】:\n" + presetContent + "\n\n";
-    }
-
-    // 4. 世界书
-    const worldBookIds = character.worldbook || [];
-    if (worldBookIds.length > 0) {
-        const worldBookContent = worldBookStore.getWorldBookContext(worldBookIds);
-        if (worldBookContent) {
-            systemPrompt += "【世界书/设定参考】:\n" + worldBookContent + "\n\n";
-        }
-    }
-
-    // 5. 主动消息指令
+    // 5. 主动消息指令 (追加)
     systemPrompt += `\n【指令：主动发起话题】\n` +
         `现在是主动发起话题的时间。请根据长期记忆、人设、世界书以及最近的对话内容，主动向用户发起一个新的、自然的话题。\n` +
         `要求：\n` +

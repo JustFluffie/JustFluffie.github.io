@@ -709,7 +709,7 @@ const loadSettings = () => {
     isOnline.value = char.isOnline !== false;
     preset.value = Array.isArray(char.preset) ? char.preset : (char.preset ? [char.preset] : []);
     worldbook.value = char.worldbook || [];
-    const [min, max] = (char.replyLength || (isOnline.value ? '10-50' : '200-500')).split('-');
+    const [min, max] = (char.replyLength || (isOnline.value ? '10-50' : '100-200')).split('-');
     replyLengthMin.value = min || '';
     replyLengthMax.value = max || '';
 
@@ -967,7 +967,7 @@ const applyBgToAll = () => {
 // --- 6.6 模式与总结逻辑 (Mode & Summary Logic) ---
 const setMode = (online) => {
     isOnline.value = online;
-    [replyLengthMin.value, replyLengthMax.value] = online ? ['10', '50'] : ['200', '500'];
+    [replyLengthMin.value, replyLengthMax.value] = online ? ['10', '50'] : ['100', '200'];
 };
 
 const triggerManualSummary = () => {

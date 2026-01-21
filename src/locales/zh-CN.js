@@ -182,6 +182,7 @@ export default {
     createRepo: '创建',
     backupNow: '立即备份',
     backingUp: '备份中...',
+    restoring: '恢复中...',
     restoreBackup: '恢复备份',
     lastBackup: '上次备份:',
     imageHost: '图床设置',

@@ -380,7 +380,7 @@ const selectDisplay = (preference) => {
   height: 1.7em;
   background: var(--home-text-color);
   border-radius: 50%;
-  opacity: 0.8;
+  opacity: 0.6;
   z-index: 5;
 }
 

@@ -417,7 +417,6 @@ onMounted(() => {
     padding: 6px 12px;
     background: rgba(0, 0, 0, 0);
     border-radius: 20px;
-    backdrop-filter: blur(4px);
 }
 
 .dot {

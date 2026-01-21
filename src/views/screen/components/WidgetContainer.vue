@@ -136,7 +136,7 @@ const handleAppClick = (app) => emit('app-click', app)
 
 .widget-sub-container {
   position: absolute;
-  top: 36%; /* 紧接在 Header 下方 (35% + 1% 间隙) */
+  top: 32.5%; /* 紧接在 Header 下方 (35% + 1% 间隙) */
   height: 64%; 
   width: 50%;
   /* transition 等保持不变 */
@@ -149,7 +149,7 @@ const handleAppClick = (app) => emit('app-click', app)
 
 /* 小组件相对于其子容器进行定位 */
 .left-app-grid {
-  top: -6.5%; /* 相对于 sub-container */
+  top: 0; /* 相对于 sub-container */
   left: 3%;
   width: 80%;
   height: 40%;
@@ -157,21 +157,21 @@ const handleAppClick = (app) => emit('app-click', app)
 }
 
 .left-list-card {
-  top: 33%;
+  top: 40%;
   left: 4%; /* 稍微向左偏移一点以匹配原始布局 */
   width: 90%;
   height: 55%;
 }
 
 .right-photo-wall {
-  top: 5%;
+  top: 10%;
   left: 0%;
   width: 80%;
   height: 55%;
 }
 
 .right-app-grid {
-  top: 57.5%;
+  top: 65%;
   left: 7%;
   width: 90%;
   height: 40%;

@@ -7,6 +7,7 @@ export const useBackupStore = defineStore('backup', () => {
   const githubToken = ref('');
   const githubRepo = ref(''); // 格式: 'owner/repo'
   const isBackingUp = ref(false);
+  const isRestoring = ref(false);
   const lastBackupTime = ref(null);
 
   // 核心：创建备份数据（异步）
@@ -255,9 +256,77 @@ export const useBackupStore = defineStore('backup', () => {
     }
   }
   
-  // 从 GitHub 恢复 (待实现)
+  // 从 GitHub 恢复
   async function restoreFromGitHub() {
-    alert('从 GitHub 恢复的功能尚未实现。');
+    // 从 localStorage 加载最新的 token 和 repo
+    githubToken.value = localStorage.getItem('github_token') || '';
+    githubRepo.value = localStorage.getItem('github_repo') || '';
+
+    if (!githubToken.value || !githubRepo.value) {
+      alert('请先设置 GitHub Token 和仓库地址！');
+      return;
+    }
+
+    if (!confirm('这将从 GitHub 覆盖所有当前数据，确定要恢复吗？此操作不可逆。')) {
+      return;
+    }
+
+    isRestoring.value = true;
+    alert('正在从 GitHub 下载备份...');
+
+    try {
+      const fileName = 'phone_backup.json';
+      const [owner, repo] = githubRepo.value.split('/');
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `token ${githubToken.value}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (response.status === 401) {
+        throw new Error('GitHub Token 无效或过期 (401)。请检查设置。');
+      }
+      if (response.status === 404) {
+        throw new Error('在仓库中未找到备份文件 (phone_backup.json)。');
+      }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`获取备份文件失败: ${errorData.message || '未知错误'}`);
+      }
+
+      const data = await response.json();
+      const base64Content = data.content;
+
+      // Base64 解码
+      const binaryString = atob(base64Content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+      }
+      const utf8Decoder = new TextDecoder('utf-8');
+      const jsonString = utf8Decoder.decode(bytes);
+      
+      const backupData = JSON.parse(jsonString);
+
+      // 应用备份
+      localStorage.clear();
+      for (const key in backupData) {
+        if (Object.hasOwnProperty.call(backupData, key)) {
+          localStorage.setItem(key, backupData[key]);
+        }
+      }
+
+      alert('数据恢复成功！请刷新页面以应用更改。');
+
+    } catch (error) {
+      console.error('Restore from GitHub failed:', error);
+      alert(`恢复过程中发生错误: ${error.message}`);
+    } finally {
+      isRestoring.value = false;
+    }
   }
 
   // 导出备份文件
@@ -317,6 +386,7 @@ export const useBackupStore = defineStore('backup', () => {
     githubToken,
     githubRepo,
     isBackingUp,
+    isRestoring,
     lastBackupTime,
     backupToGitHub,
     restoreFromGitHub,
