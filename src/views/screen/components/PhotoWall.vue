@@ -123,8 +123,8 @@ const getLangClass = (text) => {
 /* 十字：背景透明，但线条要用变量色 */
 .s-cross { width: 1.3em; height: 1.3em; background: transparent; position: relative;}
 .s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); border-radius: 2px; }
-.s-cross::before { top: 45%; left: 0; width: 100%; height: 0.15em; transform: translateY(-50%); opacity: 0.7;}
-.s-cross::after { top: 0; left: 45%; width: 0.15em; height: 100%; transform: translateX(-50%); opacity: 0.7;}
+.s-cross::before { top: 45%; left: 0; width: 100%; height: 0.15em; transform: translateY(-50%); opacity: 0.85;}
+.s-cross::after { top: 0; left: 45%; width: 0.15em; height: 100%; transform: translateX(-50%); opacity: 0.85;}
 
 .cross-sparkle-icon {
   position: absolute; width: 1.2em; height: 1.2em; color: var(--home-text-color); }
@@ -136,7 +136,7 @@ const getLangClass = (text) => {
 .pos-1 { top: -7%; left: 25%; transform: rotate(-15deg); opacity: 0.7;} 
 .pos-2 { top: 5%; left: 20%; }
 /* 中间那个特别的大星星 */
-.pos-3 { top: 48%; left: 45%; transform: scale(1.15); opacity: 0.8;}
+.pos-3 { top: 48%; left: 45%; transform: scale(1.15); opacity: 0.9;}
 .pos-4 { top: 40%; left: 51%; transform: rotate(10deg); opacity: 0.7;}
 .pos-5 { top: 15%; left: 105%; transform: scale(0.7); }
 .pos-6 { top: 25%; left: 100%; transform: rotate(45deg); opacity: 0.7;}
