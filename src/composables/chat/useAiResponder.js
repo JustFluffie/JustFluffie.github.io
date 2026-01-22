@@ -69,6 +69,26 @@ export function useAiResponder(charId, apiStore) {
       console.log('[useAiResponder] AI Response:', responseText);
       
       if (responseText) {
+        // --- 新增：处理撤回指令 ---
+        // 格式: [撤回]
+        const revokePattern = /\[撤回\]/g;
+        if (revokePattern.test(responseText)) {
+          // 查找角色最近一条未撤回的消息
+          const charMessages = singleStore.messages[charId.value] || [];
+          // 从后往前找
+          for (let i = charMessages.length - 1; i >= 0; i--) {
+            const msg = charMessages[i];
+            if (msg.sender === 'char' && !msg.isRevoked) {
+              singleStore.revokeMessage(charId.value, msg.id);
+              console.log(`[useAiResponder] Revoked message: ${msg.id}`);
+              break; // 只撤回最近的一条
+            }
+          }
+          // 从回复中移除撤回指令
+          responseText = responseText.replace(revokePattern, '').trim();
+        }
+        // --- 结束：处理撤回指令 ---
+
         // --- 新增：处理朋友圈互动指令 ---
         const interactMomentPattern = /\[互动朋友圈：(.+?)\]/g;
         let interactMatch;
@@ -168,20 +188,33 @@ export function useAiResponder(charId, apiStore) {
                  // targetDate 保持为今天
              }
           } else {
-              // 无时间，默认为今天，无具体时间
-              timeStr = new Date().toTimeString().slice(0, 5);
+              // 无时间，默认为今天，随机延迟 15/30/60 分钟
+              const now = new Date();
+              const delays = [15, 30, 60];
+              const randomDelay = delays[Math.floor(Math.random() * delays.length)];
+              now.setMinutes(now.getMinutes() + randomDelay);
+              // 格式化为 HH:mm
+              const hours = now.getHours().toString().padStart(2, '0');
+              const minutes = now.getMinutes().toString().padStart(2, '0');
+              timeStr = `${hours}:${minutes}`;
           }
 
           if (todoContent) {
+            // 截断内容，如果超过18个字
+            let finalContent = todoContent;
+            if (finalContent.length > 18) {
+                finalContent = finalContent.substring(0, 18) + '...';
+            }
+
             calendarStore.addEvent({
               type: 'todo',
-              title: todoContent,
-              content: todoContent, // 兼容 UI 组件使用 content 字段
+              title: finalContent,
+              content: finalContent, // 兼容 UI 组件使用 content 字段
               date: formatISO(targetDate, { representation: 'date' }),
               done: false,
               time: timeStr
             });
-            console.log(`[useAiResponder] Added new todo: "${todoContent}" at ${timeStr} on ${formatISO(targetDate, { representation: 'date' })}`);
+            console.log(`[useAiResponder] Added new todo: "${finalContent}" at ${timeStr} on ${formatISO(targetDate, { representation: 'date' })}`);
           }
         }
         // 从回复中移除待办事项指令，以免显示在聊天中
@@ -201,9 +234,15 @@ export function useAiResponder(charId, apiStore) {
         const isCharBlocked = character?.isBlocked || false;
 
         // 1. 拆分多条消息
+        // 预处理：处理可能的转义字符、全角字符和空格
+        // 匹配连续的3个或更多竖线（包括普通|、转义\|、全角｜），允许中间有空格
+        // 这样可以兼容 |||、\|\|\|、｜｜｜、| | | 等各种变体
+        const separatorRegex = /(?:\||\\\||｜)\s*(?:\||\\\||｜)\s*(?:\||\\\||｜)+/g;
+        let cleanText = responseText.replace(separatorRegex, '|||');
+
         // 策略：首先按显式分隔符 '|||' 拆分，然后对每一段尝试按特殊消息格式拆分
         // 这样即使AI忘记使用分隔符，只要使用了特殊格式（如[图片：...]），也能被正确拆分
-        let rawSegments = responseText.split('|||');
+        let rawSegments = cleanText.split('|||');
         let segments = [];
         
         const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账)：.+?\])/g;

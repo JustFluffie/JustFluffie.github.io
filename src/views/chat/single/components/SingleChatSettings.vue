@@ -613,9 +613,8 @@ const userPersonaOptions = computed(() => [
 ]);
 
 const apiConfigOptions = computed(() => [
-  { value: 'default', label: t('chat.singleChat.settings.default')+'配置' }, 
-  { value: 'api1', label: '配置一' }, 
-  { value: 'api2', label: '配置二' },
+  { value: 'default', label: t('chat.singleChat.settings.default') }, 
+  ...apiStore.presets.map(p => ({ value: p.name, label: p.name }))
 ]);
 
 const bubblePresetOptions = computed(() => [

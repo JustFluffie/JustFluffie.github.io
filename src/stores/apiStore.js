@@ -375,6 +375,7 @@ export const useApiStore = defineStore('api', () => {
     systemPrompt += "【待办指令】\n" +
         "当需要记录**用户的日程**时，在回复末尾加：`[待办：YYYY-MM-DD HH:mm 内容]` 或 `[待办：HH:mm 内容]`。\n" +
         "- 仅记录用户要做的事，**禁止**记录角色自己的行为。\n" +
+        "- 待办内容必须精简，**不超过18个字**。\n" +
         "- 示例：用户让你提醒开会 -> 回复“好的”并附加 `[待办：14:00 开会]`。\n\n";
         
     // 3. 模式状态 (线上/线下)
@@ -413,11 +414,15 @@ export const useApiStore = defineStore('api', () => {
             "3. **语音**：`[语音：说话内容]` (仅限说话内容，勿含语气描述)\n" +
             "4. **位置**：`[位置：地点名称]`\n" +
             "5. **转账**：`[转账：金额]`\n" +
-            "6. **发朋友圈**：`[朋友圈：{\"text\":\"内容\",\"imageDescription\":\"图片描述\"}]` (text或imageDescription至少其一)\n" +
-            "7. **互动朋友圈**：\n" +
+            "6. **撤回**：`[撤回]` (撤回上一条消息)\n" +
+            "7. **发朋友圈**：`[朋友圈：{\"text\":\"内容\",\"imageDescription\":\"图片描述\"}]` (text或imageDescription至少其一)\n" +
+            "8. **互动朋友圈**：\n" +
             "   - 点赞用户最新动态：`[互动朋友圈：{\"action\":\"like\"}]`\n" +
             "   - 评论用户最新动态：`[互动朋友圈：{\"action\":\"comment\",\"response\":\"评论内容\"}]`\n" +
             "   (注意：互动指令为后台操作，请同时用自然语言回复用户)\n\n";
+
+        systemPrompt += "【撤回逻辑】\n" +
+            "若看到 `[用户撤回：...]`，代表你**已看到**该内容。可根据人设选择假装没看见或调侃。同理，你撤回消息后，用户也可能看到了。\n\n";
     }
 
     // 4. 世界书
@@ -533,9 +538,9 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
-  async function getGenericCompletion(messages) {
+  async function getGenericCompletion(messages, presetOverride = null) {
     const themeStore = useThemeStore();
-    const activePreset = getActivePreset();
+    const activePreset = presetOverride || getActivePreset();
 
     if (!activePreset || !activePreset.apiUrl || !activePreset.apiKey) {
       themeStore.showToast('请先在API设置中配置有效的URL和Key', 'error');

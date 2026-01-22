@@ -10,27 +10,35 @@
       >
         <div class="checkbox" :class="{ 'checked': todo.done }" @click="toggleStatus(todo.id)"></div>
         
-        <div v-if="editingTodo && editingTodo.id === todo.id" class="edit-container">
+        <div 
+          v-if="editingTodo && editingTodo.id === todo.id" 
+          class="edit-container" 
+          ref="editContainerRef"
+        >
+          <label class="all-day-label">
+            <input type="checkbox" v-model="editingTodo.isAllDay" class="hidden-checkbox">
+            <span class="custom-checkbox" :class="{ checked: editingTodo.isAllDay }"></span>
+            <span class="checkbox-text">全天</span>
+          </label>
           <input 
+            v-if="!editingTodo.isAllDay"
             type="time"
             v-model="editingTodo.time"
             class="base-input-mini"
-            @mousedown="preventBlur"
           />
           <input 
             type="text"
             v-model="editingTodo.content"
-            @blur="saveTodo"
             @keyup.enter="saveTodo"
             class="base-input"
             ref="editInputRef"
           />
-          <button class="delete-btn" @mousedown="preventBlur" @click="deleteTodo(todo.id)">
+          <button class="delete-btn" @click="deleteTodo(todo.id)">
             <SvgIcon name="x-mark" />
           </button>
         </div>
         <template v-else>
-          <span class="todo-time">{{ formatTime(todo.date) }}</span>
+          <span class="todo-time">{{ formatTime(todo) }}</span>
           <span class="todo-content" @click="startEditing(todo)">{{ (todo.content || '').trim() || '[空内容]' }}</span>
         </template>
       </li>
@@ -39,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onUnmounted } from 'vue';
 import { useCalendarStore } from '@/stores/calendarStore';
 import SvgIcon from '@/components/common/SvgIcon.vue';
 
@@ -53,32 +61,42 @@ const props = defineProps({
 const calendarStore = useCalendarStore();
 const editingTodo = ref(null);
 const editInputRef = ref(null);
-const isLosingFocusToInternalElement = ref(false);
+const editContainerRef = ref(null);
 
-const preventBlur = () => {
-  isLosingFocusToInternalElement.value = true;
+const handleOutsideClick = (event) => {
+  // 如果点击的是 edit-container 内部，不处理
+  const container = editContainerRef.value?.[0];
+  if (container && container.contains(event.target)) {
+    return;
+  }
+  // 点击外部，保存
+  saveTodo();
 };
 
 const startEditing = (todo) => {
-  const todoDate = new Date(todo.date);
+  // 如果已经在编辑其他项，先保存
+  if (editingTodo.value) {
+    saveTodo();
+  }
+
   editingTodo.value = { 
     ...todo,
-    time: todoDate.toTimeString().slice(0, 5) // Extract HH:mm
+    isAllDay: !todo.time,
+    time: todo.time || new Date().toTimeString().slice(0, 5)
   };
+  
   nextTick(() => {
     editInputRef.value?.[0]?.focus();
+    // 添加全局点击监听，使用 setTimeout 避免立即触发（如果是点击触发的编辑）
+    setTimeout(() => {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }, 0);
   });
 };
 
 const saveTodo = () => {
-  // This is a workaround to prevent the blur event from closing the edit mode
-  // when clicking on other elements within the edit container (like the time input or delete button).
-  // The mousedown event on those elements will set this flag to true.
-  if (isLosingFocusToInternalElement.value) {
-    isLosingFocusToInternalElement.value = false; // Reset the flag
-    return; // And do not proceed with saving
-  }
-
+  document.removeEventListener('mousedown', handleOutsideClick);
+  
   if (!editingTodo.value) return;
 
   // If content is cleared, delete the todo
@@ -87,21 +105,18 @@ const saveTodo = () => {
     return;
   }
 
-  const originalDate = new Date(editingTodo.value.date);
-  const [hours, minutes] = editingTodo.value.time.split(':').map(Number);
-  originalDate.setHours(hours, minutes);
-  
   const updatedTodo = {
     ...editingTodo.value,
-    date: originalDate.toISOString(),
+    time: editingTodo.value.isAllDay ? '' : editingTodo.value.time
   };
-  delete updatedTodo.time; // Clean up temporary property
+  delete updatedTodo.isAllDay; // Clean up temporary property
 
   calendarStore.updateEvent(updatedTodo);
   editingTodo.value = null;
 };
 
 const deleteTodo = (todoId) => {
+  document.removeEventListener('mousedown', handleOutsideClick);
   calendarStore.removeEvent(todoId);
   editingTodo.value = null; // Exit editing mode after deletion
 };
@@ -110,11 +125,14 @@ const toggleStatus = (eventId) => {
   calendarStore.toggleTodoStatus(eventId);
 };
 
-const formatTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+const formatTime = (todo) => {
+  if (!todo.time) return '全天';
+  return todo.time;
 };
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleOutsideClick);
+});
 </script>
 
 <style scoped>
@@ -139,7 +157,7 @@ const formatTime = (dateString) => {
 }
 .todo-list li { 
   display: flex; 
-  align-items: center; 
+  align-items: flex-start; 
   gap: 10px; 
   margin-bottom: 12px; 
   font-size: 14px; 
@@ -152,6 +170,7 @@ const formatTime = (dateString) => {
   border-radius: 6px; 
   cursor: pointer;
   flex-shrink: 0;
+  margin-top: 2px; /* Align with text top */
 }
 .checkbox.checked { 
   background: #ccc; 
@@ -166,6 +185,10 @@ const formatTime = (dateString) => {
   color: #999;
   font-size: 12px;
   flex-shrink: 0; /* Prevent time from shrinking */
+  min-width: 35px; /* Ensure enough width for time or "全天" */
+  text-align: right;
+  margin-top: 3px; /* Align with text top */
+  line-height: 1.4;
 }
 .edit-container {
   display: flex;
@@ -174,15 +197,50 @@ const formatTime = (dateString) => {
   gap: 8px;
   min-width: 0; /* Allow container to shrink */
 }
+.all-day-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hidden-checkbox {
+  display: none;
+}
+.custom-checkbox {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #999;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
+  box-sizing: border-box;
+}
+.custom-checkbox.checked {
+  border-color: #666;
+}
+.custom-checkbox.checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid #555;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.checkbox-text {
+  font-size: 12px;
+}
 .todo-content {
   flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-word;
   cursor: pointer;
-  /* 微调对齐 */
-  position: relative;
-  top: -1px;
+  line-height: 1.4;
 }
 
 .edit-container .base-input {

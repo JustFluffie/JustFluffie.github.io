@@ -40,7 +40,7 @@
         <SvgIcon name="plus-circle" class="svg-icon" />
       </div>
       <div class="send-btn-icon" v-else @click="handleSendMessage">
-        <svg class="svg-icon" viewBox="0 0 24 24" style="stroke: white; width: 21px; height: 21px; position: relative; top: 1px; left: -1px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        <svg class="svg-icon" viewBox="0 0 24 24" style="stroke: white; width: 24px; height: 24px; position: relative; top: 1px; left: -1px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </div>
     </div>
     
@@ -261,8 +261,8 @@ const handleSendSticker = (sticker) => {
 
 /* --- 按钮 --- */
 .chat-tool-btn {
-    width: 30px; 
-    height: 30px; 
+    width: 36px; 
+    height: 36px; 
     display: flex; 
     align-items: center; 
     justify-content: center;
@@ -271,9 +271,14 @@ const handleSendSticker = (sticker) => {
     flex-shrink: 0;
 }
 
+.chat-tool-btn :deep(.svg-icon) {
+    width: 32px;
+    height: 32px;
+}
+
 .send-btn-icon {
-    width: 30px; 
-    height: 30px; 
+    width: 36px; 
+    height: 36px; 
     display: flex; 
     align-items: center; 
     justify-content: center;

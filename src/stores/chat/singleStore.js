@@ -248,6 +248,18 @@ export const useSingleStore = defineStore('singleChat', {
       }
     },
 
+    // 撤回消息
+    revokeMessage(charId, messageId) {
+      const msgs = this.messages[charId];
+      if (!msgs) return;
+
+      const msg = msgs.find(m => m.id === messageId);
+      if (msg) {
+        msg.isRevoked = true;
+        this.saveData();
+      }
+    },
+
     // --- 心声 Actions ---
     addInnerVoice(charId, voiceData) {
       if (!this.innerVoices[charId]) {
@@ -453,6 +465,21 @@ export const useSingleStore = defineStore('singleChat', {
       
       return recent.map(msg => {
         let content = msg.content;
+
+        // 处理撤回消息
+        if (msg.isRevoked) {
+          if (msg.sender === 'user') {
+            return {
+              role: 'user',
+              content: `[用户撤回了一条消息：${content}]`
+            };
+          } else {
+            return {
+              role: 'assistant',
+              content: `[你撤回了一条消息：${content}]`
+            };
+          }
+        }
         
         // 根据消息类型格式化内容，以便AI理解
         switch (msg.type) {
@@ -738,7 +765,14 @@ export const useSingleStore = defineStore('singleChat', {
 
       try {
         const apiStore = useApiStore();
-        const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
+        
+        // 获取预设
+        let presetToUse = null;
+        if (character.api && character.api !== 'default') {
+            presetToUse = apiStore.presets.find(p => p.name === character.api);
+        }
+
+        const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], presetToUse);
         if (summary) {
           if (!character.memories) {
             character.memories = [];

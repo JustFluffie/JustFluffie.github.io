@@ -28,10 +28,9 @@ const toggleStatus = (id) => {
   calendarStore.toggleTodoStatus(id);
 };
 
-const formatTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+const formatTime = (todo) => {
+  if (!todo.time) return '全天';
+  return todo.time;
 };
 
 // ========================================================================
@@ -242,7 +241,7 @@ const selectDisplay = (preference) => {
               :class="{ 'done': todo.done }"
             >
               <div class="checkbox" :class="{ 'checked': todo.done }" @click="toggleStatus(todo.id)"></div>
-              <span class="todo-time">{{ formatTime(todo.date) }}</span>
+              <span class="todo-time">{{ formatTime(todo) }}</span>
               <span class="todo-content">{{ todo.content }}</span>
             </li>
           </ul>
@@ -482,7 +481,7 @@ const selectDisplay = (preference) => {
 
 .todo-list li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.3em;
   margin-bottom: 1.2em;
   border-bottom: 0.1em dashed #bebebe;
@@ -498,6 +497,7 @@ const selectDisplay = (preference) => {
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s ease;
+  margin-top: 0.15em; /* Align with text top */
 }
 
 .checkbox.checked {
@@ -515,15 +515,17 @@ const selectDisplay = (preference) => {
   color: #999;
   font-size: 0.8em;
   flex-shrink: 0;
+  margin-top: 0.2em; /* Align with text top */
+  line-height: 1.4;
 }
 
 .todo-content {
   flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap; /* Allow wrapping */
+  word-break: break-word;
   font-size: 0.9em;
   font-family: "Noto Serif SC", serif;
+  line-height: 1.4;
 }
 
 .no-todos {

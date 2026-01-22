@@ -25,7 +25,7 @@
         <!-- 转账 -->
         <div class="more-item" @click="$emit('send-transfer')">
             <div class="more-icon">
-                <svg class="svg-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5 L4 9 H20 M16 19 L20 15 H4"></path></svg>
             </div>
             <span class="more-label">{{ t('chat.morePanel.transfer') }}</span>
         </div>

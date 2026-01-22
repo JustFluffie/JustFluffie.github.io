@@ -316,7 +316,7 @@ const handleTransferClick = () => {
 
 <style scoped>
 /* --- 根容器 --- */
-.message { display: flex; gap: 10px; max-width: 85%; position: relative; align-items: center; }
+.message { display: flex; gap: 10px; max-width: 85%; position: relative; align-items: flex-start; }
 .message.sent { align-self: flex-end; flex-direction: row-reverse; }
 .message.revoked { justify-content: center; width: 100%; max-width: 100%; flex-direction: row !important; padding: 10px 0; gap: 5px; align-items: center; }
 .message.revoked .message-checkbox {
@@ -506,7 +506,7 @@ const handleTransferClick = () => {
 .revoked-content { margin-top: 4px; padding: 6px 10px; background: #D6D6D6; border-radius: 10px; font-size: 10px; color: #666; width: 100%; word-break: break-all; }
 
 /* --- 多选模式 --- */
-.message-checkbox { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ccc; display: none; align-items: center; justify-content: center; cursor: pointer; background: white; z-index: 100; }
+.message-checkbox { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ccc; display: none; align-items: center; justify-content: center; cursor: pointer; background: white; z-index: 100; align-self: center; }
 .message-checkbox.visible { display: flex; }
 .message-checkbox.checked { background: #07C160; border-color: #07C160; }
 .message-checkbox.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
