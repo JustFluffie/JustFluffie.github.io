@@ -159,33 +159,72 @@ export const usePresetStore = defineStore('preset', {
       this._saveToLocalStorage();
     },
 
-    getPresetContext(entryIds) {
-      if (!entryIds || entryIds.length === 0) return '';
-      
-      // 找到包含选中条目的预设
-      // 我们需要保持预设的顺序（优先级），并在预设内保持条目的顺序
-      
-      // 1. 过滤并排序预设
-      const sortedPresets = this.sortedPresets.filter(p => p.enabled);
-      
-      let context = '';
-      
-      sortedPresets.forEach(preset => {
-        // 2. 在每个预设中，找到被选中且启用的条目
-        const activeEntries = preset.entries.filter(e => 
-          e.enabled && entryIds.some(id => String(id) === String(e.id))
-        );
-        
-        if (activeEntries.length > 0) {
-          context += `[预设: ${preset.title}]\n`;
-          activeEntries.forEach(entry => {
-            context += `【${entry.title}】: ${entry.content}\n`;
-          });
-          context += '\n';
+    getPresetContext(selectedIds) {
+      if (!selectedIds || selectedIds.length === 0) return '';
+
+      const contextByPreset = {};
+
+      // 遍历所有预设和条目，构建一个快速查找表
+      const entryMap = new Map();
+      this.presets.forEach(preset => {
+        preset.entries.forEach(entry => {
+          entryMap.set(entry.id, { ...entry, presetTitle: preset.title, presetPriority: preset.priority, presetOrder: preset.order });
+        });
+      });
+
+      selectedIds.forEach(id => {
+        // 检查这个 ID 是否是一个条目的 ID
+        if (entryMap.has(id)) {
+          const entry = entryMap.get(id);
+          if (entry.enabled) {
+            if (!contextByPreset[entry.presetTitle]) {
+              contextByPreset[entry.presetTitle] = {
+                priority: entry.presetPriority,
+                order: entry.presetOrder,
+                entries: []
+              };
+            }
+            contextByPreset[entry.presetTitle].entries.push(`【${entry.title}】: ${entry.content}`);
+          }
+        } else {
+          // 否则，假设它是一个预设的 ID
+          const preset = this.presets.find(p => p.id === id && p.enabled);
+          if (preset) {
+            const activeEntries = preset.entries.filter(e => e.enabled);
+            if (activeEntries.length > 0) {
+              if (!contextByPreset[preset.title]) {
+                contextByPreset[preset.title] = {
+                  priority: preset.priority,
+                  order: preset.order,
+                  entries: []
+                };
+              }
+              activeEntries.forEach(entry => {
+                contextByPreset[preset.title].entries.push(`【${entry.title}】: ${entry.content}`);
+              });
+            }
+          }
         }
       });
-      
-      return context.trim();
+
+      // 将收集到的内容排序并格式化
+      const sortedPresetTitles = Object.keys(contextByPreset).sort((a, b) => {
+        const presetA = contextByPreset[a];
+        const presetB = contextByPreset[b];
+        if (presetA.priority !== presetB.priority) return presetA.priority - presetB.priority;
+        return (presetA.order || 0) - (presetB.order || 0);
+      });
+
+      let finalContext = '';
+      sortedPresetTitles.forEach(title => {
+        const presetData = contextByPreset[title];
+        if (presetData.entries.length > 0) {
+          finalContext += `[预设: ${title}]\n`;
+          finalContext += presetData.entries.join('\n') + '\n\n';
+        }
+      });
+
+      return finalContext.trim();
     },
   },
 });

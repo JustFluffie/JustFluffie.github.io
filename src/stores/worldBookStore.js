@@ -161,31 +161,72 @@ export const useWorldBookStore = defineStore('worldBook', {
       this._saveToLocalStorage();
     },
 
-    getWorldBookContext(bookIds) {
-      if (!bookIds || bookIds.length === 0) return '';
-      
-      // 过滤出启用的、在列表中的世界书
-      const activeBooks = this.worldBooks.filter(b => bookIds.includes(b.id) && b.enabled);
-      
-      // 按照优先级和顺序排序 (复用 sortedWorldBooks 的逻辑，但只针对选中的)
-      activeBooks.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return (a.order || 0) - (b.order || 0);
+    getWorldBookContext(selectedIds) {
+      if (!selectedIds || selectedIds.length === 0) return '';
+
+      const contextByBook = {};
+
+      // 遍历所有世界书和条目，构建一个快速查找表
+      const entryMap = new Map();
+      this.worldBooks.forEach(book => {
+        book.entries.forEach(entry => {
+          entryMap.set(entry.id, { ...entry, bookTitle: book.title, bookPriority: book.priority, bookOrder: book.order });
+        });
       });
 
-      let context = '';
-      activeBooks.forEach(book => {
-        const activeEntries = book.entries.filter(e => e.enabled);
-        if (activeEntries.length > 0) {
-          context += `[世界书: ${book.title}]\n`;
-          activeEntries.forEach(entry => {
-            context += `【${entry.title}】: ${entry.content}\n`;
-          });
-          context += '\n';
+      selectedIds.forEach(id => {
+        // 检查这个 ID 是否是一个条目的 ID
+        if (entryMap.has(id)) {
+          const entry = entryMap.get(id);
+          if (entry.enabled) {
+            if (!contextByBook[entry.bookTitle]) {
+              contextByBook[entry.bookTitle] = {
+                priority: entry.bookPriority,
+                order: entry.bookOrder,
+                entries: []
+              };
+            }
+            contextByBook[entry.bookTitle].entries.push(`【${entry.title}】: ${entry.content}`);
+          }
+        } else {
+          // 否则，假设它是一个世界书的 ID
+          const book = this.worldBooks.find(b => b.id === id && b.enabled);
+          if (book) {
+            const activeEntries = book.entries.filter(e => e.enabled);
+            if (activeEntries.length > 0) {
+              if (!contextByBook[book.title]) {
+                contextByBook[book.title] = {
+                  priority: book.priority,
+                  order: book.order,
+                  entries: []
+                };
+              }
+              activeEntries.forEach(entry => {
+                contextByBook[book.title].entries.push(`【${entry.title}】: ${entry.content}`);
+              });
+            }
+          }
         }
       });
-      
-      return context.trim();
+
+      // 将收集到的内容排序并格式化
+      const sortedBookTitles = Object.keys(contextByBook).sort((a, b) => {
+        const bookA = contextByBook[a];
+        const bookB = contextByBook[b];
+        if (bookA.priority !== bookB.priority) return bookA.priority - bookB.priority;
+        return (bookA.order || 0) - (bookB.order || 0);
+      });
+
+      let finalContext = '';
+      sortedBookTitles.forEach(title => {
+        const bookData = contextByBook[title];
+        if (bookData.entries.length > 0) {
+          finalContext += `[世界书: ${title}]\n`;
+          finalContext += bookData.entries.join('\n') + '\n\n';
+        }
+      });
+
+      return finalContext.trim();
     },
   },
 });

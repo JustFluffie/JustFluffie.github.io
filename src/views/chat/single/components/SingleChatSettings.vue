@@ -984,6 +984,13 @@ const clearChatBackground = () => {
 const setMode = (online) => {
     isOnline.value = online;
     [replyLengthMin.value, replyLengthMax.value] = online ? ['10', '50'] : ['100', '200'];
+    
+    // 直接修改 store 中的角色对象并保存，使模式切换立即生效
+    if (character.value) {
+        character.value.isOnline = online;
+        singleStore.saveData();
+        themeStore.showToast(`${online ? t('chat.singleChat.settings.online') : t('chat.singleChat.settings.offline')}模式已开启`, 'success');
+    }
 };
 
 const triggerManualSummary = () => {
