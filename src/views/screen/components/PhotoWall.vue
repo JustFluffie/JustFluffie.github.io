@@ -232,8 +232,8 @@ const getLangClass = (text) => {
 .photo-wall-input.lang-kr {
     font-family: 'Gaegu', cursive; font-size: 1.05em; font-weight: 500; font-style: normal; text-shadow:  0 1px 1px rgba(0,0,0,0.15); }
 
-.photo-wall-input-1 { top: 75%; left: 49%; width: 10em; }
-.photo-wall-input-2 { top: 85%; left: 49%; width: 15em; }
+.photo-wall-input-1 { top: 75%; left: 48%; width: 10em; }
+.photo-wall-input-2 { top: 85%; left: 48%; width: 15em; }
 .photo-wall-input-3 { top: 14%; left: -22%; width: 12em; text-align: center; }
 
 /* --- 照片区域样式 --- */
