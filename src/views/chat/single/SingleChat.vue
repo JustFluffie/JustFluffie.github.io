@@ -130,6 +130,7 @@ import { useRouter } from 'vue-router'
 import { useSingleStore } from '@/stores/chat/singleStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useApiStore } from '@/stores/apiStore'
+import { useWalletStore } from '@/stores/chat/walletStore'
 import { useMessageSelection } from '@/composables/chat/useMessageSelection.js'
 import { useAiResponder } from '@/composables/chat/useAiResponder.js'
 import { useMessageEditing } from '@/composables/chat/useMessageEditing.js'
@@ -165,6 +166,7 @@ const { t } = useI18n()
 const singleStore = useSingleStore()
 const themeStore = useThemeStore()
 const apiStore = useApiStore()
+const walletStore = useWalletStore()
 
 // ==========================================
 // 3. 基础状态与引用 (State & Refs)
@@ -431,13 +433,35 @@ const sendTransfer = () => {
 
 // 处理转账确认
 const handleSendTransfer = ({ amount, note }) => {
-  sendTransferMessage(amount, note);
-  showMoneyPacket.value = false;
+  if (walletStore.consume(amount)) {
+    sendTransferMessage(amount, note);
+    showMoneyPacket.value = false;
+  } else {
+    themeStore.showToast('余额不足', 'error');
+  }
 };
 
 // 处理转账接收
 const handleAcceptTransfer = (messageId) => {
-  singleStore.acceptTransfer(props.charId, messageId);
+  const msg = messages.value.find(m => m.id === messageId);
+  // 检查是否是待处理的转账
+  const isPending = msg?.status === 'pending' || msg?.status === undefined;
+  
+  if (msg && msg.type === 'transfer' && isPending) {
+    // 只有角色发送的转账才能被用户点击收取
+    if (msg.sender !== 'user') {
+      const amount = parseFloat(msg.content);
+      if (walletStore.income(amount)) {
+        singleStore.acceptTransfer(props.charId, messageId);
+        // themeStore.showToast(`已收款 ¥${amount}`, 'success'); // 可选提示
+      } else {
+        themeStore.showToast('收款失败', 'error');
+      }
+    }
+  } else {
+    // 如果状态不对（例如已收取），仍然调用 store 方法以保持一致性（store 内部会检查状态）
+    singleStore.acceptTransfer(props.charId, messageId);
+  }
 };
 </script>
 

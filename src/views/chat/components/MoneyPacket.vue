@@ -2,17 +2,17 @@
   <Teleport v-if="mounted && teleportReady" to="#phone-screen-container">
     <Transition name="slide-up">
       <div class="transfer-modal" v-if="visible">
-        <!-- 顶部栏 - 标题为空 -->
+        <!-- 顶部栏 -->
         <div class="app-header transfer-header">
           <div class="back-btn" @click="handleClose">
             <svg-icon name="back-btn" />
           </div>
-          <div class="title"></div>
+          <div class="title">{{ mode === 'recharge' ? '充值' : '' }}</div>
           <div class="action-btn"></div>
         </div>
 
-        <!-- 转账目标信息区域 -->
-        <div class="target-section">
+        <!-- 转账目标信息区域 (仅转账模式显示) -->
+        <div class="target-section" v-if="mode === 'transfer'">
           <div class="target-info">
             <div class="target-text">
               <div class="transfer-to">转账给 {{ targetName }}</div>
@@ -25,10 +25,14 @@
             </svg>
           </div>
         </div>
+        <!-- 充值模式下的占位，保持布局一致性 -->
+        <div class="target-section" v-else style="visibility: hidden;">
+          <div class="target-info"><div class="target-text"><div class="transfer-to">充值</div></div></div>
+        </div>
 
         <!-- 转账金额卡片 -->
         <div class="amount-card">
-          <div class="amount-label">转账金额</div>
+          <div class="amount-label">{{ mode === 'recharge' ? '充值金额' : '转账金额' }}</div>
           <div class="amount-input-wrapper">
             <span class="currency-symbol">¥</span>
             <div class="amount-display" @click="focusInput">
@@ -37,7 +41,9 @@
             </div>
           </div>
           <div class="amount-divider"></div>
-          <div class="note-section">
+          
+          <!-- 备注区域 (仅转账模式显示) -->
+          <div class="note-section" v-if="mode === 'transfer'">
             <div class="note-label-row" v-if="!isNoteEditing" @click="startNoteEdit">
               <span class="note-text" :class="{ 'has-note': note }">
                 {{ note || '添加转账说明' }}
@@ -79,7 +85,7 @@
               :class="{ 'disabled': !isValidAmount }"
               @click="handleTransfer"
             >
-              转账
+              {{ mode === 'recharge' ? '确定' : '转账' }}
             </div>
             <!-- 第三行 -->
             <div class="key-btn" @click="inputNumber('7')">7</div>
@@ -111,6 +117,11 @@ const props = defineProps({
   targetAvatar: {
     type: String,
     default: ''
+  },
+  mode: {
+    type: String,
+    default: 'transfer', // 'transfer' | 'recharge'
+    validator: (value) => ['transfer', 'recharge'].includes(value)
   }
 })
 
@@ -249,7 +260,7 @@ const handleTransfer = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 46px;
+  border-radius: 0;
   box-sizing: border-box;
 }
 

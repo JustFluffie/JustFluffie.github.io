@@ -54,7 +54,12 @@ const router = createRouter({
         {
           path: 'profile',
           name: 'chat-profile',
-          component: () => import('../views/chat/ChatList.vue') // 暂时复用
+          component: () => import('../views/chat/profile/Profile.vue')
+        },
+        {
+          path: 'profile/wallet',
+          name: 'profile-wallet',
+          component: () => import('../views/chat/profile/Wallet.vue')
         },
         {
           path: '',

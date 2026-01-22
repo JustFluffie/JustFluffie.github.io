@@ -2,7 +2,7 @@
   <div class="chat-module">
     <div class="chat-app-layout">
       <!-- 顶部栏 -->
-      <div class="app-header" :class="{ 'moments-header-style': currentTab === 'moments' || currentTab === 'favorites' }" id="chatAppHeader" v-if="showHeader">
+      <div class="app-header" :class="{ 'moments-header-style': currentTab === 'moments' || currentTab === 'favorites', 'profile-header-style': currentTab === 'profile' }" id="chatAppHeader" v-if="showHeader">
         <div class="left-controls" style="display: flex; align-items: center;">
           <div class="back-btn" @click="goBack" :class="{ 'white-icon': currentTab === 'moments' }">
             <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -10,11 +10,11 @@
           <div id="chatRoomLeftArea"></div>
         </div>
 
-        <div class="title" id="chatAppTitle" v-if="!isChatRoom && currentTab !== 'moments' && currentTab !== 'favorites'">{{ pageTitle }}</div>
+        <div class="title" id="chatAppTitle" v-if="!isChatRoom && currentTab !== 'moments' && currentTab !== 'favorites' && currentTab !== 'profile'">{{ pageTitle }}</div>
         <div id="chatRoomTitleArea" class="chat-room-title-area" v-show="isChatRoom"></div>
 
         <div class="right-controls" style="display: flex; align-items: center;">
-          <div class="action-btn" id="chatAppActionBtn" @click="openAddModal" v-if="!isChatRoom && currentTab !== 'moments' && currentTab !== 'favorites'">
+          <div class="action-btn" id="chatAppActionBtn" @click="openAddModal" v-if="!isChatRoom && currentTab !== 'moments' && currentTab !== 'favorites' && currentTab !== 'profile'">
             <svg-icon name="plus-circle" />
           </div>
           <div class="action-btn" id="momentsActionBtn" @click="openMomentsModal" v-if="!isChatRoom && currentTab === 'moments' && showMomentsCamera">
@@ -53,7 +53,7 @@ const momentsStore = useMomentsStore();
 const isChatRoom = computed(() => ['single-chat', 'single-chat-settings', 'memory-bank'].includes(route.name));
 
 // 判断是否显示顶部栏
-const showHeader = computed(() => !['single-chat-settings', 'memory-bank'].includes(route.name));
+const showHeader = computed(() => !['single-chat-settings', 'memory-bank', 'profile-wallet'].includes(route.name));
 
 // --- 以下逻辑从 ChatAppLayout.vue 迁移过来 ---
 
@@ -170,6 +170,11 @@ const openMomentsModal = () => {
   left: 0;
   width: 100%;
   z-index: 10;
+  border-bottom: none !important;
+}
+
+.profile-header-style {
+  background: white !important;
   border-bottom: none !important;
 }
 
