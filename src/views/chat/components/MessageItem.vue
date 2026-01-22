@@ -100,10 +100,13 @@
                @click.stop="handleTransferClick">
               <div class="transfer-content">
                   <div class="transfer-icon">
-                    <svg v-if="msg.status === 'accepted'" viewBox="0 0 24 24" fill="currentColor">
+                    <svg v-if="msg.status === 'accepted' || msg.isReceived" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                     </svg>
-                    <span v-else>¥</span>
+                    <!-- 转账进行中图标 -->
+                    <svg v-else viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8 5 L4 9 H20 M16 19 L20 15 H4"/>
+                    </svg>
                   </div>
                   <div class="transfer-info">
                       <div class="transfer-amount">¥{{ msg.content }}</div>
@@ -233,9 +236,9 @@ const transferDesc = computed(() => {
   
   // 待处理的转账
   if (isSender) {
-    return `转账给${props.charName}`;
+    return `你发起了一笔转账`;
   } else {
-    return '转账给你';
+    return '请收款';
   }
 });
 
@@ -244,7 +247,7 @@ const transferFooter = computed(() => {
   if (props.msg.type !== 'transfer') return '';
   
   if (props.msg.isReceived) return '已收款';
-  if (props.msg.status === 'accepted') return '已被领取';
+  if (props.msg.status === 'accepted') return '已被接收';
   return '微信转账';
 });
 
@@ -357,9 +360,9 @@ const handleTransferClick = () => {
   -ms-user-select: none;       /* Internet Explorer/Edge */
   user-select: none;           /* Non-prefixed version */
 }
-.message.sent .msg-bubble { background: #A9EA7A; color: var(--text-primary); }
+.message.sent .msg-bubble { background: #95ec69; color: var(--text-primary); }
 .message.received .msg-bubble::before { content: ''; position: absolute; top: 12px; left: -6px; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-right: 7px solid white; }
-.message.sent .msg-bubble::after { content: ''; position: absolute; top: 12px; right: -6px; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 7px solid #A9EA7A; }
+.message.sent .msg-bubble::after { content: ''; position: absolute; top: 12px; right: -6px; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 7px solid #95ec69; }
 
 /* --- 引用 --- */
 .quote-in-bubble { background: rgba(0,0,0,0.05); padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; font-size: 12px; color: #555; border-left: 2px solid #ccc; }
@@ -368,10 +371,10 @@ const handleTransferClick = () => {
 
 /* --- 编辑视图 --- */
 .edit-view { display: flex; flex-direction: column; }
-.edit-textarea { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-size: 14px; margin-bottom: 8px; resize: vertical; }
+.edit-textarea { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 3px; font-size: 14px; margin-bottom: 8px; resize: vertical; }
 .edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.edit-btn { padding: 4px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
-.edit-btn.save { background-color: #07C160; color: white; }
+.edit-btn { padding: 2px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.edit-btn.save { background-color: #f0f0f0; color: #333; }
 .edit-btn.cancel { background-color: #f0f0f0; color: #333; }
 
 /* --- 特殊消息类型 --- */
@@ -381,11 +384,11 @@ const handleTransferClick = () => {
 .message.received .msg-bubble.has-location::before, .message.received .msg-bubble.has-transfer::before { display: block; }
 .message.sent .msg-bubble.has-location::after { border-left-color: white; }
 .message.received .msg-bubble.has-location::before { border-right-color: white; }
-.message.sent .msg-bubble.has-transfer::after { border-left-color: #FA9D3B; }
-.message.received .msg-bubble.has-transfer::before { border-right-color: #FA9D3B; }
+.message.sent .msg-bubble.has-transfer::after { border-left-color: #fa9e3b; }
+.message.received .msg-bubble.has-transfer::before { border-right-color: #fa9e3b; }
 /* 已接收的转账小三角也使用浅橙色 */
-.message.sent .msg-bubble.has-transfer.accepted::after { border-left-color: #FBD4A4; }
-.message.received .msg-bubble.has-transfer.accepted::before { border-right-color: #FBD4A4; }
+.message.sent .msg-bubble.has-transfer.accepted::after { border-left-color: #fce1c3; }
+.message.received .msg-bubble.has-transfer.accepted::before { border-right-color: #fce1c3; }
 
 .image-msg img {
   max-width: 100%;
