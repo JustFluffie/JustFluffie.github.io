@@ -124,7 +124,7 @@ const getLangClass = (text) => {
 .s-cross { width: 1.3em; height: 1.3em; background: transparent; position: relative;}
 .s-cross::before, .s-cross::after { content: ''; position: absolute; background: var(--home-text-color); }
 .s-cross::before { top: 45%; left: 0; width: 100%; height: 0.13em; transform: translateY(-50%); opacity: 0.9;}
-.s-cross::after { top: 0; left: 45%; width: 0.13em; height: 100%; transform: translateX(-50%); opacity: 0.9;}
+.s-cross::after { top: 0; left: 45%; width: 0.13em; height: 100%; transform: translateX(-50%); opacity: 0.91;}
 
 .cross-sparkle-icon {
   position: absolute; width: 1.2em; height: 1.2em; color: var(--home-text-color); }
