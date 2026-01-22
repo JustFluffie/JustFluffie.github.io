@@ -305,7 +305,7 @@ onMounted(() => {
 /* 注意这里没有 scoped，或者是用 :root */
 :root {
   --global-icon-size: 7.3vh;
-  --global-icon-font: 3.2vh;
+  --global-icon-font-size: 3.2vh;
   --global-icon-radius: 1.6vh;
 }
 </style>
