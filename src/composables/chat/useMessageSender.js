@@ -21,10 +21,7 @@ export function useMessageSender(chatStore, charId, themeStore, activePanel, opt
       };
     }
 
-    if (!chatStore.messages[charId.value]) {
-      chatStore.messages[charId.value] = [];
-    }
-    chatStore.messages[charId.value].push({
+    chatStore.addMessage(charId.value, {
       id: Date.now().toString() + Math.random(), // 增加随机性防止ID重复
       sender: 'user',
       type: type,
@@ -32,7 +29,6 @@ export function useMessageSender(chatStore, charId, themeStore, activePanel, opt
       timestamp: Date.now(),
       ...newExtra
     });
-    chatStore.saveData();
     if (activePanel) activePanel.value = null; // 发送后关闭面板
     quotingMessage.value = null; // 发送后清除引用
   };

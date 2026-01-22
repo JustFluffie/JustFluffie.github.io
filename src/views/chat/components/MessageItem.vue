@@ -5,19 +5,18 @@
       sent: msg.sender === 'user', 
       received: msg.sender !== 'user',
       revoked: msg.type === 'revoked' || msg.type === 'notification',
-      'selection-mode-active': isSelectionMode
-    }"
-  >
+    'selection-mode-active': isSelectionMode
+  }"
+>
+  <!-- 消息主体 -->
+  <!-- 撤回/通知消息 -->
+  <template v-if="msg.type === 'revoked' || msg.type === 'notification'">
     <!-- 多选框 -->
     <div class="message-checkbox" 
          :class="{ checked: isSelected, visible: isSelectionMode }"
          @click.stop="$emit('toggle-selection', msg.id)">
     </div>
-
-    <!-- 消息主体 -->
-    <!-- 撤回/通知消息 -->
-    <template v-if="msg.type === 'revoked' || msg.type === 'notification'">
-       <div class="system-message-wrapper"
+     <div class="system-message-wrapper"
             @mousedown="handleLongPressStart" @mouseup="handleLongPressEnd" @mouseleave="handleLongPressEnd"
             @touchstart="handleLongPressStart" @touchend="handleLongPressEnd" @touchmove="handleTouchMove"
             @click.prevent="handleClick">
@@ -133,6 +132,11 @@
         </div>
       </div>
 
+      <!-- 多选框 -->
+      <div class="message-checkbox" 
+           :class="{ checked: isSelected, visible: isSelectionMode }"
+           @click.stop="$emit('toggle-selection', msg.id)">
+      </div>
     </template>
   </div>
 </template>
@@ -309,7 +313,7 @@ const handleTransferClick = () => {
 
 <style scoped>
 /* --- 根容器 --- */
-.message { display: flex; gap: 10px; max-width: 85%; position: relative; }
+.message { display: flex; gap: 10px; max-width: 85%; position: relative; align-items: center; }
 .message.sent { align-self: flex-end; flex-direction: row-reverse; }
 .message.revoked { justify-content: center; width: 100%; max-width: 100%; flex-direction: row !important; padding: 10px 0; gap: 5px; align-items: center; }
 .message.revoked .message-checkbox {
@@ -499,13 +503,10 @@ const handleTransferClick = () => {
 .revoked-content { margin-top: 4px; padding: 6px 10px; background: #D6D6D6; border-radius: 10px; font-size: 10px; color: #666; width: 100%; word-break: break-all; }
 
 /* --- 多选模式 --- */
-.message-checkbox { position: absolute; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ccc; display: none; align-items: center; justify-content: center; cursor: pointer; background: white; z-index: 100; }
+.message-checkbox { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ccc; display: none; align-items: center; justify-content: center; cursor: pointer; background: white; z-index: 100; }
 .message-checkbox.visible { display: flex; }
 .message-checkbox.checked { background: #07C160; border-color: #07C160; }
 .message-checkbox.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
-.message.received .message-checkbox { left: 46px; right: auto; z-index: 5; }
-.message.sent .message-checkbox { left: -26px; right: auto; }
-.message.selection-mode-active.received .msg-bubble { margin-left: 25px; }
 
 .message.revoked .message-checkbox {
   position: static;

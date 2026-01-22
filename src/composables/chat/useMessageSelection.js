@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
 
@@ -16,13 +16,35 @@ export function useMessageSelection(charId) {
   /**
    * 进入多选模式
    * @param {string} [msgId] - 可选，初始要选中的消息ID
+   * @param {HTMLElement} [targetEl] - 可选，触发多选模式的目标元素
    */
-  const enterSelectionMode = (msgId) => {
+  const enterSelectionMode = (msgId, targetEl) => {
     console.log('[useMessageSelection] enterSelectionMode triggered');
+    
+    let initialScrollTop = 0;
+    let targetElTop = 0;
+    const messageListEl = document.querySelector('.message-list');
+
+    if (targetEl && messageListEl) {
+      initialScrollTop = messageListEl.scrollTop;
+      targetElTop = targetEl.getBoundingClientRect().top;
+    }
+
     isSelectionMode.value = true;
     selectedMessageIds.value.clear();
     if (msgId) {
       selectedMessageIds.value.add(msgId);
+    }
+
+    if (targetEl && messageListEl) {
+      nextTick(() => {
+        const selectionBar = document.querySelector('.selection-bar');
+        const selectionBarHeight = selectionBar ? selectionBar.offsetHeight : 0;
+        const newTargetElTop = targetEl.getBoundingClientRect().top;
+        const topDiff = newTargetElTop - targetElTop;
+        
+        messageListEl.scrollTop = initialScrollTop + topDiff - selectionBarHeight;
+      });
     }
   };
 

@@ -164,7 +164,7 @@ const handleAction = (action) => {
         themeStore.showToast(t('chat.messageMenu.toast.revoked'));
       }
     },
-    select: () => emit('enter-selection-mode', msgId),
+    select: () => emit('enter-selection-mode', msgId, props.targetEl),
     quote: () => emit('quote-message', msgId),
     retry: () => {
       if (msg.sender !== 'user') {

@@ -427,16 +427,16 @@ const selectDisplay = (preference) => {
   left: -0.82em;  
   width: 1.9em;
   height: 1.9em;
-  opacity: 0.6;
+  opacity: 0.8;
   transform: rotate(-22deg);
 }
 
 .star-deco::after {
   bottom: 8em;
-  right: 0;
+  right: -0.2em;
   width: 1.2em;
   height: 1.2em;
-  opacity: 0.3;
+  opacity: 0.4;
   transform: rotate(10deg);
 }
 

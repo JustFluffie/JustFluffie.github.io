@@ -52,7 +52,7 @@ const handleAppClick = (app) => {
     transform: translateX(-50%);
     
     /* --- 尺寸控制 --- */
-    height: 90px; /* 稍微增高一点，给文字留呼吸感 */
+    height: 105px; /* 稍微增高一点，给文字留呼吸感 */
     width: calc(100% - 40px); /* 默认占满减去边距 */
     max-width: 400px; /* 关键：限制最大宽度，防止平板上图标分太开 */
     padding: 0 10px;  /* 减小内边距，让 justify-content 发挥作用 */

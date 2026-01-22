@@ -259,7 +259,8 @@ const exportSelectedStickers = () => {
 .sticker-groups { 
     flex: 1; 
     display: flex; 
-    overflow-x: auto; 
+    flex-wrap: wrap;
+    overflow-x: hidden; 
     height: 100%; 
     align-items: center; 
     scrollbar-width: none; 
@@ -313,9 +314,7 @@ const exportSelectedStickers = () => {
     text-align: center; 
     display: block; 
     width: 100%; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    white-space: nowrap; 
+    word-break: break-all;
 }
 
 /* --- 底部 --- */

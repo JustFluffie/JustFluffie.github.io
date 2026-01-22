@@ -159,7 +159,7 @@ const handleAppClick = (app) => emit('app-click', app)
 .left-list-card {
   top: 40%;
   left: 4%; /* 稍微向左偏移一点以匹配原始布局 */
-  width: 90%;
+  width: 88%;
   height: 55%;
 }
 

@@ -123,7 +123,10 @@ export function useAiResponder(charId, apiStore) {
         }
         // --- 结束：处理待办事项 ---
 
-        if (!singleStore.messages[charId.value]) singleStore.messages[charId.value] = [];
+        // 确保消息数组存在
+        if (!singleStore.messages[charId.value]) {
+            singleStore.messages[charId.value] = [];
+        }
         const isCharBlocked = character?.isBlocked || false;
 
         // 1. 拆分多条消息
@@ -178,7 +181,7 @@ export function useAiResponder(charId, apiStore) {
                 isTextGenerated = true;
             }
 
-            singleStore.messages[charId.value].push({
+            singleStore.addMessage(charId.value, {
               id: Date.now().toString() + i, // 确保ID唯一
               sender: 'char',
               type: type,
@@ -188,7 +191,6 @@ export function useAiResponder(charId, apiStore) {
               time: Date.now(),
               blocked: isCharBlocked
             });
-            singleStore.saveData();
 
             // 在指定位置插入收款气泡（第一条消息发送后）
             if (i === insertTransferAfterIndex && !transferInserted && pendingTransfers.length > 0) {

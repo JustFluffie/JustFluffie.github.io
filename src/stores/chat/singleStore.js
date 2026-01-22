@@ -151,6 +151,12 @@ export const useSingleStore = defineStore('singleChat', {
             weatherEnabled: false,
             charLocation: { real: '', virtual: '', display: '' },
             userLocation: { real: '', virtual: '', display: '' }
+        },
+        // 新增：自动总结设置
+        autoSummarySettings: {
+          enabled: false,
+          range: 50,
+          lastSummaryCount: 0
         }
       };
       
@@ -208,18 +214,26 @@ export const useSingleStore = defineStore('singleChat', {
       }
     },
 
-    sendSystemNotification(charId, content) {
+    // 新增：统一的消息添加方法
+    addMessage(charId, message) {
       if (!this.messages[charId]) {
         this.messages[charId] = [];
       }
-      this.messages[charId].push({
+      this.messages[charId].push(message);
+      this.saveData();
+
+      // 检查是否需要自动总结
+      this.checkAutoSummary(charId);
+    },
+
+    sendSystemNotification(charId, content) {
+      this.addMessage(charId, {
         id: Date.now().toString(),
         sender: 'system',
         type: 'notification',
         content: content,
         timestamp: Date.now()
       });
-      this.saveData();
     },
 
     retryFromMessage(charId, messageId) {
@@ -345,7 +359,7 @@ export const useSingleStore = defineStore('singleChat', {
         // 确定发送者：谁发起的通话，谁发送总结消息
         const summarySender = initiatedBy === 'character' ? 'char' : 'user';
 
-        this.messages[charId].push({
+        this.addMessage(charId, {
             id: Date.now().toString(),
             sender: summarySender,
             type: 'call_summary',
@@ -375,8 +389,6 @@ export const useSingleStore = defineStore('singleChat', {
             }
         }
         
-        this.saveData();
-
         // 自动总结并触发AI响应
         if (callMessages.length > 0) {
           await this.summarizeMessages(charId, { type: 'video' });
@@ -511,7 +523,6 @@ export const useSingleStore = defineStore('singleChat', {
           console.log('[SingleStore] AI Response:', responseText);
           
           if (responseText) {
-              if (!this.messages[charId]) this.messages[charId] = [];
               const isCharBlocked = character?.isBlocked || false;
   
               let rawSegments = responseText.split('|||');
@@ -536,6 +547,11 @@ export const useSingleStore = defineStore('singleChat', {
   
                   let { type, content } = parseAiResponse(segment);
                   let extraData = {};
+
+                  // 如果角色处于线下模式，则跳过所有非文本消息
+                  if (character && !character.isOnline && type !== 'text') {
+                    continue; // 跳过此消息段
+                  }
   
                   if (type === 'sticker') {
                       const stickerName = content;
@@ -559,7 +575,7 @@ export const useSingleStore = defineStore('singleChat', {
                       extraData.status = 'pending';
                   }
   
-                  this.messages[charId].push({
+                  this.addMessage(charId, {
                       id: Date.now().toString() + i,
                       sender: 'char',
                       type: type,
@@ -606,8 +622,6 @@ export const useSingleStore = defineStore('singleChat', {
                   this.autoAcceptPendingTransfers(charId);
                   console.log('[SingleStore] Transfer acceptance inserted at the end');
               }
-              
-              this.saveData();
           }
       } catch (error) {
           console.error(`[SingleStore] triggerAiResponseForCharacter failed for charId ${charId}:`, error);
@@ -618,11 +632,7 @@ export const useSingleStore = defineStore('singleChat', {
       const character = this.getCharacter(charId);
       if (!character) return;
 
-      if (!this.messages[charId]) {
-        this.messages[charId] = [];
-      }
-
-      this.messages[charId].push({
+      this.addMessage(charId, {
         id: Date.now().toString(),
         sender: 'char',
         type: 'text',
@@ -651,8 +661,35 @@ export const useSingleStore = defineStore('singleChat', {
               'text'
           );
       }
+    },
 
-      this.saveData();
+    async checkAutoSummary(charId) {
+      const character = this.getCharacter(charId);
+      if (!character || !character.autoSummarySettings?.enabled) {
+        return;
+      }
+
+      const settings = character.autoSummarySettings;
+      const currentMessageCount = this.messages[charId]?.length || 0;
+      const lastSummaryCount = settings.lastSummaryCount || 0;
+      const range = settings.range || 50;
+
+      if (currentMessageCount - lastSummaryCount >= range) {
+        console.log(`[AutoSummary] Triggered for ${character.name}. Current: ${currentMessageCount}, Last: ${lastSummaryCount}, Range: ${range}`);
+        const result = await this.summarizeMessages(charId, {
+          type: 'range',
+          start: lastSummaryCount + 1,
+          end: currentMessageCount
+        });
+
+        if (result.success) {
+          settings.lastSummaryCount = currentMessageCount;
+          this.saveData();
+          console.log(`[AutoSummary] Success. New lastSummaryCount: ${currentMessageCount}`);
+        } else {
+          console.error(`[AutoSummary] Failed: ${result.message}`);
+        }
+      }
     },
 
     async summarizeMessages(charId, options) {
@@ -704,7 +741,7 @@ export const useSingleStore = defineStore('singleChat', {
         const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
         if (summary) {
           if (!character.memories) {
-            character.memies = [];
+            character.memories = [];
           }
           character.memories.push({
             id: Date.now(),
@@ -735,7 +772,7 @@ export const useSingleStore = defineStore('singleChat', {
         
         if (transferMsg.sender !== 'user') {
           // 角色发送的转账被用户收取：添加用户收款的消息气泡
-          this.messages[charId].push({
+          this.addMessage(charId, {
             id: Date.now().toString(),
             sender: 'user',
             type: 'transfer',
@@ -788,7 +825,7 @@ export const useSingleStore = defineStore('singleChat', {
           
           // 添加角色收款的消息气泡
           // 使用稍早的时间戳确保收款消息在 AI 响应之前
-          this.messages[charId].push({
+          this.addMessage(charId, {
             id: `${now}-receive-${index}-${Math.random().toString(36).substr(2, 9)}`,
             sender: 'char',
             type: 'transfer',
@@ -800,7 +837,6 @@ export const useSingleStore = defineStore('singleChat', {
           });
         });
         
-        this.saveData();
         return true;
       }
       return false;

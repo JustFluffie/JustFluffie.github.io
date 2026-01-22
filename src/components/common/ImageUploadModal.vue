@@ -65,8 +65,8 @@
             
             <button class="btn" @click="toggleUrlInput">URL</button>
             
-            <button class="btn" @click="$refs.txtImportInput.click()">TXT</button>
-            <input type="file" ref="txtImportInput" class="hidden-input" accept=".txt" @change="handleTxtFileSelect">
+            <button class="btn" @click="$refs.docImportInput.click()">文档</button>
+            <input type="file" ref="docImportInput" class="hidden-input" accept=".txt,.doc,.docx" @change="handleDocumentFileSelect">
           </div>
 
           <!-- URL 输入区域 -->
@@ -110,6 +110,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import mammoth from 'mammoth';
 import Modal from './Modal.vue';
 import { useImageUpload } from '@/composables/useImageUpload.js';
 import { useThemeStore } from '@/stores/themeStore';
@@ -337,18 +338,35 @@ const handleBatchStickerSelect = (event) => {
   event.target.value = '';
 };
 
-const handleTxtFileSelect = (event) => {
+const handleDocumentFileSelect = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = (e) => {
-    const text = e.target.result;
-    urlBatchInput.value = text;
-    showUrlInput.value = true;
-    themeStore.showToast('TXT文件已加载，点击“导入”以继续。', 'info');
-  };
-  reader.readAsText(file);
+
+  if (file.name.endsWith('.txt')) {
+    reader.onload = (e) => {
+      urlBatchInput.value = e.target.result;
+      showUrlInput.value = true;
+      themeStore.showToast('文档已加载，点击“导入”以继续。', 'info');
+    };
+    reader.readAsText(file);
+  } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+    reader.onload = (e) => {
+      mammoth.extractRawText({ arrayBuffer: e.target.result })
+        .then(result => {
+          urlBatchInput.value = result.value;
+          showUrlInput.value = true;
+          themeStore.showToast('文档已加载，点击“导入”以继续。', 'info');
+        })
+        .catch(err => {
+          console.error('Error reading docx file:', err);
+          themeStore.showToast('无法读取Word文档。', 'error');
+        });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
   event.target.value = '';
 };
 
@@ -375,15 +393,32 @@ const handleStickerImportConfirm = () => {
   // 2. 处理URL和TXT文件内容
   if (urlBatchInput.value.trim()) {
     const lines = urlBatchInput.value.trim().split('\n');
+    const urlRegex = /(https?:\/\/\S+)/;
+
     lines.forEach(line => {
-      const parts = line.trim().split(/\s+/);
-      if (parts.length >= 2) {
-        const url = parts.pop();
-        const name = parts.join(' ');
-        newStickers.push({
-          url: url,
-          name: name
-        });
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return;
+
+      const match = trimmedLine.match(urlRegex);
+
+      if (match) {
+        const url = match[0];
+        const urlIndex = trimmedLine.indexOf(url);
+        
+        let name = trimmedLine.substring(0, urlIndex).trim();
+        
+        if (!name) {
+          name = trimmedLine.substring(urlIndex + url.length).trim();
+        }
+
+        name = name.replace(/^[\s,:，：]+|[\s,:，：]+$/g, '').trim();
+
+        if (name && url) {
+          newStickers.push({
+            url: url,
+            name: name
+          });
+        }
       }
     });
   }
