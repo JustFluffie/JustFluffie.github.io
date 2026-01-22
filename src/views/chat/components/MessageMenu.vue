@@ -142,14 +142,8 @@ const handleAction = (action) => {
       }
     },
     favorite: () => {
-      if (!singleStore.favorites) singleStore.favorites = [];
-      if (!singleStore.favorites.some(f => f.id === msg.id)) {
-        singleStore.favorites.push(msg);
-        singleStore.saveData();
-        themeStore.showToast(t('chat.messageMenu.toast.favorited'));
-      } else {
-        themeStore.showToast(t('chat.messageMenu.toast.alreadyFavorited'));
-      }
+      singleStore.addToFavorites(props.charId, msg);
+      themeStore.showToast(t('chat.messageMenu.toast.favorited'));
     },
     delete: () => {
       themeStore.showConfirm(t('chat.messageMenu.confirmDelete'), t('chat.messageMenu.confirmDeleteMsg'), () => {

@@ -46,9 +46,10 @@ const router = createRouter({
           component: () => import('../views/chat/ChatList.vue') // 暂时复用
         },
         {
-          path: 'favorites',
+          path: 'favorites/:charId',
           name: 'chat-favorites',
-          component: () => import('../views/chat/ChatList.vue') // 暂时复用
+          component: () => import('../views/chat/favorites/Favorites.vue'),
+          props: true
         },
         {
           path: 'profile',

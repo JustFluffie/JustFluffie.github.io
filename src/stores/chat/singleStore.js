@@ -5,6 +5,11 @@ import { parseAiResponse } from '@/utils/messageParser';
 import { useNotificationStore } from '@/stores/notificationStore';
 import router from '@/router';
 
+// 引入拆分的逻辑
+import { videoCallState, videoCallActions } from './partials/videoCall';
+import { innerVoiceState, innerVoiceActions } from './partials/innerVoice';
+import { messageAiActions } from './partials/messageAi';
+
 const defaultStickers = [];
 
 export const useSingleStore = defineStore('singleChat', {
@@ -17,27 +22,9 @@ export const useSingleStore = defineStore('singleChat', {
     bubblePresets: [], // 气泡样式预设
     favorites: [], // 收藏
 
-    // 新增：实时心声
-    innerVoices: {}, // { charId: [voice] }
-    currentInnerVoice: {}, // { charId: voice }
-
-    // 全局视频通话状态 (单聊)
-    videoCall: {
-      isActive: false,
-      isMinimized: false,
-      status: 'idle', // idle, waiting, connected
-      characterId: null,
-      duration: 0,
-      timerInterval: null,
-      connectTimer: null,
-      initiatedBy: null, // 'user' or 'character'
-    },
-
-    // 保存上次视频通话的聊天记录，用于手动总结
-    lastVideoCallTranscript: { 
-      charId: null,
-      messages: []
-    },
+    // 混入拆分的状态
+    ...innerVoiceState,
+    ...videoCallState,
   }),
   
   actions: {
@@ -260,174 +247,6 @@ export const useSingleStore = defineStore('singleChat', {
       }
     },
 
-    // --- 心声 Actions ---
-    addInnerVoice(charId, voiceData) {
-      if (!this.innerVoices[charId]) {
-        this.innerVoices[charId] = [];
-      }
-      
-      // 添加时间戳和唯一ID
-      const newVoice = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        ...voiceData
-      };
-
-      // 更新当前心声用于实时显示
-      this.currentInnerVoice[charId] = newVoice;
-
-      // 存入历史记录
-      this.innerVoices[charId].unshift(newVoice);
-
-      // 保持最多20条历史记录
-      if (this.innerVoices[charId].length > 20) {
-        this.innerVoices[charId].pop();
-      }
-
-      this.saveData();
-    },
-
-    clearInnerVoices(charId) {
-      if (this.innerVoices[charId]) {
-        this.innerVoices[charId] = [];
-        this.currentInnerVoice[charId] = null;
-        this.saveData();
-      }
-    },
-
-    // --- 视频通话 Actions ---
-    _clearVideoTimers() {
-      if (this.videoCall.timerInterval) {
-        clearInterval(this.videoCall.timerInterval);
-        this.videoCall.timerInterval = null;
-      }
-      if (this.videoCall.connectTimer) {
-        clearTimeout(this.videoCall.connectTimer);
-        this.videoCall.connectTimer = null;
-      }
-    },
-
-    startVideoCall(charId, initiator = 'user') { // initiator: 'user' or 'character'
-      const char = this.getCharacter(charId);
-      // 线下模式无法触发视频通话
-      if (char && char.isOnline === false) {
-          return;
-      }
-
-      if (this.videoCall.isActive) return;
-
-      this.videoCall.isActive = true;
-      this.videoCall.isMinimized = false;
-      this.videoCall.status = 'waiting';
-      this.videoCall.characterId = charId;
-      this.videoCall.duration = 0;
-      this.videoCall.initiatedBy = initiator;
-      
-      this.videoCall.connectTimer = setTimeout(() => {
-        this.connectVideoCall();
-      }, 2000);
-    },
-
-    connectVideoCall() {
-        this.videoCall.status = 'connected';
-        this._clearVideoTimers();
-        this.videoCall.timerInterval = setInterval(() => {
-            this.videoCall.duration++;
-        }, 1000);
-    },
-
-    async endVideoCall() {
-      const wasConnected = this.videoCall.status === 'connected';
-      const callDuration = this.videoCall.duration;
-      const charId = this.videoCall.characterId;
-      const initiatedBy = this.videoCall.initiatedBy;
-
-      this._clearVideoTimers();
-
-      if (wasConnected && charId && this.messages[charId]) {
-        const callMessages = this.messages[charId].filter(m => m.inVideoCall);
-        
-        // 保存通话记录
-        if (callMessages.length > 0) {
-          this.lastVideoCallTranscript = {
-            charId: charId,
-            messages: JSON.parse(JSON.stringify(callMessages)) // 深拷贝
-          };
-        } else {
-          // 如果没有通话内容，则清空
-          this.lastVideoCallTranscript = { charId: null, messages: [] };
-        }
-
-        this.messages[charId] = this.messages[charId].filter(m => !m.inVideoCall);
-
-        const minutes = Math.floor(callDuration / 60).toString().padStart(2, '0');
-        const seconds = (callDuration % 60).toString().padStart(2, '0');
-        const timeStr = `${minutes}:${seconds}`;
-
-        const summaryContent = initiatedBy === 'character' 
-            ? `视频通话已结束，时长 ${timeStr}`
-            : `通话时长 ${timeStr}`;
-
-        // 确定发送者：谁发起的通话，谁发送总结消息
-        const summarySender = initiatedBy === 'character' ? 'char' : 'user';
-
-        this.addMessage(charId, {
-            id: Date.now().toString(),
-            sender: summarySender,
-            type: 'call_summary',
-            content: summaryContent,
-            timestamp: Date.now()
-        });
-
-        if (summarySender === 'char') {
-            this.incrementUnreadCount(charId);
-            
-            const notificationStore = useNotificationStore();
-            const currentRoute = router.currentRoute.value;
-            const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
-            
-            if (!isCurrentChat) {
-                const char = this.getCharacter(charId);
-                notificationStore.triggerNotification(
-                    char ? char.name : '未知角色',
-                    summaryContent,
-                    char ? char.avatar : '',
-                    () => {
-                        router.push({ name: 'single-chat', params: { id: charId } });
-                    },
-                    3000,
-                    'call_summary'
-                );
-            }
-        }
-        
-        // 自动总结并触发AI响应
-        if (callMessages.length > 0) {
-          await this.summarizeMessages(charId, { type: 'video' });
-        }
-        
-        setTimeout(() => {
-            this.triggerAiResponseForCharacter(charId);
-        }, 1000);
-      }
-
-      // 重置状态
-      this.videoCall.isActive = false;
-      this.videoCall.isMinimized = false;
-      this.videoCall.status = 'idle';
-      this.videoCall.characterId = null;
-      this.videoCall.duration = 0;
-      this.videoCall.initiatedBy = null;
-    },
-
-    minimizeVideoCall() {
-      this.videoCall.isMinimized = true;
-    },
-
-    maximizeVideoCall() {
-      this.videoCall.isMinimized = false;
-    },
-
     applyChatBackgroundToAll(bgUrl) {
         this.characters.forEach(char => {
             char.chatBackground = bgUrl;
@@ -536,344 +355,146 @@ export const useSingleStore = defineStore('singleChat', {
       });
     },
 
-    async triggerAiResponseForCharacter(charId) {
-      const apiStore = useApiStore();
-      try {
-          const character = this.getCharacter(charId);
-          if (!character) return;
-
-          // 获取待处理的转账信息（但不立即处理，稍后混杂在消息中处理）
-          const pendingTransfers = this.getPendingUserTransfers(charId);
-          console.log('[SingleStore] Pending transfers to accept:', pendingTransfers.length);
-  
-          const responseText = await apiStore.getChatCompletion(charId);
-          console.log('[SingleStore] AI Response:', responseText);
-          
-          if (responseText) {
-              const isCharBlocked = character?.isBlocked || false;
-  
-              let rawSegments = responseText.split('|||');
-              let segments = [];
-              const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账)：.+?\])/g;
-  
-              rawSegments.forEach(seg => {
-                  const subSegments = seg.split(specialMsgPattern).map(s => s.trim()).filter(s => s);
-                  segments.push(...subSegments);
-              });
-  
-              // 决定在哪个位置插入收款气泡（如果有待处理转账）
-              const insertTransferAfterIndex = pendingTransfers.length > 0 ? 0 : -1;
-              let transferInserted = false;
-
-              for (let i = 0; i < segments.length; i++) {
-                  const segment = segments[i];
-                  
-                  if (i > 0) {
-                      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-                  }
-  
-                  let { type, content } = parseAiResponse(segment);
-                  let extraData = {};
-
-                  // 如果角色处于线下模式，则跳过所有非文本消息
-                  if (character && !character.isOnline && type !== 'text') {
-                    continue; // 跳过此消息段
-                  }
-  
-                  if (type === 'sticker') {
-                      const stickerName = content;
-                      const sticker = this.stickers.find(e => e.name === stickerName);
-                      if (sticker) {
-                          content = sticker.url;
-                          extraData.name = stickerName;
-                      } else {
-                          type = 'text';
-                          content = `[表情包：${stickerName}]`;
-                      }
-                  }
-  
-                  let isTextGenerated = false;
-                  if (type === 'image' && !content.startsWith('http') && !content.startsWith('data:')) {
-                      isTextGenerated = true;
-                  }
-
-                  // 为转账消息添加 pending 状态
-                  if (type === 'transfer') {
-                      extraData.status = 'pending';
-                  }
-  
-                  this.addMessage(charId, {
-                      id: Date.now().toString() + i,
-                      sender: 'char',
-                      type: type,
-                      content: content,
-                      isTextGenerated: isTextGenerated,
-                      ...extraData,
-                      timestamp: Date.now(),
-                      blocked: isCharBlocked
-                  });
-
-                  // 在指定位置插入收款气泡（第一条消息发送后）
-                  if (i === insertTransferAfterIndex && !transferInserted && pendingTransfers.length > 0) {
-                      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
-                      this.autoAcceptPendingTransfers(charId);
-                      transferInserted = true;
-                      console.log('[SingleStore] Transfer acceptance inserted after message', i);
-                  }
-
-                  // 增加未读计数
-                  this.incrementUnreadCount(charId);
-
-                  // 触发通知
-                  const notificationStore = useNotificationStore();
-                  const currentRoute = router.currentRoute.value;
-                  const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
-
-                  if (!isCurrentChat) {
-                      notificationStore.triggerNotification(
-                          character.name,
-                          content,
-                          character.avatar,
-                          () => {
-                              router.push({ name: 'single-chat', params: { id: charId } });
-                          },
-                          3000,
-                          type
-                      );
-                  }
-              }
-              
-              // 如果消息处理完毕但还没插入收款气泡
-              if (!transferInserted && pendingTransfers.length > 0) {
-                  await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
-                  this.autoAcceptPendingTransfers(charId);
-                  console.log('[SingleStore] Transfer acceptance inserted at the end');
-              }
-          }
-      } catch (error) {
-          console.error(`[SingleStore] triggerAiResponseForCharacter failed for charId ${charId}:`, error);
+    // 添加到收藏
+    addToFavorites(charId, messages) {
+      if (!Array.isArray(messages)) {
+        messages = [messages];
       }
-    },
+      
+      const char = this.getCharacter(charId);
+      const charName = char ? char.name : '角色';
 
-    addMessageFromChar(charId, content) {
-      const character = this.getCharacter(charId);
-      if (!character) return;
-
-      this.addMessage(charId, {
-        id: Date.now().toString(),
-        sender: 'char',
-        type: 'text',
-        content: content,
-        isTextGenerated: false,
-        time: Date.now(),
-        blocked: character.isBlocked || false
+      // 格式化消息内容
+      const formattedLines = messages.map(msg => {
+        const date = new Date(msg.timestamp || msg.time || Date.now());
+        const timeStr = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+        
+        const senderName = msg.sender === 'user' ? '我' : charName;
+        
+        // 处理内容，如果是特殊类型，可能需要转换
+        let content = msg.content;
+        if (msg.type === 'image') content = `[图片：${msg.content}]`;
+        else if (msg.type === 'voice') content = `[语音：${msg.content}]`;
+        else if (msg.type === 'sticker') content = `[表情包：${msg.name || msg.content}]`;
+        else if (msg.type === 'location') content = `[位置：${msg.content}]`;
+        else if (msg.type === 'transfer') content = `[转账：${msg.content}]`;
+        
+        return `${senderName}：${content} | ${timeStr}`;
       });
 
-      this.incrementUnreadCount(charId);
+      const favoriteItem = {
+        id: Date.now().toString(), // 收藏条目的ID
+        charId: charId,
+        type: 'messages', // 类型
+        content: formattedLines.join('\n'), // 多条消息合并为文本
+        timestamp: Date.now(), // 收藏操作的时间
+        originalMessageIds: messages.map(m => m.id) // 保留原始ID引用
+      };
 
-      // 触发通知
-      const notificationStore = useNotificationStore();
-      const currentRoute = router.currentRoute.value;
-      const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
-
-      if (!isCurrentChat) {
-          notificationStore.triggerNotification(
-              character.name,
-              content,
-              character.avatar,
-              () => {
-                  router.push({ name: 'single-chat', params: { id: charId } });
-              },
-              3000,
-              'text'
-          );
-      }
+      if (!this.favorites) this.favorites = [];
+      this.favorites.unshift(favoriteItem); // 添加到开头
+      this.saveData();
     },
 
-    async checkAutoSummary(charId) {
-      const character = this.getCharacter(charId);
-      if (!character || !character.autoSummarySettings?.enabled) {
-        return;
-      }
+    // 添加朋友圈到收藏
+    addMomentToFavorites(moment) {
+      const favoriteItem = {
+        id: Date.now().toString(),
+        charId: moment.userId, // 假设 moment.userId 是角色ID
+        type: 'moments',
+        content: moment, // 存储整个 moment 对象
+        timestamp: Date.now()
+      };
 
-      const settings = character.autoSummarySettings;
-      const currentMessageCount = this.messages[charId]?.length || 0;
-      const lastSummaryCount = settings.lastSummaryCount || 0;
-      const range = settings.range || 50;
-
-      if (currentMessageCount - lastSummaryCount >= range) {
-        console.log(`[AutoSummary] Triggered for ${character.name}. Current: ${currentMessageCount}, Last: ${lastSummaryCount}, Range: ${range}`);
-        const result = await this.summarizeMessages(charId, {
-          type: 'range',
-          start: lastSummaryCount + 1,
-          end: currentMessageCount
-        });
-
-        if (result.success) {
-          settings.lastSummaryCount = currentMessageCount;
-          this.saveData();
-          console.log(`[AutoSummary] Success. New lastSummaryCount: ${currentMessageCount}`);
-        } else {
-          console.error(`[AutoSummary] Failed: ${result.message}`);
-        }
-      }
+      if (!this.favorites) this.favorites = [];
+      this.favorites.unshift(favoriteItem);
+      this.saveData();
     },
-
-    async summarizeMessages(charId, options) {
-      const character = this.getCharacter(charId);
-      if (!character) return { success: false, message: '角色不存在' };
-
-      let messagesToSummarize = [];
-      let summaryTitle = '核心记忆';
-
-      switch (options.type) {
-        case 'recent':
-          const count = character.memoryCount || 10;
-          messagesToSummarize = (this.messages[charId] || []).slice(-count);
-          summaryTitle = `最近 ${count} 条消息的记忆`;
-          break;
-        case 'range':
-          const { start, end } = options;
-          const allMessages = this.messages[charId] || [];
-          if (start < 1 || end > allMessages.length || start > end) {
-            return { success: false, message: '无效的范围' };
-          }
-          messagesToSummarize = allMessages.slice(start - 1, end);
-          summaryTitle = `第 ${start}-${end} 条消息的记忆`;
-          break;
-        case 'video':
-          if (this.lastVideoCallTranscript.charId !== charId || this.lastVideoCallTranscript.messages.length === 0) {
-            return { success: false, message: '没有可总结的通话记录' };
-          }
-          messagesToSummarize = this.lastVideoCallTranscript.messages;
-          summaryTitle = '上次视频通话的核心记忆';
-          break;
-        default:
-          return { success: false, message: '未知的总结类型' };
-      }
-
-      if (messagesToSummarize.length === 0) {
-        return { success: false, message: '没有可总结的消息' };
-      }
-
-      const chatLog = messagesToSummarize.map(msg => {
-        const senderName = msg.sender === 'user' ? '用户' : character.name;
-        return `${senderName}: ${msg.content}`;
-      }).join('\n');
-
-      const prompt = `你是一个对话总结助手。请根据以下聊天记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。\n\n聊天记录：\n${chatLog}\n\n核心记忆：`;
-
-      try {
-        const apiStore = useApiStore();
-        
-        // 获取预设
-        let presetToUse = null;
-        if (character.api && character.api !== 'default') {
-            presetToUse = apiStore.presets.find(p => p.name === character.api);
-        }
-
-        const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], presetToUse);
-        if (summary) {
-          if (!character.memories) {
-            character.memories = [];
-          }
-          character.memories.push({
-            id: Date.now(),
-            content: `【${summaryTitle}】\n${summary.trim()}`
-          });
-          this.saveData();
-          console.log(`[Summary] Added to ${character.name}'s memory: ${summary}`);
-          return { success: true, message: '总结成功！' };
-        }
-        return { success: false, message: 'API未能生成摘要' };
-      } catch (error) {
-        console.error('[Summary] Failed to generate memory:', error);
-        return { success: false, message: '生成摘要时发生错误' };
-      }
-    },
-
-    acceptTransfer(charId, messageId) {
-      const msgs = this.messages[charId];
-      if (!msgs) return;
-
-      const transferMsg = msgs.find(m => m.id === messageId);
-      
-      // 注意：status 为 undefined 或 'pending' 都视为待处理状态
-      const isPending = transferMsg?.status === 'pending' || transferMsg?.status === undefined;
-      
-      if (transferMsg && transferMsg.type === 'transfer' && isPending) {
-        transferMsg.status = 'accepted';
-        
-        if (transferMsg.sender !== 'user') {
-          // 角色发送的转账被用户收取：添加用户收款的消息气泡
-          this.addMessage(charId, {
-            id: Date.now().toString(),
-            sender: 'user',
-            type: 'transfer',
-            content: transferMsg.content, // 金额
-            note: transferMsg.note || '',
-            status: 'accepted', // 已收款状态
-            isReceived: true, // 标记这是收款消息，不是发送转账
-            timestamp: Date.now()
-          });
-        }
-        
+    
+    // 移除朋友圈收藏
+    removeMomentFromFavorites(momentId) {
+      if (!this.favorites) return;
+      const index = this.favorites.findIndex(f => f.type === 'moments' && f.content.id === momentId);
+      if (index !== -1) {
+        this.favorites.splice(index, 1);
         this.saveData();
       }
     },
-
-    // 获取用户发送的待处理转账列表（不修改状态）
-    getPendingUserTransfers(charId) {
-      const msgs = this.messages[charId];
-      if (!msgs) return [];
-      
-      return msgs.filter(
-        m => m.type === 'transfer' && m.sender === 'user' && m.status === 'pending'
-      );
+    
+    // 检查朋友圈是否已收藏
+    isMomentFavorited(momentId) {
+      if (!this.favorites) return false;
+      return this.favorites.some(f => f.type === 'moments' && f.content.id === momentId);
     },
 
-    // 自动收取用户发送的待处理转账（角色收取）
-    // 返回是否有转账被收取
-    autoAcceptPendingTransfers(charId) {
-      const msgs = this.messages[charId];
-      if (!msgs) {
-        console.log('[SingleStore] autoAcceptPendingTransfers: No messages found for charId', charId);
-        return false;
-      }
-
-      // 查找所有用户发送的待处理转账
-      const allTransfers = msgs.filter(m => m.type === 'transfer');
-      console.log('[SingleStore] All transfers:', allTransfers.map(t => ({ id: t.id, sender: t.sender, status: t.status, content: t.content })));
+    // 切换记忆收藏状态（副本模式）
+    toggleMemoryFavorite(charId, memory) {
+      if (!this.favorites) this.favorites = [];
       
-      const pendingTransfers = msgs.filter(
-        m => m.type === 'transfer' && m.sender === 'user' && m.status === 'pending'
-      );
-      console.log('[SingleStore] Pending transfers from user:', pendingTransfers.length);
-
-      if (pendingTransfers.length > 0) {
-        const now = Date.now();
+      // 查找是否已收藏（通过 originalId 或内容匹配）
+      const index = this.favorites.findIndex(f => {
+        if (String(f.charId) !== String(charId) || f.type !== 'memory') return false;
+        if (memory.id && f.originalId === memory.id) return true;
         
-        pendingTransfers.forEach((transferMsg, index) => {
-          // 将用户发送的转账标记为已接收
-          transferMsg.status = 'accepted';
-          
-          // 添加角色收款的消息气泡
-          // 使用稍早的时间戳确保收款消息在 AI 响应之前
-          this.addMessage(charId, {
-            id: `${now}-receive-${index}-${Math.random().toString(36).substr(2, 9)}`,
-            sender: 'char',
-            type: 'transfer',
-            content: transferMsg.content, // 金额
-            note: transferMsg.note || '',
-            status: 'accepted', // 已收款状态
-            isReceived: true, // 标记这是收款消息，不是发送转账
-            timestamp: now + index // 确保每个收款消息有唯一的时间戳
-          });
+        // 后备匹配：内容和时间
+        // 注意：存储的 content 可能包含时间头，需要处理
+        let storedContent = f.content;
+        // 尝试去除第一行时间（如果存在换行）
+        if (storedContent.includes('\n')) {
+            const parts = storedContent.split('\n');
+            // 简单的启发式：如果第一行看起来像时间，或者我们假设它就是时间
+            // 这里我们假设存储格式总是 "时间\n内容"
+            storedContent = parts.slice(1).join('\n');
+        }
+        
+        return storedContent === memory.content && Math.abs((f.memoryTime || f.timestamp) - (memory.time || 0)) < 1000;
+      });
+
+      if (index !== -1) {
+        // 已收藏 -> 移除
+        this.favorites.splice(index, 1);
+        // 同时更新原记忆状态（如果存在）
+        if (memory) memory.isFavorite = false;
+      } else {
+        // 格式化时间
+        const date = new Date(memory.time || Date.now());
+        const timeStr = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+        const contentWithTime = `${timeStr}\n${memory.content}`;
+
+        // 未收藏 -> 添加副本
+        this.favorites.unshift({
+          id: Date.now().toString(),
+          charId: charId,
+          type: 'memory',
+          originalId: memory.id,
+          content: contentWithTime, // 存储带时间的内容
+          timestamp: Date.now(), // 收藏操作的时间
+          memoryTime: memory.time || Date.now() // 记忆的原时间
         });
-        
-        return true;
+        // 同时更新原记忆状态
+        if (memory) memory.isFavorite = true;
       }
-      return false;
+      this.saveData();
     },
+
+    // 检查记忆是否已收藏
+    isMemoryFavorited(charId, memory) {
+      if (!this.favorites) return false;
+      return this.favorites.some(f => {
+        if (String(f.charId) !== String(charId) || f.type !== 'memory') return false;
+        if (memory.id && f.originalId === memory.id) return true;
+        
+        let storedContent = f.content;
+        if (storedContent.includes('\n')) {
+            storedContent = storedContent.split('\n').slice(1).join('\n');
+        }
+        return storedContent === memory.content && Math.abs((f.memoryTime || f.timestamp) - (memory.time || 0)) < 1000;
+      });
+    },
+
+    // 混入拆分的 Actions
+    ...innerVoiceActions,
+    ...videoCallActions,
+    ...messageAiActions,
   }
 });

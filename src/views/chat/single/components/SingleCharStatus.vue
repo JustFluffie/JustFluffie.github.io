@@ -63,7 +63,19 @@
           <div class="scroll-container">
             <div v-for="item in voiceHistory" :key="item.id" class="history-item">
               <div class="item-header">
-                <span>{{ item.title }}</span>
+                <div class="header-left">
+                  <button class="star-btn" @click.stop="toggleFavorite(item)">
+                    <!-- 实心星星 (已收藏) -->
+                    <svg v-if="isFavorited(item)" viewBox="0 0 24 24" width="16" height="16" fill="#f39c12" stroke="#f39c12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <!-- 空心星星 (未收藏) -->
+                    <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                  </button>
+                  <span>{{ item.title }}</span>
+                </div>
                 <span class="item-date">{{ formatDate(item.timestamp) }}</span>
               </div>
               <div class="prop-row"><span class="prop-label">情绪：</span>{{ item.emotion }}</div>
@@ -107,6 +119,21 @@ const currentVoice = computed(() => {
 const voiceHistory = computed(() => {
   return innerVoices.value[props.charId] || []
 })
+
+// 检查是否已收藏
+const isFavorited = (item) => {
+  if (!singleStore.favorites) return false
+  return singleStore.favorites.some(f => 
+    String(f.charId) === String(props.charId) && 
+    f.type === 'thoughts' && 
+    f.originalId === item.id
+  )
+}
+
+// 切换收藏
+const toggleFavorite = (item) => {
+  singleStore.toggleThoughtFavorite(props.charId, item)
+}
 
 // 格式化日期
 const formatDate = (isoString) => {
@@ -365,6 +392,19 @@ const handleClose = () => {
   border-bottom: 1px solid #eee;
   padding-bottom: 8px; margin-bottom: 8px;
   font-size: 12px; color: #333; font-weight: bold;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.star-btn {
+  background: none; border: none; padding: 0; cursor: pointer;
+  display: flex; align-items: center;
+  transition: transform 0.2s;
+}
+.star-btn:hover {
+  transform: scale(1.1);
 }
 .item-date { font-weight: normal; color: #999; }
 .prop-row { font-size: 10px; line-height: 1.6; color: #333; }

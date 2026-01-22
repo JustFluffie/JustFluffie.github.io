@@ -327,7 +327,7 @@ const handleTransferClick = () => {
 }
 
 /* --- 头像 --- */
-.msg-avatar { width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0; overflow: hidden; background: #ddd; }
+.msg-avatar { width: 40px; height: 40px; border-radius: 4px; flex-shrink: 0; overflow: hidden; background: #ddd; }
 .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .default-avatar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 

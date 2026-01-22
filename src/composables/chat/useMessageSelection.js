@@ -94,16 +94,13 @@ export function useMessageSelection(charId) {
         }
       );
     } else if (action === 'favorite') {
-      if (!singleStore.favorites) singleStore.favorites = [];
-      msgs.forEach(m => {
-        if (selectedMessageIds.value.has(m.id)) {
-          if (!singleStore.favorites.some(f => f.id === m.id)) {
-            singleStore.favorites.push(m);
-          }
-        }
-      });
-      singleStore.saveData();
-      themeStore.showToast('已收藏', 'success');
+      // 按原始顺序收集选中的消息
+      const selectedMsgs = msgs.filter(m => selectedMessageIds.value.has(m.id));
+      
+      if (selectedMsgs.length > 0) {
+        singleStore.addToFavorites(charId.value, selectedMsgs);
+        themeStore.showToast('已收藏', 'success');
+      }
       exitSelectionMode();
     }
   };

@@ -211,13 +211,16 @@ const toggleFavorite = (mem) => {
   if (!memory) return;
 
   if (typeof memory === 'string') {
-    // This case should ideally not happen if memories are objects, but as a fallback:
+    // 兼容旧数据：如果是字符串，先转换为对象
     const index = memories.value.indexOf(memory);
-    memories.value[index] = { content: memory, time: Date.now(), charName: charName.value, isFavorite: true }
+    const newMem = { content: memory, time: Date.now(), charName: charName.value, isFavorite: false };
+    memories.value[index] = newMem;
+    // 然后调用 store 方法进行收藏
+    singleStore.toggleMemoryFavorite(charId.value, newMem);
   } else {
-    memory.isFavorite = !memory.isFavorite
+    // 调用 store 方法切换收藏状态（副本模式）
+    singleStore.toggleMemoryFavorite(charId.value, memory);
   }
-  singleStore.saveData()
 }
 
 const showRefineModal = () => {

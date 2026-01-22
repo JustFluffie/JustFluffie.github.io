@@ -54,6 +54,9 @@
       </div>
     </div>
 
+    <!-- 底部导航栏 -->
+    <ChatBottomNav />
+
     <!-- ==================== 弹窗模块 ==================== -->
     
     <!-- 长按菜单弹窗 -->
@@ -115,6 +118,7 @@ import { useChatStore } from '@/stores/chatStore'
 import { useSingleStore } from '@/stores/chat/singleStore'
 import { useThemeStore } from '@/stores/themeStore'
 import Modal from '@/components/common/Modal.vue'
+import ChatBottomNav from './components/ChatBottomNav.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -187,7 +191,12 @@ const getLastTime = (session) => {
   const lastMsg = session.lastMessage
   if (!lastMsg) return ''
   
-  const date = new Date(lastMsg.time)
+  const time = lastMsg.timestamp || lastMsg.time
+  if (!time) return ''
+
+  const date = new Date(time)
+  if (isNaN(date.getTime())) return ''
+
   const hours = date.getHours().toString().padStart(2, '0')
   const minutes = date.getMinutes().toString().padStart(2, '0')
   return `${hours}:${minutes}`
