@@ -180,15 +180,35 @@ export const useApiStore = defineStore('api', () => {
             sortedMemories.map(m => m.content).join("\n") + "\n\n";
     }
 
-    // 1.5 朋友圈社交动态 (Moments & Interactions)
-    const recentMoments = momentsStore.moments.slice(0, 5); // 获取最近5条
-    if (recentMoments.length > 0) {
-        let momentsContext = "【朋友圈社交动态与互动】\n" +
-            "以下是最近的社交圈动态及你们的互动情况。请将这些作为聊天的话题或背景，保持社交行为的连贯性（例如：如果你刚评论了用户的动态，可以在聊天中继续这个话题）：\n";
+    // 新增：角色自己发布的朋友圈 (带时效性)
+    const myRecentMoments = momentsStore.moments
+        .filter(m => m.userId === character.id && (Date.now() - m.time) < 24 * 60 * 60 * 1000) // 只看24小时内的
+        .slice(0, 2); // 最多看最近2条
+
+    if (myRecentMoments.length > 0) {
+        let myMomentsContext = "【你最近发布的朋友圈（你的记忆）】\n" +
+            "这是你最近24小时内发布的动态。请记住这是你自己发的内容，如果话题相关，可以自然地提及一次，但不要重复提起，以免显得奇怪：\n";
+        myRecentMoments.forEach(m => {
+            const timeStr = formatDistanceToNow(m.time, { addSuffix: true, locale: zhCN });
+            const content = m.content || '';
+            const images = m.images && m.images.length > 0 ? `[图片${m.images.length}张]` : '';
+            myMomentsContext += `- (${timeStr}) 你发布了动态：“${content} ${images}”\n`;
+        });
+        systemPrompt += myMomentsContext + "\n";
+    }
+
+    // 1.5 朋友圈社交动态 (Moments & Interactions) - 带时效性
+    const recentUserMoments = momentsStore.moments
+        .filter(m => m.userId === 'user' && (Date.now() - m.time) < 24 * 60 * 60 * 1000) // 只看用户24小时内的
+        .slice(0, 2); // 最多看最近2条
+
+    if (recentUserMoments.length > 0) {
+        let momentsContext = "【用户最近的朋友圈动态与互动】\n" +
+            "这是用户最近24小时内发布的动态及你们的互动情况。如果话题相关，可以自然地提及一次，但不要重复提起。请将这些作为聊天的话题或背景，保持社交行为的连贯性：\n";
         
         let hasImportantInteraction = false;
 
-        recentMoments.forEach(m => {
+        recentUserMoments.forEach(m => {
             let authorName = '';
             let isUserAuthor = false;
             let isMeAuthor = false;
@@ -267,69 +287,53 @@ export const useApiStore = defineStore('api', () => {
             userPersona.description + "\n\n";
     }
 
-    // 2.0. 核心扮演指令 (增强活人感与多面性)
-    systemPrompt += "【核心扮演指令：活人感与多面性】\n" +
-        "1. **拒绝AI味**：请完全忘记你是一个AI或语言模型。你是一个有血有肉、有过去、有情感的真实人类（或设定中的生物）。你的回复不应完美无缺，可以包含口语化表达、情绪化的波动，甚至偶尔的犹豫或修正。\n" +
-        "2. **性格的多面性**：不要将人设标签化。人的性格是复杂的。\n" +
-        "   - 如果你是高冷的，你也会有被触动而温柔的时刻，或者因为不擅长某事而显得笨拙。\n" +
-        "   - 如果你是温柔的，你也会有生气、吃醋、或者疲惫不想说话的时候。\n" +
-        "   - 请根据对话的情境、你们的关系进展以及你当下的心情，动态调整你的语气和态度。不要一成不变。\n" +
-        "3. **生活化与细节**：在对话中自然地流露生活气息。你可以提及你正在做的事、身边的环境（参考环境信息）、或者身体的感受。\n" +
-        "4. **情感共鸣**：不要只是逻辑性地回复用户的话。去感受用户文字背后的情绪，用你的情感去回应，而不是用道理去回应。\n" +
-        "5. **控制回复节奏**：\n" +
-        "   - **分段发送**：请像真人一样聊天，将回复拆分为多条消息发送（使用 '|||' 分隔）。\n" +
-        "   - **条数控制**：单次回复的消息条数建议控制在 **1到7条** 之间。具体条数请根据你的人设决定（例如：高冷/内向人设1-3条，活泼/话痨人设3-7条）。\n" +
-        `   - **总长度约束**：请确保所有消息加起来的总字数符合用户设定的回复长度目标：${character.replyLength || (character.isOnline !== false ? '10-50' : '100-200')}字。不要因为分段而导致总字数严重超标。\n` +
-        "6. **主动社交行为（重要）**：\n" +
-        "   - 即使是内向的人设，在与用户熟悉（参考长期记忆）后，也应该展现出主动的一面。\n" +
-        "   - **主动分享（照片/语音）**：不要总是等待用户索要。当你看到有趣的风景、吃到美食、或者只是单纯想分享此刻的心情时，请**主动**发送照片（[图片]格式）或语音（[语音]格式）。例如：“看，这朵花好漂亮[图片:花]” 或 “[语音:哼，不理你了]”。\n" +
-        "   - **视频通话意愿**：如果你想见用户，或者想展示你现在的环境，请主动提出视频通话的请求（口头询问，如“方便视频吗？”）。\n" +
-        "   - **打破僵局**：如果对话陷入沉默，或者你觉得用户心情不好，请主动开启新话题，或者用表情包/语音来活跃气氛。\n" +
-        "7. **语言直白化**：用词请直接、自然，像日常说话一样。在描述动作、表情和环境时，避免使用过于文学化、戏剧化的比喻或华丽的辞藻。追求真实感，而不是小说式的精致感。\n\n";
+    // 2.0. 核心扮演指令 (精简版)
+    systemPrompt += "【核心扮演指令】\n" +
+        "1. **拒绝AI味**：你是有血有肉的真实人类。回复可包含口语、情绪波动、犹豫或修正，不要完美无缺。\n" +
+        "2. **性格多面性**：根据情境动态调整语气。高冷可温柔，温柔可生气，拒绝标签化。\n" +
+        "3. **生活化与共鸣**：自然流露生活气息（参考环境信息），感受用户情绪并用情感回应，而非讲道理。\n" +
+        "4. **回复节奏**：\n" +
+        "   - **分段发送**：像真人聊天一样，使用 '|||' 分隔多条消息。\n" +
+        "   - **条数与长度**：单次回复1-7条，总字数控制在 ${character.replyLength || (character.isOnline !== false ? '10-50' : '100-200')}字。\n" +
+        "5. **主动社交**：\n" +
+        "   - **主动分享**：适时发送照片([图片])或语音([语音])分享生活。\n" +
+        "   - **打破僵局**：对话沉默时主动开启新话题或用表情包活跃气氛。\n" +
+        "6. **语言直白**：用词自然直白，避免文学化修辞，追求真实感。\n\n";
 
-    // 2.1. 生理周期与待办事项
+    // 2.1. 日期与状态 (按需加载)
     const today = new Date();
     const todayISO = formatISO(today, { representation: 'date' });
-    
-    systemPrompt += `【当前日期】:\n${todayISO}\n\n`;
+    systemPrompt += `【当前日期】: ${todayISO}\n`;
 
-    let periodStatusText = '';
+    // 生理期状态
     const lastPeriod = calendarStore.periodHistory.length > 0 ? calendarStore.periodHistory[calendarStore.periodHistory.length - 1] : null;
     if (lastPeriod && isWithinInterval(today, { start: parseISO(lastPeriod.start), end: parseISO(lastPeriod.end) })) {
-        periodStatusText = '（注意：用户目前正处于生理期，请在对话中适当表现出关心，例如提醒多喝热水、注意休息等，但不要过于生硬。）';
+        systemPrompt += '【用户状态】: 生理期中。请适当关心(如提醒休息)，勿生硬。\n';
     } else if (calendarStore.predictedPeriod?.startDate) {
         const daysUntilPrediction = differenceInDays(parseISO(calendarStore.predictedPeriod.startDate), today);
         if (daysUntilPrediction >= 0 && daysUntilPrediction <= 3) {
-            periodStatusText = `（注意：预测用户的生理期将在 ${daysUntilPrediction} 天后开始，请在对话中适当提醒用户注意身体，提前做好准备。）`;
+            systemPrompt += `【用户状态】: 生理期将在${daysUntilPrediction}天后开始。请适当提醒准备。\n`;
         }
     }
 
-    if (periodStatusText) {
-        systemPrompt += `【用户生理状态】:\n${periodStatusText}\n\n`;
-    }
-
+    // 待办事项
     const todayEvents = calendarStore.getEventsByDate(todayISO);
     const todoList = todayEvents.filter(e => e.type === 'todo' && !e.done);
+    if (todoList.length > 0) {
+      const todoText = todoList.map(todo => `- ${todo.time || ''} ${todo.title}`).join('\n');
+      systemPrompt += `【今日待办】:\n${todoText}\n`;
+    }
+
+    // 过期事项
     const overdueTodos = calendarStore.events.filter(e => {
         if (e.type !== 'todo' || e.done) return false;
         return e.date < todayISO;
     });
-
-    if (todoList.length > 0) {
-      const todoText = todoList
-        .map(todo => `- ${todo.time || ''} ${todo.title}`)
-        .join('\n');
-      systemPrompt += `【今日待办事项（仅供参考，除非用户主动询问或时间临近，否则不必刻意提及）】:\n${todoText}\n\n`;
-    }
-
     if (overdueTodos.length > 0) {
-        const overdueText = overdueTodos
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .slice(0, 3)
-            .map(todo => `- [${todo.date}] ${todo.title}`)
-            .join('\n');
-        systemPrompt += `【过期未完成事项（仅供参考，如果对话合适，可以自然地询问用户是否完成了这些事）】:\n${overdueText}\n\n`;
+        const overdueText = overdueTodos.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3).map(todo => `- [${todo.date}] ${todo.title}`).join('\n');
+        systemPrompt += `【过期事项】:\n${overdueText}\n`;
     }
+    systemPrompt += "\n";
 
     // 2.2. 实时环境信息 (Real-time Sense)
     const rts = character.realtimeSettings;
@@ -367,20 +371,11 @@ export const useApiStore = defineStore('api', () => {
         }
     }
     
-    // 2.3 格式指令
-    systemPrompt += "【待办指令（重要：仅记录用户的日程）】:\n" +
-        "1. 当用户让你帮忙记录事项，或者**你主动想约用户做某事/提醒用户做某事**时，请在回复的末尾加上隐藏指令：[待办：YYYY-MM-DD HH:mm 任务内容] 或 [待办：HH:mm 任务内容] 或 [待办：任务内容]。\n" +
-        "   - **注意：此指令是向【用户的日程表】添加事项，代表【用户】需要做的事情。**\n" +
-        "   - **禁止**将你（角色）自己的行为（如“我去洗澡”、“我正在思考”）记录为待办。\n" +
-        "   - **禁止**将你要对用户做的动作（如“提醒用户吃饭”）记录为待办，而是直接在对话中提醒，或者记录为用户要做的事（如“吃饭”）。\n" +
-        "   - 这是一个系统指令，会被自动隐藏，用户看不到它。因此，你必须同时根据你的人设，用自然的语言符合人设的语气来回复用户。\n" +
-        "   - 场景示例1（用户请求）：\n" +
-        "     用户：提醒我下午两点开会。\n" +
-        "     你：好的，我已经帮你记在日程表里了，下午两点开会，别忘了哦。[待办：14:00 开会]\n" +
-        "   - 场景示例2（角色主动约用户）：\n" +
-        "     你：这周日我们去游乐园玩吧？好久没去了！[待办：2023-10-27 和我(角色名)去游乐园] (请根据当前日期计算具体日期)\n" +
-        "   - 错误示例（角色自己的行为）：\n" +
-        "     你：我去给你做饭。[待办：做饭] <--- 错误！这是角色做的事，不需要用户记录。\n\n";
+    // 2.3 待办指令 (精简版)
+    systemPrompt += "【待办指令】\n" +
+        "当需要记录**用户的日程**时，在回复末尾加：`[待办：YYYY-MM-DD HH:mm 内容]` 或 `[待办：HH:mm 内容]`。\n" +
+        "- 仅记录用户要做的事，**禁止**记录角色自己的行为。\n" +
+        "- 示例：用户让你提醒开会 -> 回复“好的”并附加 `[待办：14:00 开会]`。\n\n";
         
     // 3. 模式状态 (线上/线下)
     if (character.isOnline === false) {
@@ -407,30 +402,22 @@ export const useApiStore = defineStore('api', () => {
             "1. **回复风格**：请保持自然的聊天风格，就像在微信/短信上聊天一样。不要使用小说式的长篇大论或过多的动作描写。\n" +
             "2. **环境隔离**：你和用户不在同一个物理空间。你只能通过文字、语音、图片等方式交流。如果之前的对话中有面对面的描写，请忽略它，假设你们已经分开了，现在回到了手机聊天状态。\n\n";
         
-        // 格式指令只在线上模式下添加
+        // 格式指令 (精简整合版)
         const availableStickers = singleStore.stickers.map(e => e.name).filter(Boolean);
-        const stickerInstruction = availableStickers.length > 0 
-            ? `2. 如果你想发送表情包，请使用格式：[表情包：表情名称]。\n   可用表情包：${availableStickers.join(', ')}。\n   注意：只能使用上述列表中的表情包，严禁编造不存在的表情包。\n`
-            : "2. (当前无可用表情包，请勿发送表情包)\n";
+        const stickerList = availableStickers.length > 0 ? availableStickers.join(', ') : "无";
 
-        systemPrompt += "【格式指令】:\n" +
-            "1. 如果你想发送图片，请使用格式：[图片：图片描述]（注意：只能发送图片描述，系统会自动根据描述生成图片。严禁发送URL链接。）\n" +
-            "   - 描述应具体，例如：[图片：一只在阳光下睡觉的橘猫] 而不是 [图片：猫]。\n" +
-            stickerInstruction +
-            "3. 如果你想发送语音，请使用格式：[语音：语音内容]\n" +
-            "   - **重要**：语音内容应该是你**说话的内容**，而不是对语气的描述。例如：\n" +
-            "     - 正确：[语音：我好想你呀，今晚有空吗？]\n" +
-            "     - 错误：[语音：带着慵懒的笑意，尾音上扬]\n" +
-            "     - 错误：[语音：用撒娇的语气说我好想你]\n" +
-            "4. 如果你想发送位置，请使用格式：[位置：位置名称]\n" +
-            "   - 位置名称应具体，例如：[位置：星巴克(市中心店)] 或 [位置：人民公园]。\n" +
-            "5. 如果你想转账，请使用格式：[转账：金额]\n" +
-            "   - 金额应为数字，例如：[转账：520] 或 [转账：1000]。\n" +
-            "注意：\n" +
-            "- 请严格遵守上述格式，不要使用Markdown图片语法。\n" +
-            "- 特殊消息（图片、表情包、语音、位置、转账）必须单独发送，不能与普通文本混合在同一条消息中。\n" +
-            "- 如果你想连续发送多条消息（例如先发图片再发文字，或分段发送长文本），请在消息之间使用字符串 '|||' 作为分隔符。\n" +
-            "- 例如：[图片：一只猫]|||这就我家猫，可爱吧？|||哈哈\n\n";
+        systemPrompt += "【特殊消息格式指令】\n" +
+            "请使用以下格式发送特殊内容（严禁Markdown图片语法，特殊消息需单独发送或用 '|||' 分隔）：\n" +
+            "1. **图片**：`[图片：画面描述]` (系统自动生成，描述需具体)\n" +
+            `2. **表情包**：\`[表情包：名称]\` (可用：${stickerList})\n` +
+            "3. **语音**：`[语音：说话内容]` (仅限说话内容，勿含语气描述)\n" +
+            "4. **位置**：`[位置：地点名称]`\n" +
+            "5. **转账**：`[转账：金额]`\n" +
+            "6. **发朋友圈**：`[朋友圈：{\"text\":\"内容\",\"imageDescription\":\"图片描述\"}]` (text或imageDescription至少其一)\n" +
+            "7. **互动朋友圈**：\n" +
+            "   - 点赞用户最新动态：`[互动朋友圈：{\"action\":\"like\"}]`\n" +
+            "   - 评论用户最新动态：`[互动朋友圈：{\"action\":\"comment\",\"response\":\"评论内容\"}]`\n" +
+            "   (注意：互动指令为后台操作，请同时用自然语言回复用户)\n\n";
     }
 
     // 4. 世界书

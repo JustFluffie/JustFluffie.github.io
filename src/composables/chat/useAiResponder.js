@@ -4,6 +4,7 @@ import { useSingleStore } from '@/stores/chat/singleStore';
 import { useApiStore } from '@/stores/apiStore'; // 确保 apiStore 被正确使用
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useCalendarStore } from '@/stores/calendarStore'; // 引入日历 store
+import { useMomentsStore } from '@/stores/chat/momentsStore'; // 引入朋友圈 store
 import { parseAiResponse } from '@/utils/messageParser';
 import { formatISO } from 'date-fns'; // 引入日期格式化工具
 
@@ -48,6 +49,7 @@ export function useAiResponder(charId, apiStore) {
   const singleStore = useSingleStore();
   const notificationStore = useNotificationStore();
   const calendarStore = useCalendarStore(); // 实例化日历 store
+  const momentsStore = useMomentsStore(); // 实例化朋友圈 store
   const router = useRouter();
   const route = useRoute();
 
@@ -67,6 +69,75 @@ export function useAiResponder(charId, apiStore) {
       console.log('[useAiResponder] AI Response:', responseText);
       
       if (responseText) {
+        // --- 新增：处理朋友圈互动指令 ---
+        const interactMomentPattern = /\[互动朋友圈：(.+?)\]/g;
+        let interactMatch;
+        while ((interactMatch = interactMomentPattern.exec(responseText)) !== null) {
+          try {
+            const interactData = JSON.parse(interactMatch[1]);
+            const { action, response } = interactData;
+            
+            // 找到用户最新的一条朋友圈
+            const userMoments = momentsStore.moments.filter(m => m.userId === 'user');
+            if (userMoments.length > 0) {
+              const latestUserMoment = userMoments[0]; // moments是按时间倒序的
+              
+              if (action === 'like') {
+                momentsStore.likeMoment(latestUserMoment.id, charId.value);
+                console.log(`[useAiResponder] Liked user's latest moment: ${latestUserMoment.id}`);
+              } else if (action === 'comment' && response) {
+                // 评论时自动点赞
+                momentsStore.likeMoment(latestUserMoment.id, charId.value);
+                momentsStore.addComment(latestUserMoment.id, {
+                  userId: charId.value,
+                  content: response,
+                  time: Date.now(),
+                });
+                console.log(`[useAiResponder] Commented on user's latest moment: ${latestUserMoment.id}`);
+              }
+            }
+          } catch (e) {
+            console.error('[useAiResponder] Failed to parse moment interaction data:', e);
+          }
+        }
+        // 从回复中移除指令
+        responseText = responseText.replace(interactMomentPattern, '').trim();
+        // --- 结束：处理朋友圈互动 ---
+
+        // --- 新增：处理朋友圈 ---
+        // 格式: [朋友圈：{"text": "...", "imageDescription": "..."}]
+        const momentPattern = /\[朋友圈：(.+?)\]/g;
+        let momentMatch;
+        while ((momentMatch = momentPattern.exec(responseText)) !== null) {
+          try {
+            const momentData = JSON.parse(momentMatch[1]);
+            const { text, imageDescription } = momentData;
+            
+            const images = [];
+            if (imageDescription) {
+              images.push({
+                content: imageDescription,
+                isTextGenerated: true
+              });
+            }
+
+            if (text || images.length > 0) {
+              momentsStore.addMoment({
+                userId: charId.value,
+                content: text || '',
+                images: images,
+                time: Date.now(),
+              });
+              console.log(`[useAiResponder] Added new moment for ${charId.value}`);
+            }
+          } catch (e) {
+            console.error('[useAiResponder] Failed to parse moment data from AI response:', e);
+          }
+        }
+        // 从回复中移除朋友圈指令
+        responseText = responseText.replace(momentPattern, '').trim();
+        // --- 结束：处理朋友圈 ---
+
         // --- 新增：处理待办事项 ---
         // 支持格式：[待办：YYYY-MM-DD HH:mm 内容] 或 [待办：HH:mm 内容] 或 [待办：YYYY-MM-DD 内容]
         const todoPattern = /\[待办：(?:((?:\d{4}-\d{2}-\d{2}\s)?\d{1,2}:\d{2}|\d{4}-\d{2}-\d{2})\s)?(.+?)\]/g;
@@ -143,12 +214,7 @@ export function useAiResponder(charId, apiStore) {
             segments.push(...subSegments);
         });
 
-        // 2. 决定在哪个位置插入收款气泡（如果有待处理转账）
-        // 策略：在第一条消息之后插入，这样看起来像是角色先回复了一句话，然后收取了转账
-        const insertTransferAfterIndex = pendingTransfers.length > 0 ? 0 : -1;
-        let transferInserted = false;
-
-        // 3. 依次处理每条消息
+        // 2. 依次处理每条消息
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             
@@ -160,6 +226,15 @@ export function useAiResponder(charId, apiStore) {
             // 解析消息类型
             let { type, content } = parseAiResponse(segment);
             let extraData = {};
+
+            // --- 新增：处理收款消息 ---
+            if (type === 'transfer_accepted') {
+              // 延迟一下再插入收款气泡，模拟自然的收款动作
+              await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+              singleStore.autoAcceptPendingTransfers(charId.value);
+              console.log('[useAiResponder] Transfer acceptance message processed.');
+              continue; // 处理完收款后，跳过后续的消息添加逻辑
+            }
 
             // 处理表情包：将名称转换为URL
             if (type === 'sticker') {
@@ -192,17 +267,6 @@ export function useAiResponder(charId, apiStore) {
               blocked: isCharBlocked
             });
 
-            // 在指定位置插入收款气泡（第一条消息发送后）
-            if (i === insertTransferAfterIndex && !transferInserted && pendingTransfers.length > 0) {
-              // 延迟一下再插入收款气泡，模拟自然的收款动作
-              await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
-              
-              // 调用收取转账方法
-              singleStore.autoAcceptPendingTransfers(charId.value);
-              transferInserted = true;
-              console.log('[useAiResponder] Transfer acceptance inserted after message', i);
-            }
-
             // 如果当前不在该角色的聊天页面，增加未读计数并触发通知
             if (route.path !== `/chat/room/${charId.value}`) {
               singleStore.incrementUnreadCount(charId.value);
@@ -219,11 +283,11 @@ export function useAiResponder(charId, apiStore) {
               );
             }
         }
-        // 如果消息处理完毕但还没插入收款气泡（比如只有一条消息的情况）
-        if (!transferInserted && pendingTransfers.length > 0) {
+        // 如果AI没有明确回复收款，但仍有待处理转账（例如，AI的回复被过滤后变空），则在这里处理
+        if (pendingTransfers.length > 0 && singleStore.getPendingUserTransfers(charId.value).length > 0) {
           await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
           singleStore.autoAcceptPendingTransfers(charId.value);
-          console.log('[useAiResponder] Transfer acceptance inserted at the end');
+          console.log('[useAiResponder] Fallback transfer acceptance executed at the end');
         }
       }
     } catch (error) {
