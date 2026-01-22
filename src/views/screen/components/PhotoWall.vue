@@ -199,14 +199,14 @@ const getLangClass = (text) => {
     border: none;
     color: var(--home-text-color);
     padding: 5px;
-    font-weight: 600;
+    font-weight: 500;
     text-align: left;
     outline: none;
     z-index: 13;
-    text-shadow: 0 2px 3px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     border-radius: 8px;
     transition: background 0.2s ease;
-    font-family: inherit;
+    font-family: 'Segoe UI', 'Open Sans', sans-serif;
     font-style: italic; 
     font-size: 0.9em; 
 }
@@ -218,7 +218,7 @@ const getLangClass = (text) => {
 /* --- 语言特定样式 --- */
 /* 英文 */
 .photo-wall-input.lang-en {
-    font-family: 'Open Sans', 'Segoe UI', sans-serif; font-size: 0.9em; font-weight: 600; font-style: italic; }
+    font-family: 'Segoe UI', 'Open Sans',  sans-serif; font-weight: 500; font-style: italic; }
 
 /* 中文 */
 .photo-wall-input.lang-zh {
