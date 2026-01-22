@@ -395,8 +395,8 @@ export const useApiStore = defineStore('api', () => {
         if (character.preset && character.preset.length > 0) {
             const presetContent = presetStore.getPresetContext(character.preset);
             if (presetContent) {
-                systemPrompt += "【线下互动情景与行为规范（Preset）】\n" +
-                    "以下内容定义了当前线下互动的具体场景、剧本走向以及对你回复行为的特殊约束。请将其视为当前模式下的核心指令严格执行：\n" + 
+                systemPrompt += "【线下行为规范和写作风格（Preset）】\n" +
+                    "以下内容定义了当前线下互动时的提示词，用来帮助你该如何思考后生成回复，以及你回复时应遵守的写作风格。请将其视为当前模式下的核心指令严格执行：\n" + 
                     presetContent + "\n\n";
             }
         }
@@ -439,7 +439,7 @@ export const useApiStore = defineStore('api', () => {
         const worldBookContent = worldBookStore.getWorldBookContext(worldBookIds);
         if (worldBookContent) {
             systemPrompt += "【世界观设定与对话准则（World Book）】\n" +
-                "以下内容包含了角色所处世界的详细设定、背景故事，以及额外的对话提示词或回复约束。请在生成回复时严格遵循这些设定与规范：\n" + 
+                "以下内容包含了额外的对话提示词或回复约束，以及角色所处世界的详细设定、背景故事。请在生成回复时严格遵循这些设定与规范：\n" + 
                 worldBookContent + "\n\n";
         }
     }
