@@ -390,8 +390,8 @@ export const useApiStore = defineStore('api', () => {
         if (character.preset && character.preset.length > 0) {
             const presetContent = presetStore.getPresetContext(character.preset);
             if (presetContent) {
-                systemPrompt += "【线下行为规范和写作风格（Preset）】\n" +
-                    "以下内容定义了当前线下互动时的提示词，用来帮助你该如何思考后生成回复，以及你回复时应遵守的写作风格。请将其视为当前模式下的核心指令严格执行：\n" + 
+                systemPrompt += "【线下模式用户指令与规范（Preset）- 高优先级】\n" +
+                    "以下是用户为线下互动指定的具体指令和风格规范。请将其视为当前模式下的高优先级指令，严格执行：\n" + 
                     presetContent + "\n\n";
             }
         }
@@ -425,8 +425,8 @@ export const useApiStore = defineStore('api', () => {
     if (worldBookIds.length > 0) {
         const worldBookContent = worldBookStore.getWorldBookContext(worldBookIds);
         if (worldBookContent) {
-            systemPrompt += "【世界观设定与对话准则（World Book）】\n" +
-                "以下内容包含了额外的对话提示词或回复约束，以及角色所处世界的详细设定、背景故事。请在生成回复时严格遵循这些设定与规范：\n" + 
+            systemPrompt += "【用户自定义指令与世界设定（World Book）- 最高优先级】\n" +
+                "以下内容包含了用户指定的具体指令、回复约束及世界设定。请将其视为最高优先级的指令，若与前文（包括核心扮演指令）有冲突，请严格以本部分内容为准：\n" + 
                 worldBookContent + "\n\n";
         }
     }
