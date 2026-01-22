@@ -234,7 +234,7 @@ const getLangClass = (text) => {
 
 .photo-wall-input-1 { top: 75%; left: 49%; width: 10em; }
 .photo-wall-input-2 { top: 85%; left: 49%; width: 15em; }
-.photo-wall-input-3 { top: 14%; left: -22%; text-align: center; }
+.photo-wall-input-3 { top: 14%; left: -22%; width: 12em; text-align: center; }
 
 /* --- 照片区域样式 --- */
 .photo {
