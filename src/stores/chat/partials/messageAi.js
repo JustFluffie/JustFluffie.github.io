@@ -123,38 +123,55 @@ export const messageAiActions = {
     }
   },
 
-  addMessageFromChar(charId, content) {
+  async addMessageFromChar(charId, content) {
     const character = this.getCharacter(charId);
     if (!character) return;
 
-    this.addMessage(charId, {
-      id: Date.now().toString(),
-      sender: 'char',
-      type: 'text',
-      content: content,
-      isTextGenerated: false,
-      time: Date.now(),
-      blocked: character.isBlocked || false
-    });
+    // 处理多条消息分隔符 |||
+    const separatorRegex = /(?:\||\\\||｜)\s*(?:\||\\\||｜)\s*(?:\||\\\||｜)+/g;
+    let cleanText = content.replace(separatorRegex, '|||');
+    let segments = cleanText.split('|||').map(s => s.trim()).filter(s => s);
 
-    this.incrementUnreadCount(charId);
+    if (segments.length === 0) return;
 
-    // 触发通知
     const notificationStore = useNotificationStore();
     const currentRoute = router.currentRoute.value;
     const isCurrentChat = currentRoute.name === 'single-chat' && currentRoute.params.id === charId;
 
-    if (!isCurrentChat) {
-        notificationStore.triggerNotification(
-            character.name,
-            content,
-            character.avatar,
-            () => {
-                router.push({ name: 'single-chat', params: { id: charId } });
-            },
-            3000,
-            'text'
-        );
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        
+        // 模拟微小的发送延迟，让消息看起来更自然
+        if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        this.addMessage(charId, {
+          id: Date.now().toString() + i,
+          sender: 'char',
+          type: 'text',
+          content: segment,
+          isTextGenerated: false,
+          time: Date.now(),
+          blocked: character.isBlocked || false
+        });
+
+        this.incrementUnreadCount(charId);
+
+        // 仅对第一条消息或最后一条消息触发通知，避免刷屏
+        // 这里选择对最后一条触发，或者如果不在聊天界面，每条都触发但可能会被覆盖
+        if (!isCurrentChat && i === segments.length - 1) {
+            notificationStore.triggerNotification(
+                character.name,
+                segment, // 显示最后一条消息的内容
+                character.avatar,
+                () => {
+                    router.push({ name: 'single-chat', params: { id: charId } });
+                },
+                3000,
+                'text'
+            );
+        }
     }
   },
 

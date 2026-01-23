@@ -385,7 +385,7 @@ export const useApiStore = defineStore('api', () => {
             "你现在正与用户面对面在一起（线下模式）。\n" +
             "1. **场景感知**：请根据对话内容或预设场景，想象你们所处的环境（如家里、咖啡厅、公园等），并在回复中自然地体现出环境互动（如“递给你一杯水”、“看着你的眼睛”）。\n" +
             "2. **沉浸式描写**：你的回复不再是手机短信，而是面对面的互动。请使用小说式的描写手法，详细描述你的表情、动作、语气以及心理活动，让用户有身临其境的感觉。\n" +
-            `3. **回复长度控制**：请严格遵守用户设定的回复长度目标：${character.replyLength || '100-200'}字。请在此字数范围内分配对话和描写的内容。如果用户设定了较短的长度，请精简描写；如果设定了较长的长度，请丰富细节。\n` +
+            `3. **回复长度控制（极重要）**：用户设定的回复长度目标是 **${character.replyLength || '100-200'}字**。请务必严格遵守此限制，**绝对不要**输出超过此范围太多的内容（例如不要输出600-900字）。请在此字数范围内分配对话和描写的内容。如果用户设定了较短的长度，请精简描写；如果设定了较长的长度，请丰富细节。\n` +
             "4. **【核心禁令】**：因为是面对面交流，你**绝对不能**提及或使用任何线上交流方式。严禁说出“我给你发张照片”、“我给你发个表情包”等话语，也**绝对不能**使用 [图片:]、[表情包:]、[语音:]、[位置:]、[转账:] 等任何格式指令。\n\n";
 
         if (character.preset && character.preset.length > 0) {
@@ -525,7 +525,10 @@ export const useApiStore = defineStore('api', () => {
         throw new Error(data.error.message || 'API返回了一个未知错误');
       }
       if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-        return data.choices[0].message.content;
+        let content = data.choices[0].message.content;
+        // 过滤掉 <think>...</think> 标签及其内容
+        content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        return content;
       } else {
         console.error('API响应格式不符合预期:', data);
         throw new Error('API响应格式不符合预期。请检查控制台中的错误详情。');
@@ -593,7 +596,10 @@ export const useApiStore = defineStore('api', () => {
         throw new Error(data.error.message || 'API返回了一个未知错误');
       }
       if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-        return data.choices[0].message.content;
+        let content = data.choices[0].message.content;
+        // 过滤掉 <think>...</think> 标签及其内容
+        content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        return content;
       } else {
         console.error('API响应格式不符合预期:', data);
         throw new Error('API响应格式不符合预期。请检查控制台中的错误详情。');
