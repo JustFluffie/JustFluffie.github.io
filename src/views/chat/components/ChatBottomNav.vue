@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 收藏夹角色选择弹窗 -->
-    <Modal v-model:visible="showFavoritesCharModal" title="选择角色查看收藏">
+    <Modal v-model:visible="showFavoritesCharModal" title="查看和谁的回忆">
       <div class="modal-options centered-text">
         <div 
           v-for="char in singleStore.characters" 

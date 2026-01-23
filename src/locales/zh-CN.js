@@ -50,6 +50,7 @@ export default {
       theme: '主题',
       spy: '占位符1',
       check: '占位符2',
+      check_phone: '查手机',
     },
     modalTitles: {
       setBg: '设置主页背景',
@@ -481,5 +482,9 @@ export default {
     deleteCharacterWarning: '此操作将永久删除该角色及其所有聊天记录，且无法恢复',
     pin: '置顶',
     unpin: '取消置顶',
+  },
+  checkPhone: {
+    title: '查看手机',
+    locked: '手机已锁定',
   }
 };

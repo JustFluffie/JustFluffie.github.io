@@ -103,6 +103,12 @@ const router = createRouter({
       component: () => import('../views/chat/single/components/SingleMemoryBank.vue'),
       props: true
     },
+    {
+      path: '/check-phone/:charId',
+      name: 'check-phone',
+      component: () => import('../views/check-phone/CheckPhone.vue'),
+      props: true
+    },
   ]
 })
 

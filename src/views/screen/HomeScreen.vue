@@ -11,9 +11,11 @@ import localforage from 'localforage'
 // Store
 import { useThemeStore } from '@/stores/themeStore'
 import { useWeatherStore } from '@/stores/weatherStore'
+import { useSingleStore } from '@/stores/chat/singleStore'
 
 // 组件
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
+import Modal from '@/components/common/Modal.vue'
 import DockBar from './components/DockBar.vue'
 import HomeScreen2 from './HomeScreen2.vue'
 import WidgetContainer from './components/WidgetContainer.vue'
@@ -25,11 +27,13 @@ const { t } = useI18n()
 const router = useRouter()
 const themeStore = useThemeStore()
 const weatherStore = useWeatherStore()
+const singleStore = useSingleStore()
 const { themePresets, currentThemePreset, appIcons, showFrame } = storeToRefs(themeStore)
 const { homeScreenWeather } = storeToRefs(weatherStore)
 
 // 页面控制状态
 const currentPage = ref(1)
+const showCheckPhoneModal = ref(false)
 const touchStartX = ref(0)
 const touchEndX = ref(0)
 
@@ -59,7 +63,7 @@ const currentDate = ref('--/--/--  --')
 // leftApps 显示在左侧（Header下方），rightApps 显示在右侧（PhotoWall下方）
 const leftApps = computed(() => [
   { id: 'spy', label: '', action: () => {} },
-  { id: 'check', label: '', action: () => {} }
+  { id: 'check_phone', label: '查手机', action: () => { showCheckPhoneModal.value = true } }
 ])
 
 const rightApps = computed(() => [
@@ -209,6 +213,11 @@ const updateHomeImage = async (url) => {
   }
 }
 
+const selectCheckPhoneChar = (charId) => {
+  showCheckPhoneModal.value = false
+  router.push({ name: 'check-phone', params: { charId } })
+}
+
 // ==========================================
 // 生命周期与监听 (Lifecycle & Watch)
 // ==========================================
@@ -297,6 +306,23 @@ onMounted(() => {
       :title="modalTitle"
       @upload-complete="handleImageSelected"
     />
+
+    <!-- 查手机角色选择弹窗 -->
+    <Modal v-model:visible="showCheckPhoneModal" title="查看谁的手机">
+      <div class="modal-options centered-text">
+        <div 
+          v-for="char in singleStore.characters" 
+          :key="char.id" 
+          class="modal-option"
+          @click="selectCheckPhoneChar(char.id)"
+        >
+          <span class="option-text">{{ char.name }}</span>
+        </div>
+      </div>
+      <template #footer>
+        <button class="modal-btn cancel" @click="showCheckPhoneModal = false">{{ t('cancel') }}</button>
+      </template>
+    </Modal>
 
   </div>
 </template>
