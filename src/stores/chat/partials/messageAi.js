@@ -1,6 +1,7 @@
 import { useApiStore } from '@/stores/apiStore';
 import { parseAiResponse } from '@/utils/messageParser';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useMomentsStore } from '@/stores/chat/momentsStore';
 import router from '@/router';
 
 export const messageAiActions = {
@@ -27,7 +28,7 @@ export const messageAiActions = {
             let rawSegments = cleanResponseText.split('|||');
             let segments = [];
             // 优化：支持中英文冒号
-            const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账|状态|设置状态)[：:].+?\])/g;
+            const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账|状态|设置状态|朋友圈|发布朋友圈)[：:].+?\])/g;
 
             rawSegments.forEach(seg => {
                 const subSegments = seg.split(specialMsgPattern).map(s => s.trim()).filter(s => s);
@@ -69,6 +70,48 @@ export const messageAiActions = {
                     this.saveData();
                     console.log(`[SingleStore] Updated character status: ${icon} ${text}`);
                     continue; // 状态更新不显示为消息
+                }
+
+                // 处理朋友圈发布指令
+                if (type === 'moment') {
+                    try {
+                        // content 可能是 JSON 字符串，也可能是普通文本（如果解析失败）
+                        // 我们的 prompt 要求是 JSON，但有时候模型可能会输出不标准的 JSON
+                        // 尝试解析
+                        let momentData = { text: content, imageDescription: "" };
+                        if (content.trim().startsWith('{')) {
+                             momentData = JSON.parse(content);
+                        } else {
+                             // 如果不是 JSON，就把整个内容当做文字发朋友圈
+                             momentData = { text: content, imageDescription: "" };
+                        }
+
+                        const momentsStore = useMomentsStore();
+                        
+                        const images = [];
+                        if (momentData.imageDescription) {
+                            images.push({
+                                content: momentData.imageDescription,
+                                isTextGenerated: true
+                            });
+                        }
+
+                        if (momentData.text || images.length > 0) {
+                            momentsStore.addMoment({
+                                userId: charId,
+                                content: momentData.text || "",
+                                images: images,
+                                time: Date.now(),
+                            });
+                            console.log(`[SingleStore] Character ${charId} posted a moment via chat command.`);
+                            
+                            // 更新发布状态，可能触发红点等
+                            // momentsStore 内部已经处理了 addMoment 的逻辑
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse moment command content", e);
+                    }
+                    continue; // 朋友圈动作不显示为聊天消息
                 }
 
                 // 如果角色处于线下模式，则跳过所有非文本消息
@@ -205,14 +248,15 @@ export const messageAiActions = {
 
   async checkAutoSummary(charId) {
     const character = this.getCharacter(charId);
-    if (!character || !character.autoSummarySettings?.enabled) {
+    // 修复：直接从 character 读取 autoSummary 状态，与 Settings 页面保持一致
+    if (!character || !character.autoSummary) {
       return;
     }
 
-    const settings = character.autoSummarySettings;
     const currentMessageCount = this.messages[charId]?.length || 0;
-    const lastSummaryCount = settings.lastSummaryCount || 0;
-    const range = settings.range || 50;
+    // 修复：直接从 character 读取 lastSummaryCount 和 summaryRange
+    const lastSummaryCount = character.lastSummaryCount || 0;
+    const range = character.summaryRange || 20;
 
     if (currentMessageCount - lastSummaryCount >= range) {
       console.log(`[AutoSummary] Triggered for ${character.name}. Current: ${currentMessageCount}, Last: ${lastSummaryCount}, Range: ${range}`);
@@ -223,7 +267,8 @@ export const messageAiActions = {
       });
 
       if (result.success) {
-        settings.lastSummaryCount = currentMessageCount;
+        // 修复：更新 character 顶层的 lastSummaryCount
+        character.lastSummaryCount = currentMessageCount;
         this.saveData();
         console.log(`[AutoSummary] Success. New lastSummaryCount: ${currentMessageCount}`);
       } else {
@@ -274,7 +319,13 @@ export const messageAiActions = {
       return `${senderName}: ${msg.content}`;
     }).join('\n');
 
-    const prompt = `你是一个对话总结助手。请根据以下聊天记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。\n\n聊天记录：\n${chatLog}\n\n核心记忆：`;
+    let systemPrompt = `你是一个对话总结助手。请根据以下聊天记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。`;
+    
+    if (character.summaryPrompt) {
+        systemPrompt = character.summaryPrompt;
+    }
+
+    const prompt = `${systemPrompt}\n\n聊天记录：\n${chatLog}\n\n核心记忆：`;
 
     try {
       const apiStore = useApiStore();
@@ -290,8 +341,10 @@ export const messageAiActions = {
         if (!character.memories) {
           character.memories = [];
         }
-        character.memories.push({
+        // 使用 unshift 将最新记忆添加到数组开头
+        character.memories.unshift({
           id: Date.now(),
+          time: Date.now(), // 确保包含时间戳，以便在界面上正确排序
           content: `【${summaryTitle}】\n${summary.trim()}`
         });
         this.saveData();

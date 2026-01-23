@@ -3,10 +3,12 @@
     class="debug-console"
     :class="{ 'collapsed': isCollapsed }"
     :style="{ top: position.y + 'px', left: position.x + 'px' }"
-    @mousedown="startDrag"
-    @touchstart="startDrag"
   >
-    <div class="header">
+    <div
+      class="header"
+      @mousedown="startDrag"
+      @touchstart="startDrag"
+    >
       <span @click.stop="toggleCollapse">{{ isCollapsed ? '🧸' : 'Debug Console' }}</span>
       <div class="controls" v-if="!isCollapsed">
         <button @click.stop="clearLogs">Clear</button>
@@ -81,7 +83,9 @@ const startDrag = (event) => {
 
 const onDrag = (event) => {
   if (!isDragging.value) return;
-  event.preventDefault();
+  if (event.cancelable) {
+    event.preventDefault();
+  }
 
   const e = event.touches ? event.touches[0] : event;
   const dx = e.clientX - dragStart.value.x;
@@ -108,14 +112,8 @@ const captureLogs = () => {
   types.forEach(type => {
     originalConsole[type] = console[type];
     console[type] = (...args) => {
-      logs.value.push({ type, args });
+      logs.value.unshift({ type, args });
       originalConsole[type](...args);
-      // Auto-scroll to bottom
-      nextTick(() => {
-        if (logContainer.value) {
-          logContainer.value.scrollTop = logContainer.value.scrollHeight;
-        }
-      });
     };
   });
 };
@@ -140,7 +138,7 @@ onUnmounted(() => {
 .debug-console {
   position: fixed;
   z-index: 9999;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.5);
   color: rgb(26, 26, 26);
   border-radius: 8px;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
@@ -166,9 +164,10 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.507);
   cursor: move;
   user-select: none;
+  touch-action: none;
   height: 40px;
   width: 100%;
 }
@@ -219,11 +218,11 @@ onUnmounted(() => {
   border-bottom: none;
 }
 
-.log-item.log { color: #fff; }
+.log-item.log { color: #000000; }
 .log-item.warn { color: #ffc107; }
 .log-item.error { color: #f44336; }
 .log-item.info { color: #2196f3; }
-.log-item.debug { color: #9e9e9e; }
+.log-item.debug { color: #000000; }
 
 pre {
   margin: 0;

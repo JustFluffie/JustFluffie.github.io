@@ -491,6 +491,14 @@ export const useApiStore = defineStore('api', () => {
       ...formattedMessages
     ];
 
+    // 如果没有历史消息，添加一个占位符以满足API要求
+    if (formattedMessages.length === 0) {
+        apiMessages.push({
+            role: 'user',
+            content: '（用户刚刚上线）'
+        });
+    }
+
     try {
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
@@ -671,6 +679,14 @@ export const useApiStore = defineStore('api', () => {
       { role: 'system', content: systemPrompt.trim() },
       ...formattedMessages
     ];
+
+    // 如果没有历史消息，添加一个占位符以满足API要求（特别是Anthropic等要求messages非空的API）
+    if (formattedMessages.length === 0) {
+        apiMessages.push({
+            role: 'user',
+            content: '（用户刚刚上线，请根据指令主动发起话题）'
+        });
+    }
 
     try {
       const response = await fetch(`${baseUrl}/chat/completions`, {

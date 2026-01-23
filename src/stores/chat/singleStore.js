@@ -158,12 +158,11 @@ export const useSingleStore = defineStore('singleChat', {
             charLocation: { real: '', virtual: '', display: '' },
             userLocation: { real: '', virtual: '', display: '' }
         },
-        // 新增：自动总结设置
-        autoSummarySettings: {
-          enabled: false,
-          range: 50,
-          lastSummaryCount: 0
-        }
+        // 新增：自动总结设置 (扁平化结构，与 Settings 页面一致)
+        autoSummary: false,
+        summaryRange: 20,
+        lastSummaryCount: 0,
+        summaryPrompt: ''
       };
       
       this.characters.unshift(newChar);
