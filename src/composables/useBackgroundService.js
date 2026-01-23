@@ -120,14 +120,23 @@ export function useBackgroundService() {
       if (override === 'off') continue;
 
       // 1. 检查是否需要发布朋友圈
+      // 增加概率判断：即使满足时间间隔，也只有 1% 的概率触发，避免一到时间就发，减少频率
       if ((char.todayMomentCount || 0) < dailyLimit && (now - (char.lastMomentTime || 0) > interval)) {
-          console.log(`[BackgroundService] Triggering moment for ${char.name}`);
-          await momentsStore.triggerCharacterMoment(char.id);
+          if (Math.random() < 0.01) {
+              console.log(`[BackgroundService] Triggering moment for ${char.name}`);
+              await momentsStore.triggerCharacterMoment(char.id);
+          }
       }
 
       // 2. 检查互动 (点赞/评论/回复)
       // 互动不占用发布配额，但依赖于全局开关
       await momentsStore.checkAndInteractWithMoments(char.id);
+    }
+
+    // 3. NPC 互动检查
+    for (const npc of singleStore.npcs) {
+        // NPC 互动检查 (内部会检查开关和冷却)
+        await momentsStore.checkAndInteractWithMoments(npc.id);
     }
   };
 

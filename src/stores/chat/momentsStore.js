@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useApiStore } from '../apiStore';
 import { useSingleStore } from './singleStore';
+import { useBackgroundStore } from '@/stores/backgroundStore';
 import LZString from 'lz-string';
 
 export const useMomentsStore = defineStore('moments', {
@@ -166,13 +167,25 @@ export const useMomentsStore = defineStore('moments', {
         });
     },
 
+    // 辅助方法：获取角色或NPC
+    getActor(id) {
+        const singleStore = useSingleStore();
+        const character = singleStore.getCharacter(id);
+        if (character) return { ...character, type: 'character' };
+        
+        const npc = singleStore.npcs.find(n => n.id === id);
+        if (npc) return { ...npc, type: 'npc', charPersona: npc.summary || '普通路人' };
+        
+        return null;
+    },
+
     async triggerMomentReaction(charId, moment, reactionType = 'public') {
         const apiStore = useApiStore();
         const singleStore = useSingleStore();
         
-        // 获取角色信息
-        const character = singleStore.getCharacter ? singleStore.getCharacter(charId) : null;
-        if (!character) return;
+        // 获取角色/NPC信息
+        const actor = this.getActor(charId);
+        if (!actor) return;
 
         const userName = this.userMomentsProfile.name || '我';
         let contextDesc = "";
@@ -189,10 +202,10 @@ export const useMomentsStore = defineStore('moments', {
 
         const contentDisplay = moment.content || (moment.images && moment.images.length > 0 ? "[分享了图片]" : "[分享了内容]");
 
-        const prompt = `你正在扮演角色“${character.name}”。${contextDesc}，内容如下：\n“${contentDisplay}”\n\n现在请你根据你的角色性格，从以下三个选项中选择一个进行回应：\n1. 在聊天中私下回复他/她。\n2. 只给这条动态点赞。\n3. 点赞并评论这条动态。\n\n你的任务是返回一个JSON对象来指明你的选择。请严格遵循以下格式，不要添加任何额外的解释：\n- 如果选择聊天，返回: {"action": "chat", "response": "你想在聊天里说的话"}\n- 如果选择只点赞，返回: {"action": "like"}\n- 如果选择点赞并评论，返回: {"action": "comment", "response": "你的评论内容"}`;
+        const prompt = `你正在扮演角色“${actor.name}”。${contextDesc}，内容如下：\n“${contentDisplay}”\n\n现在请你根据你的角色性格，从以下三个选项中选择一个进行回应：\n1. 在聊天中私下回复他/她。\n2. 只给这条动态点赞。\n3. 点赞并评论这条动态。\n\n你的任务是返回一个JSON对象来指明你的选择。请严格遵循以下格式，不要添加任何额外的解释：\n- 如果选择聊天，返回: {"action": "chat", "response": "你想在聊天里说的话"}\n- 如果选择只点赞，返回: {"action": "like"}\n- 如果选择点赞并评论，返回: {"action": "comment", "response": "你的评论内容"}`;
 
         const messages = [
-            { role: 'system', content: `你正在进行角色扮演。你的身份是“${character.name}”。请根据你的人设和当前情境，以指定的JSON格式做出回应。你的性格设定是：${character.charPersona || '友好、乐于助人'}` },
+            { role: 'system', content: `你正在进行角色扮演。你的身份是“${actor.name}”。请根据你的人设和当前情境，以指定的JSON格式做出回应。你的性格设定是：${actor.charPersona || '友好、乐于助人'}` },
             { role: 'user', content: prompt }
         ];
 
@@ -213,8 +226,17 @@ export const useMomentsStore = defineStore('moments', {
             
             switch (reaction.action) {
                 case 'chat':
-                    if (singleStore.receiveMessage) {
+                    // 只有角色支持私聊，NPC暂不支持
+                    if (actor.type === 'character' && singleStore.receiveMessage) {
                         singleStore.receiveMessage(charId, reaction.response);
+                    } else {
+                        // NPC 选择了私聊，但无法私聊，转为评论
+                         this.likeMoment(moment.id, charId);
+                         this.addComment(moment.id, {
+                            userId: charId,
+                            content: reaction.response,
+                            time: Date.now(),
+                        });
                     }
                     break;
                 case 'like':
@@ -231,7 +253,7 @@ export const useMomentsStore = defineStore('moments', {
             }
             this.saveData();
         } catch (error) {
-            console.error(`为 ${character.name} 生成动态回应失败:`, error);
+            console.error(`为 ${actor.name} 生成动态回应失败:`, error);
         }
     },
 
@@ -296,15 +318,15 @@ export const useMomentsStore = defineStore('moments', {
     async triggerCommentReply(charId, momentId, userComment, context) {
         const apiStore = useApiStore();
         const singleStore = useSingleStore();
-        const character = singleStore.getCharacter ? singleStore.getCharacter(charId) : null;
-        if (!character) return;
+        const actor = this.getActor(charId);
+        if (!actor) return;
 
         // 延迟回复
         setTimeout(async () => {
-            const prompt = `你正在扮演角色“${character.name}”。${context}\n\n请根据你的角色性格进行简短的回复（朋友圈评论风格）。\n请直接返回回复内容，不要包含任何解释或JSON格式。`;
+            const prompt = `你正在扮演角色“${actor.name}”。${context}\n\n请根据你的角色性格进行简短的回复（朋友圈评论风格）。\n请直接返回回复内容，不要包含任何解释或JSON格式。`;
 
             const messages = [
-                { role: 'system', content: `你正在进行角色扮演。你的身份是“${character.name}”。你的性格设定是：${character.charPersona || '友好'}。请以角色口吻回复评论。` },
+                { role: 'system', content: `你正在进行角色扮演。你的身份是“${actor.name}”。你的性格设定是：${actor.charPersona || '友好'}。请以角色口吻回复评论。` },
                 { role: 'user', content: prompt }
             ];
 
@@ -323,7 +345,7 @@ export const useMomentsStore = defineStore('moments', {
                     this.addComment(momentId, aiComment);
                 }
             } catch (error) {
-                console.error(`AI ${character.name} 回复评论失败:`, error);
+                console.error(`AI ${actor.name} 回复评论失败:`, error);
             }
         }, 3000 + Math.random() * 2000);
     },
@@ -480,8 +502,23 @@ export const useMomentsStore = defineStore('moments', {
     // 检查并互动朋友圈 (点赞/评论/回复)
     async checkAndInteractWithMoments(charId) {
         const singleStore = useSingleStore();
-        const character = singleStore.getCharacter(charId);
-        if (!character) return;
+        const backgroundStore = useBackgroundStore();
+        const actor = this.getActor(charId);
+        if (!actor) return;
+
+        // NPC 特有检查
+        if (actor.type === 'npc') {
+            // 1. 全局开关检查
+            if (!backgroundStore.globalBackgroundActivity) return;
+            
+            // 2. 独立开关检查
+            if (!actor.enableAutoReply) return;
+            
+            // 3. 冷却时间检查
+            const cooldown = (actor.replyCooldown || 60) * 60 * 1000;
+            const lastAction = actor.lastActionTime || 0;
+            if (Date.now() - lastAction < cooldown) return;
+        }
 
         const now = Date.now();
         const threeDays = 3 * 24 * 60 * 60 * 1000;
@@ -490,73 +527,21 @@ export const useMomentsStore = defineStore('moments', {
         for (const moment of this.moments) {
             // 跳过自己发的
             if (moment.userId === charId) {
-                // 检查是否有人回复了我，且我还没回复
-                // 逻辑：找到最后一条评论，如果是别人回复我，且我还没回复他 -> 回复
-                // 简化逻辑：遍历评论，找到 replyTo.id === charId 的评论
-                // 且该评论之后没有 charId 回复该用户的评论
-                // 这是一个复杂的链条，简化为：
-                // 找到所有回复给我的评论
-                const repliesToMe = moment.comments.filter(c => c.replyTo && c.replyTo.id === charId);
-                for (const reply of repliesToMe) {
-                    // 检查我是否已经回复了这个评论（即是否存在一条评论，userId是我，replyTo是这个人，且时间在reply之后）
-                    const myReply = moment.comments.find(c => 
-                        c.userId === charId && 
-                        c.replyTo && c.replyTo.id === reply.userId && 
-                        c.time > reply.time
-                    );
-                    
-                    if (!myReply) {
-                        // 还没回复，检查是否需要回复
-                        // 规则：NPC/角色互动一轮结束。
-                        // 如果 reply.userId 是用户 -> 可以回复
-                        // 如果 reply.userId 是 NPC/角色 -> 检查是否已经是第二轮
-                        // 这里我们假设 reply 是第一轮互动（别人评论我），那么我回复就是第二轮。
-                        // 如果 reply 本身就是回复（比如我评论他，他回复我），那么 replyTo.id === charId。
-                        // 此时我再回复，就是第三轮了。
-                        // 所以：如果 reply 是对我的动态的直接评论（replyTo 为空或 replyTo 是动态作者），那我回复是第一轮回应。
-                        // 但这里 replyTo.id === charId，说明 reply 是回复我的。
-                        // 如果我是动态作者，那 reply 可能是直接评论。
-                        // 如果我不是动态作者（我在别人动态下评论，别人回复我），那 reply 是回复。
-                        
-                        // 简化规则：
-                        // 如果对方是用户 -> 总是回复。
-                        // 如果对方是 NPC/角色 -> 
-                        //    如果这是他对我的动态的直接评论 -> 回复。
-                        //    如果这是他对我的评论的回复 -> 不回复（一轮结束）。
-                        
-                        const isUser = reply.userId === 'user';
-                        const isDirectComment = !reply.replyTo || (reply.replyTo.id === moment.userId && moment.userId === charId);
-                        
-                        // 注意：repliesToMe 筛选出了 replyTo.id === charId，所以肯定是回复我的（或者是直接评论我的动态）
-                        // 在 addComment 中，直接评论动态时 replyTo 是 null。
-                        // 所以 repliesToMe 里的都是显式回复。
-                        // 等等，addComment 中：
-                        // if (userComment.replyTo) ...
-                        // 只有显式点击回复按钮才会有 replyTo。
-                        // 直接评论动态没有 replyTo。
-                        
-                        // 修正逻辑：
-                        // 1. 检查直接评论（没有 replyTo，且 moment.userId === charId）
-                        // 2. 检查显式回复（replyTo.id === charId）
-                        
-                        // 这里我们只处理显式回复。直接评论在下面处理。
-                        if (isUser || isDirectComment) { // 这里的逻辑有点绕，暂且只处理用户无限制，NPC限制
-                             // 如果是 NPC 回复了我（显式回复），说明我已经评论过他了，或者他评论过我然后我回复了他？
-                             // 不，如果他回复我，说明上一条是我发的。
-                             // A(我) -> B(他) -> A(我) ...
-                             // 如果 B 回复 A，A 再回复 B，就是多轮了。
-                             // 规则：NPC互动一轮。即 A评论B，B回复A，结束。
-                             // 所以如果 B(他) 回复了 A(我)，A 就不应该再回复了。
-                             if (isUser) {
-                                 await this.triggerCommentReply(charId, moment.id, reply, `用户回复了你：“${reply.content}”`);
-                             }
-                        }
-                    }
-                }
-                
                 // 检查直接评论（没有 replyTo）
                 const directComments = moment.comments.filter(c => !c.replyTo && c.userId !== charId);
                 for (const comment of directComments) {
+                    // 检查是否允许互动
+                    if (actor.type === 'npc') {
+                        if (comment.userId === 'user') {
+                            if (!actor.interactWithUser) continue;
+                        } else {
+                            const commenter = this.getActor(comment.userId);
+                            if (commenter && commenter.type === 'npc' && actor.group && commenter.group && actor.group !== commenter.group) {
+                                continue;
+                            }
+                        }
+                    }
+
                     // 检查我是否回复了这个评论
                     const myReply = moment.comments.find(c => 
                         c.userId === charId && 
@@ -565,14 +550,6 @@ export const useMomentsStore = defineStore('moments', {
                     );
                     
                     if (!myReply) {
-                        // 还没回复
-                        // 规则：如果是用户 -> 回复。
-                        // 如果是 NPC -> 回复（这是第一轮：他评论，我回复）。
-                        // 时间限制：如果是 NPC，且动态超过3天 -> 不回复？
-                        // 用户说“无论是角色还是NPC只会对三天以内的朋友圈互动”。
-                        // 如果动态超过3天，NPC 应该不会评论。如果评论了，说明是新评论（或者旧评论我没回）。
-                        // 假设我们只处理新评论。
-                        
                         const isUser = comment.userId === 'user';
                         const isRecent = (now - moment.time) < threeDays;
                         
@@ -582,18 +559,102 @@ export const useMomentsStore = defineStore('moments', {
                     }
                 }
                 
-                continue; // 处理完自己的动态，继续下一个
+                // 检查回复我的评论 (repliesToMe)
+                const repliesToMe = moment.comments.filter(c => c.replyTo && c.replyTo.id === charId);
+                for (const reply of repliesToMe) {
+                    // 限制一轮互动：如果对方是 NPC，且回复了我，我不应该再回复（除非我是用户，但这里我是 actor）
+                    // 如果对方是用户，可以回复。
+                    if (reply.userId !== 'user') {
+                        continue; // 对方是 NPC/角色，不回复回复，结束对话
+                    }
+
+                    // 检查我是否已经回复了这个评论
+                    const myReply = moment.comments.find(c => 
+                        c.userId === charId && 
+                        c.replyTo && c.replyTo.id === reply.userId && 
+                        c.time > reply.time
+                    );
+                    
+                    if (!myReply) {
+                        const isRecent = (now - moment.time) < threeDays;
+                        if (isRecent) {
+                             await this.triggerCommentReply(charId, moment.id, reply, `用户回复了你：“${reply.content}”`);
+                        }
+                    }
+                }
+                
+                continue; 
             }
 
             // --- 处理别人的动态 ---
             
             // 1. 时间限制检查
             const isUserMoment = moment.userId === 'user';
-            if (!isUserMoment && (now - moment.time > threeDays)) {
-                continue; // NPC 动态超过 3 天，忽略
+            
+            // NPC 对所有动态受三天限制
+            if (actor.type === 'npc') {
+                if (now - moment.time > threeDays) continue;
+            } 
+            // 角色对非用户动态受三天限制 (保持原有逻辑，防止角色挖坟其他角色)
+            else if (!isUserMoment) {
+                if (now - moment.time > threeDays) continue;
             }
 
-            // 2. 互动检查 (点赞/评论)
+            // 2. NPC 限制检查
+            if (actor.type === 'npc') {
+                // 2.1 关联用户检查
+                if (moment.userId === 'user') {
+                    if (!actor.interactWithUser) continue;
+                } 
+                // 2.2 角色关联检查 (如果目标是角色)
+                else {
+                    const targetChar = singleStore.getCharacter(moment.userId);
+                    if (targetChar) {
+                        // 如果角色设置了关联 NPC，且我不其中，则跳过
+                        if (targetChar.linkedNpcs && targetChar.linkedNpcs.length > 0) {
+                            if (!targetChar.linkedNpcs.includes(actor.id)) {
+                                continue;
+                            }
+                        }
+                    }
+                    // 2.3 分组检查 (针对其他 NPC)
+                    else {
+                        const targetActor = this.getActor(moment.userId);
+                        if (targetActor && targetActor.type === 'npc') {
+                            if (actor.group && targetActor.group && actor.group !== targetActor.group) {
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            // 3. 角色限制检查 (新增：角色只能看到关联角色的动态)
+            else if (actor.type === 'character') {
+                // 如果目标是另一个角色
+                const targetChar = singleStore.getCharacter(moment.userId);
+                if (targetChar) {
+                    // 检查我是否关联了该角色
+                    const myLinkedChars = actor.linkedCharacters || [];
+                    // 同时也检查对方是否关联了我 (双向可见性，或者只要单向关联即可？通常朋友圈是单向关注，但这里模拟共同好友圈，假设需要关联)
+                    // 简化逻辑：只要我在我的关联列表中添加了对方，我就能看到对方的动态并互动
+                    if (!myLinkedChars.includes(targetChar.id)) {
+                        continue; // 未关联，跳过
+                    }
+                }
+                // 如果目标是 NPC
+                else {
+                    const targetNpc = singleStore.npcs.find(n => n.id === moment.userId);
+                    if (targetNpc) {
+                        // 检查我是否关联了该 NPC
+                        const myLinkedNpcs = actor.linkedNpcs || [];
+                        if (!myLinkedNpcs.includes(targetNpc.id)) {
+                            continue; // 未关联，跳过
+                        }
+                    }
+                }
+            }
+
+            // 3. 互动检查 (点赞/评论)
             const hasLiked = moment.likes.includes(charId);
             const hasCommented = moment.comments.some(c => c.userId === charId);
 
@@ -601,7 +662,18 @@ export const useMomentsStore = defineStore('moments', {
                 // 还没互动过，随机决定
                 if (Math.random() < 0.3) { // 30% 概率互动
                     await this.triggerMomentReaction(charId, moment, 'public');
-                    return; // 每次检查只互动一次，避免刷屏
+                    
+                    // 如果是 NPC，更新冷却时间并退出循环（一次只互动一个）
+                    if (actor.type === 'npc') {
+                        const npc = singleStore.npcs.find(n => n.id === charId);
+                        if (npc) {
+                            npc.lastActionTime = Date.now();
+                            singleStore.saveData();
+                        }
+                        return; 
+                    }
+                    
+                    return; // 每次检查只互动一次
                 }
             }
         }

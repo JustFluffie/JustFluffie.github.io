@@ -43,7 +43,7 @@ const router = createRouter({
         {
           path: 'npc',
           name: 'chat-npc',
-          component: () => import('../views/chat/ChatList.vue') // 暂时复用
+          component: () => import('../views/chat/npc/NpcManager.vue')
         },
         {
           path: 'favorites/:charId',

@@ -19,6 +19,7 @@ export const useSingleStore = defineStore('singleChat', {
     unreadCounts: {}, // { charId: count }
     stickers: [],
     userPersonas: [],
+    npcs: [], // 配角NPC列表
     currentUserProfile: {
       name: '我',
       customId: 'user_001'
@@ -51,6 +52,7 @@ export const useSingleStore = defineStore('singleChat', {
           // 迁移 emojis -> stickers
           this.stickers = data.stickers || [...defaultStickers];
           this.userPersonas = data.userPersonas || [];
+          this.npcs = data.npcs || [];
           this.currentUserProfile = data.currentUserProfile || { name: '我', customId: 'user_001' };
           this.bubblePresets = data.bubblePresets || [];
           this.favorites = data.favorites || [];
@@ -76,6 +78,7 @@ export const useSingleStore = defineStore('singleChat', {
           this.messages = {};
           this.stickers = [...defaultStickers];
           this.userPersonas = [];
+          this.npcs = [];
           this.favorites = [];
           this.innerVoices = {};
         }
@@ -93,6 +96,7 @@ export const useSingleStore = defineStore('singleChat', {
           unreadCounts: this.unreadCounts,
           stickers: this.stickers,
           userPersonas: this.userPersonas,
+          npcs: this.npcs,
           currentUserProfile: this.currentUserProfile,
           bubblePresets: this.bubblePresets,
           favorites: this.favorites,
@@ -162,7 +166,9 @@ export const useSingleStore = defineStore('singleChat', {
         autoSummary: false,
         summaryRange: 20,
         lastSummaryCount: 0,
-        summaryPrompt: ''
+        summaryPrompt: '',
+        // 新增：关联角色 (用于朋友圈互动)
+        linkedCharacters: []
       };
       
       this.characters.unshift(newChar);
@@ -188,6 +194,38 @@ export const useSingleStore = defineStore('singleChat', {
 
     getCharacter(id) {
       return this.characters.find(c => c.id === id);
+    },
+
+    // NPC 相关操作
+    addNpc(name) {
+      const newNpc = {
+        id: Date.now().toString(),
+        name: name,
+        avatar: '',
+        summary: '',
+        enableAutoReply: false, // 独立后台活动
+        replyCooldown: 60, // 冷却时间(分钟)
+        lastActionTime: 0,
+        group: '', // 分组
+        interactWithUser: false // 是否关联用户
+      };
+      this.npcs.push(newNpc);
+      this.saveData();
+      return newNpc.id;
+    },
+
+    deleteNpc(id) {
+      const index = this.npcs.findIndex(n => n.id === id);
+      if (index !== -1) {
+        this.npcs.splice(index, 1);
+        // 还需要从所有角色的关联列表中移除此NPC
+        this.characters.forEach(char => {
+          if (char.linkedNpcs && char.linkedNpcs.includes(id)) {
+            char.linkedNpcs = char.linkedNpcs.filter(npcId => npcId !== id);
+          }
+        });
+        this.saveData();
+      }
     },
     
     getLastMessage(charId) {

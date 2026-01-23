@@ -408,6 +408,7 @@ export default {
         setImage: '点击设置',
         advanced: '高级设置',
         linkedNpc: '关联的NPC',
+        selectNpc: '选择关联NPC',
         npcCount: '{count}个',
         blockCharacter: '拉黑角色',
         blockCharacterDesc: '拉黑后，对方发出的消息将显示为被拒收',

@@ -82,6 +82,9 @@ const pageTitle = computed(() => {
   if (route.name === 'profile-persona') {
     return '人设管理';
   }
+  if (route.name === 'chat-npc') {
+    return 'NPC管理';
+  }
   return 'WeChat';
 });
 
