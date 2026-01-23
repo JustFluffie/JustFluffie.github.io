@@ -67,7 +67,7 @@ const currentTab = computed(() => {
   if (path.includes('/moments')) return 'moments';
   if (path.includes('/npc')) return 'npc';
   if (path.includes('/favorites')) return 'favorites';
-  if (path.includes('/profile')) return 'profile';
+  if (path.includes('/profile') && route.name !== 'profile-persona') return 'profile';
   // 默认或 /chat/list 都属于 'chat'
   return 'chat';
 });
@@ -78,6 +78,9 @@ const pageTitle = computed(() => {
     if (!singleStore.characters) return '收藏';
     const char = singleStore.characters.find(c => c.id === Number(charId));
     return char ? `${char.name}的收藏` : '收藏';
+  }
+  if (route.name === 'profile-persona') {
+    return '人设管理';
   }
   return 'WeChat';
 });

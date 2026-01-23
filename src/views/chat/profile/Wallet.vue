@@ -22,6 +22,25 @@
       <button class="recharge-btn" @click="showRechargeModal = true">充值</button>
     </div>
 
+    <!-- 交易明细 -->
+    <div class="transaction-list">
+      <div class="list-header">零钱明细</div>
+      <div class="list-content">
+        <div v-for="item in walletStore.transactions" :key="item.id" class="transaction-item">
+          <div class="item-left">
+            <div class="item-title">{{ item.title }}</div>
+            <div class="item-time">{{ formatTime(item.time) }}</div>
+          </div>
+          <div class="item-amount" :class="{ 'income': item.type !== 'expense', 'expense': item.type === 'expense' }">
+            {{ item.type === 'expense' ? '-' : '+' }}{{ item.amount.toFixed(2) }}
+          </div>
+        </div>
+        <div v-if="walletStore.transactions.length === 0" class="empty-tip">
+          暂无明细
+        </div>
+      </div>
+    </div>
+
     <!-- 充值弹窗 -->
     <MoneyPacket
       v-model:visible="showRechargeModal"
@@ -45,6 +64,11 @@ const themeStore = useThemeStore()
 
 const showRechargeModal = ref(false)
 
+const formatTime = (isoString) => {
+  const date = new Date(isoString)
+  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+}
+
 const handleRecharge = ({ amount }) => {
   if (walletStore.recharge(amount)) {
     themeStore.showToast(`充值成功 ¥${amount}`, 'success')
@@ -64,11 +88,11 @@ const handleRecharge = ({ amount }) => {
 }
 
 .balance-card {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 60px;
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 .balance-icon {
@@ -102,5 +126,70 @@ const handleRecharge = ({ amount }) => {
 
 .recharge-btn:active {
   background: #06AD56;
+}
+
+.transaction-list {
+  flex: 1;
+  background: white;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 1px solid #f0f0f0;
+}
+
+.list-header {
+  font-size: 14px;
+  color: #666;
+  padding: 15px 4px 10px;
+}
+
+.list-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-title {
+  font-size: 16px;
+  color: #333;
+}
+
+.item-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.item-amount {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.item-amount.income {
+  color: #fa9d3b;
+}
+
+.item-amount.expense {
+  color: #333;
+}
+
+.empty-tip {
+  text-align: center;
+  color: #999;
+  padding-top: 40px;
+  font-size: 14px;
 }
 </style>

@@ -608,7 +608,7 @@ const charAvatar = computed(() => character.value?.avatar)
 
 // --- 选项列表 (Options) ---
 const userPersonaOptions = computed(() => [
-  { value: 'default', label: t('chat.singleChat.settings.defaultUserPersona') },
+  { value: 'new', label: t('chat.singleChat.settings.newUserPersona') },
   ...(singleStore.userPersonas || []).map(p => ({ value: p.id, label: p.name }))
 ]);
 
@@ -694,7 +694,9 @@ const loadSettings = () => {
     charPersonaInput.value = char.charPersona || '';
     
     // 2. User Info
-    currentUserPersonaId.value = char.userPersona || 'default';
+    // 如果有 userPersona 且存在于列表中，使用它；否则使用 'new'
+    const existingPersona = singleStore.userPersonas.find(p => p.id === char.userPersona);
+    currentUserPersonaId.value = existingPersona ? existingPersona.id : 'new';
     loadUserPersonaUI(currentUserPersonaId.value);
     
     // 3. Background Activity
@@ -827,28 +829,51 @@ const saveSettings = () => {
 
 // --- 6.3 用户人设逻辑 (User Persona Logic) ---
 const loadUserPersonaUI = (id) => {
-    const defaultName = t('chat.singleChat.settings.defaultUserPersona');
-    let persona = singleStore.userPersonas.find(p => p.id === id) || { id: 'default', name: defaultName, avatar: '', description: '', videoImg: '' };
-    userPersonaNameInput.value = persona.name === defaultName ? '' : persona.name;
-    userPersonaDescInput.value = persona.description || '';
-    userPersonaAvatar.value = persona.avatar || '';
-    if (id !== 'default') userVideoImg.value = persona.videoImg || '';
+    if (id === 'new') {
+        userPersonaNameInput.value = '';
+        userPersonaDescInput.value = '';
+        userPersonaAvatar.value = '';
+        userVideoImg.value = '';
+        return;
+    }
+
+    let persona = singleStore.userPersonas.find(p => p.id === id);
+    if (!persona) {
+        // 如果找不到，回退到新建模式
+        if (currentUserPersonaId.value !== 'new') {
+             currentUserPersonaId.value = 'new';
+        }
+    } else {
+        userPersonaNameInput.value = persona.name;
+        userPersonaDescInput.value = persona.description || '';
+        userPersonaAvatar.value = persona.avatar || '';
+        userVideoImg.value = persona.videoImg || '';
+    }
 };
 
 const saveUserPersona = () => {
     const name = userPersonaNameInput.value.trim();
     if (!name) return themeStore.showToast(t('chat.singleChat.settings.toast.personaNameRequired'), 'error');
+    
+    const isNew = currentUserPersonaId.value === 'new';
+    
     const newPersona = {
-        id: currentUserPersonaId.value === 'default' ? Date.now().toString() : currentUserPersonaId.value,
-        name, description: userPersonaDescInput.value, avatar: userPersonaAvatar.value, videoImg: userVideoImg.value
+        id: isNew ? Date.now().toString() : currentUserPersonaId.value,
+        name, 
+        description: userPersonaDescInput.value, 
+        avatar: userPersonaAvatar.value, 
+        videoImg: userVideoImg.value,
+        isDefault: singleStore.userPersonas.length === 0 // 如果是第一个，设为默认
     };
-    if (currentUserPersonaId.value === 'default') {
+
+    if (isNew) {
         singleStore.userPersonas.push(newPersona);
         currentUserPersonaId.value = newPersona.id;
         themeStore.showToast(t('chat.singleChat.settings.toast.personaSaved'));
     } else {
         const index = singleStore.userPersonas.findIndex(p => p.id === currentUserPersonaId.value);
         if (index !== -1) {
+            newPersona.isDefault = singleStore.userPersonas[index].isDefault;
             singleStore.userPersonas[index] = newPersona;
             themeStore.showToast(t('chat.singleChat.settings.toast.personaUpdated'));
         }
@@ -857,12 +882,14 @@ const saveUserPersona = () => {
 };
 
 const deleteUserPersona = () => {
-    if (currentUserPersonaId.value === 'default') return themeStore.showToast(t('chat.singleChat.settings.toast.defaultPersonaDelete'), 'error');
+    if (currentUserPersonaId.value === 'new') return;
+    
     themeStore.showConfirm(t('chat.singleChat.settings.toast.deletePersona'), t('chat.singleChat.settings.toast.confirmDeletePersona'), () => {
         singleStore.userPersonas = singleStore.userPersonas.filter(p => p.id !== currentUserPersonaId.value);
-        singleStore.characters.forEach(c => { if (c.userPersona === currentUserPersonaId.value) c.userPersona = 'default'; });
-        currentUserPersonaId.value = 'default';
-        loadUserPersonaUI('default');
+        // 重置使用此人设的角色为“无” (实际上是 'new' 状态，即未选择有效人设)
+        singleStore.characters.forEach(c => { if (c.userPersona === currentUserPersonaId.value) c.userPersona = ''; });
+        currentUserPersonaId.value = 'new';
+        loadUserPersonaUI('new');
         singleStore.saveData();
     });
 };

@@ -36,6 +36,7 @@ export function parseAiResponse(response) {
     { regex: /^\[(位置|分享了一个位置|定位)[：:]\s*(.+?)\]$/i, type: 'location' },
     { regex: /^\[(转账|向你转账)[：:]\s*(.+?)\]$/i, type: 'transfer' },
     { regex: /^\[角色收取了用户的转账[：:]\s*(.+?)\]$/i, type: 'transfer_accepted' },
+    { regex: /^\[(状态|设置状态)[：:]\s*(.+?)\]$/i, type: 'status' },
   ];
 
   for (const pattern of patterns) {

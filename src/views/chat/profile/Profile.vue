@@ -4,12 +4,31 @@
       <!-- 顶部用户信息 -->
       <div class="profile-header">
         <div class="user-info">
-        <div class="user-avatar">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=User" alt="User Avatar">
+        <div class="user-avatar" :class="{ 'no-avatar': !currentAvatar }">
+          <img v-if="currentAvatar" :src="currentAvatar" alt="User Avatar">
         </div>
         <div class="user-details">
-          <div class="user-name">我</div>
-          <div class="user-id">ID: user_001</div>
+          <div class="user-name-container" @click="startEditName">
+            <div v-if="!isEditingName" class="user-name">{{ singleStore.currentUserProfile.name }}</div>
+            <input v-else 
+                   ref="nameInput"
+                   v-model="singleStore.currentUserProfile.name" 
+                   class="user-name-input" 
+                   @blur="finishEditName" 
+                   @keyup.enter="finishEditName"
+            >
+          </div>
+          <div class="user-id-container">
+            <span class="id-prefix">ID: </span>
+            <span v-if="!isEditingId" class="user-id-text" @click="startEditId">{{ singleStore.currentUserProfile.customId }}</span>
+            <input v-else 
+                   ref="idInput"
+                   v-model="singleStore.currentUserProfile.customId" 
+                   class="user-id-input" 
+                   @blur="finishEditId" 
+                   @keyup.enter="finishEditId"
+            >
+          </div>
         </div>
         <div class="qr-code-icon">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
@@ -44,7 +63,7 @@
 
       <div class="menu-list">
         <!-- 人设管理 -->
-        <div class="menu-item" @click="showPersonaToast">
+        <div class="menu-item" @click="router.push({ name: 'profile-persona' })">
           <div class="menu-icon settings-icon">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#576B95" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -69,13 +88,54 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/themeStore'
+import { useSingleStore } from '@/stores/chat/singleStore'
 import ChatBottomNav from '../components/ChatBottomNav.vue'
+import { ref, computed, nextTick } from 'vue'
 
 const router = useRouter()
 const themeStore = useThemeStore()
+const singleStore = useSingleStore()
 
-const showPersonaToast = () => {
-  themeStore.showToast('人设管理功能开发中', 'info')
+const isEditingName = ref(false)
+const isEditingId = ref(false)
+const nameInput = ref(null)
+const idInput = ref(null)
+
+const currentAvatar = computed(() => {
+  const personas = singleStore.userPersonas
+  if (!personas || personas.length === 0) return null
+  const defaultPersona = personas.find(p => p.isDefault)
+  return defaultPersona ? defaultPersona.avatar : (personas[0]?.avatar || null)
+})
+
+const startEditName = () => {
+  isEditingName.value = true
+  nextTick(() => {
+    nameInput.value?.focus()
+  })
+}
+
+const finishEditName = () => {
+  isEditingName.value = false
+  if (!singleStore.currentUserProfile.name || !singleStore.currentUserProfile.name.trim()) {
+      singleStore.currentUserProfile.name = '我'
+  }
+  singleStore.saveData()
+}
+
+const startEditId = () => {
+  isEditingId.value = true
+  nextTick(() => {
+    idInput.value?.focus()
+  })
+}
+
+const finishEditId = () => {
+  isEditingId.value = false
+  if (!singleStore.currentUserProfile.customId || !singleStore.currentUserProfile.customId.trim()) {
+      singleStore.currentUserProfile.customId = 'user_001'
+  }
+  singleStore.saveData()
 }
 </script>
 
@@ -113,6 +173,10 @@ const showPersonaToast = () => {
   background: #eee;
 }
 
+.user-avatar.no-avatar {
+  background: #ccc; /* 灰色纯色背景 */
+}
+
 .user-avatar img {
   width: 100%;
   height: 100%;
@@ -123,16 +187,56 @@ const showPersonaToast = () => {
   flex: 1;
 }
 
+.user-name-container {
+  margin-bottom: 8px;
+  min-height: 30px; /* 防止高度塌陷 */
+  display: flex;
+  align-items: center;
+}
+
 .user-name {
   font-size: 22px;
   font-weight: 600;
   color: #000;
-  margin-bottom: 8px;
+  cursor: pointer;
 }
 
-.user-id {
+.user-name-input {
+  font-size: 22px;
+  font-weight: 600;
+  color: #000;
+  border: none;
+  background: transparent;
+  width: 100%;
+  padding: 0;
+  outline: none;
+  font-family: inherit;
+}
+
+.user-id-container {
   font-size: 14px;
   color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.id-prefix {
+  margin-right: 4px;
+}
+
+.user-id-text {
+  cursor: pointer;
+}
+
+.user-id-input {
+  font-size: 14px;
+  color: #666;
+  border: none;
+  background: transparent;
+  width: 150px;
+  padding: 0;
+  outline: none;
+  font-family: inherit;
 }
 
 .qr-code-icon {

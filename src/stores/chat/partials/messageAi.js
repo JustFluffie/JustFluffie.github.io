@@ -20,9 +20,14 @@ export const messageAiActions = {
         if (responseText) {
             const isCharBlocked = character?.isBlocked || false;
 
-            let rawSegments = responseText.split('|||');
+            // 过滤掉 AI 回复中的收款标记，避免作为文本显示
+            // 系统有独立的逻辑 (autoAcceptPendingTransfers) 来处理收款动作和 UI
+            const cleanResponseText = responseText.replace(/\[角色收取了用户的转账[：:].+?\]/g, '');
+
+            let rawSegments = cleanResponseText.split('|||');
             let segments = [];
-            const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账)：.+?\])/g;
+            // 优化：支持中英文冒号
+            const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账|状态|设置状态)[：:].+?\])/g;
 
             rawSegments.forEach(seg => {
                 const subSegments = seg.split(specialMsgPattern).map(s => s.trim()).filter(s => s);
@@ -43,6 +48,29 @@ export const messageAiActions = {
                 let { type, content } = parseAiResponse(segment);
                 let extraData = {};
 
+                // 处理状态更新指令
+                if (type === 'status') {
+                    // 尝试分离图标和文本
+                    // 简单的 emoji 检测：看第一个字符是否是非 ASCII
+                    let icon = '✨';
+                    let text = content;
+                    
+                    // 简单的启发式：如果内容以 emoji 开头（这里简化处理，假设前两个字符可能是 emoji）
+                    // 更严谨的 emoji 正则比较复杂，这里先尝试提取第一个字符
+                    const firstChar = content.substring(0, 2); // 代理对
+                    // 如果包含空格，可能是 "✨ 在线"
+                    const parts = content.split(/\s+/, 2);
+                    if (parts.length > 1 && parts[0].match(/\p{Emoji}/u)) {
+                        icon = parts[0];
+                        text = content.substring(icon.length).trim();
+                    }
+
+                    character.status = { icon, text };
+                    this.saveData();
+                    console.log(`[SingleStore] Updated character status: ${icon} ${text}`);
+                    continue; // 状态更新不显示为消息
+                }
+
                 // 如果角色处于线下模式，则跳过所有非文本消息
                 if (character && !character.isOnline && type !== 'text') {
                   continue; // 跳过此消息段
@@ -55,8 +83,8 @@ export const messageAiActions = {
                         content = sticker.url;
                         extraData.name = stickerName;
                     } else {
-                        type = 'text';
-                        content = `[表情包：${stickerName}]`;
+                        // 表情包不存在，跳过发送
+                        continue;
                     }
                 }
 

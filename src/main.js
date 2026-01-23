@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { useChatStore } from '@/stores/chatStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { useWalletStore } from '@/stores/chat/walletStore'
 
 import App from './App.vue'
 import router from './router'
@@ -31,6 +32,9 @@ app.use(pinia)
 // 在挂载应用之前初始化 stores
 const chatStore = useChatStore()
 chatStore.initData()
+
+const walletStore = useWalletStore()
+walletStore.initData()
 
 const themeStore = useThemeStore()
 // themeStore.initTheme() // 将在 App.vue 中初始化

@@ -94,6 +94,18 @@ onMounted(() => {
   const preventPullToRefresh = (e) => {
     // 检查是否在可滚动元素内部
     let target = e.target;
+
+    // 检查是否是微小移动（点击抖动）
+    if (e.touches.length > 0 && window.startTouchX !== undefined && window.startTouchY !== undefined) {
+        const touch = e.touches[0];
+        const deltaX = Math.abs(touch.clientX - window.startTouchX);
+        const deltaY = Math.abs(touch.clientY - window.startTouchY);
+        // 如果移动距离很小，认为是点击，不阻止默认行为
+        if (deltaX < 10 && deltaY < 10) {
+            return;
+        }
+    }
+
     while (target && target !== document.body) {
       if (target.scrollHeight > target.clientHeight) {
         // 如果是在可滚动元素内，并且滚动到了顶部，则阻止默认行为
@@ -113,6 +125,8 @@ onMounted(() => {
   document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       window.lastTouchY = e.touches[0].clientY;
+      window.startTouchX = e.touches[0].clientX;
+      window.startTouchY = e.touches[0].clientY;
     }
   }, { passive: true });
 })

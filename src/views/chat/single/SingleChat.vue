@@ -433,7 +433,7 @@ const sendTransfer = () => {
 
 // 处理转账确认
 const handleSendTransfer = ({ amount, note }) => {
-  if (walletStore.consume(amount)) {
+  if (walletStore.consume(amount, `转账 - 转给 ${charName.value}`)) {
     sendTransferMessage(amount, note);
     showMoneyPacket.value = false;
   } else {
@@ -451,7 +451,7 @@ const handleAcceptTransfer = (messageId) => {
     // 只有角色发送的转账才能被用户点击收取
     if (msg.sender !== 'user') {
       const amount = parseFloat(msg.content);
-      if (walletStore.income(amount)) {
+      if (walletStore.income(amount, `转账 - 来自 ${charName.value} `)) {
         singleStore.acceptTransfer(props.charId, messageId);
         // themeStore.showToast(`已收款 ¥${amount}`, 'success'); // 可选提示
       } else {

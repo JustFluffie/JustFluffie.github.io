@@ -40,6 +40,22 @@ export const innerVoiceActions = {
     }
   },
 
+  deleteInnerVoice(charId, voiceId) {
+    if (this.innerVoices[charId]) {
+      const index = this.innerVoices[charId].findIndex(v => v.id === voiceId);
+      if (index !== -1) {
+        this.innerVoices[charId].splice(index, 1);
+        
+        // 如果删除的是当前显示的心声，更新为最新的（如果有）
+        if (this.currentInnerVoice[charId] && this.currentInnerVoice[charId].id === voiceId) {
+             this.currentInnerVoice[charId] = null;
+        }
+        
+        this.saveData();
+      }
+    }
+  },
+
   // 切换心声收藏状态
   toggleThoughtFavorite(charId, thought) {
     if (!this.favorites) this.favorites = [];

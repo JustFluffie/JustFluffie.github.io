@@ -19,6 +19,10 @@ export const useSingleStore = defineStore('singleChat', {
     unreadCounts: {}, // { charId: count }
     stickers: [],
     userPersonas: [],
+    currentUserProfile: {
+      name: '我',
+      customId: 'user_001'
+    },
     bubblePresets: [], // 气泡样式预设
     favorites: [], // 收藏
 
@@ -47,9 +51,19 @@ export const useSingleStore = defineStore('singleChat', {
           // 迁移 emojis -> stickers
           this.stickers = data.stickers || [...defaultStickers];
           this.userPersonas = data.userPersonas || [];
+          this.currentUserProfile = data.currentUserProfile || { name: '我', customId: 'user_001' };
           this.bubblePresets = data.bubblePresets || [];
           this.favorites = data.favorites || [];
           this.innerVoices = data.innerVoices || {};
+          
+          // 恢复 currentInnerVoice 为最新一条
+          this.currentInnerVoice = {};
+          for (const charId in this.innerVoices) {
+            if (this.innerVoices[charId] && this.innerVoices[charId].length > 0) {
+              this.currentInnerVoice[charId] = this.innerVoices[charId][0];
+            }
+          }
+
           this.lastVideoCallTranscript = data.lastVideoCallTranscript || { charId: null, messages: [] };
           
           // 如果是从旧数据迁移，保存到新位置
@@ -79,6 +93,7 @@ export const useSingleStore = defineStore('singleChat', {
           unreadCounts: this.unreadCounts,
           stickers: this.stickers,
           userPersonas: this.userPersonas,
+          currentUserProfile: this.currentUserProfile,
           bubblePresets: this.bubblePresets,
           favorites: this.favorites,
           innerVoices: this.innerVoices,
@@ -100,6 +115,10 @@ export const useSingleStore = defineStore('singleChat', {
     },
     
     addCharacter(name) {
+      // 查找默认人设
+      const defaultPersona = this.userPersonas.find(p => p.isDefault);
+      const userPersonaId = defaultPersona ? defaultPersona.id : '';
+
       const newChar = {
         id: Date.now().toString(),
         name: name,
@@ -107,7 +126,7 @@ export const useSingleStore = defineStore('singleChat', {
         avatar: '',
         videoBg: '',
         userVideoImg: '',
-        userPersona: 'default',
+        userPersona: userPersonaId,
         charPersona: '',
         isOnline: true,
         worldbook: '',
@@ -181,6 +200,11 @@ export const useSingleStore = defineStore('singleChat', {
       if (this.messages[charId]) {
         this.messages[charId] = [];
         this.unreadCounts[charId] = 0;
+        // 同时清空心声
+        if (this.innerVoices[charId]) {
+          this.innerVoices[charId] = [];
+          this.currentInnerVoice[charId] = null;
+        }
         this.saveData();
       }
     },

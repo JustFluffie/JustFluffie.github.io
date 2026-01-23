@@ -62,6 +62,11 @@ const router = createRouter({
           component: () => import('../views/chat/profile/Wallet.vue')
         },
         {
+          path: 'profile/persona',
+          name: 'profile-persona',
+          component: () => import('../views/chat/profile/PersonaManager.vue')
+        },
+        {
           path: '',
           redirect: '/chat/list'
         }

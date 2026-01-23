@@ -486,7 +486,7 @@ const handleTransferClick = () => {
 /* 已接收的转账使用浅橙色背景 */
 .transfer-msg.accepted-sender,
 .transfer-msg.accepted-receiver { 
-  background: #FBD4A4; 
+  background: #fce1c3; 
   cursor: default; 
 }
 .transfer-msg:not(.accepted-sender):not(.accepted-receiver):active { opacity: 0.9; }

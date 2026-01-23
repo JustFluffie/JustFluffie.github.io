@@ -17,37 +17,42 @@
             <img v-if="avatar" :src="avatar" class="avatar-img" alt="avatar" />
             <div v-else class="avatar-placeholder">{{ name ? name.charAt(0) : '?' }}</div>
             <div class="character-name">{{ name }}</div>
-            <button class="close-btn" @click="handleClose">✕</button>
+            <button class="close-btn" @click="handleClose">
+              <svg-icon name="x-mark" />
+            </button>
           </div>
 
-          <!-- 状态区域 -->
-          <div class="status-section">
-            <div class="status-row">
-              <span class="status-label">情绪</span>
-              <span class="status-value">{{ currentVoice.emotion || '无' }}</span>
+          <!-- ===== 展示模式 ===== -->
+          <div class="content-body">
+            <!-- 状态区域 -->
+            <div class="status-section">
+              <div class="status-row">
+                <span class="status-label">情绪</span>
+                <span class="status-value">{{ currentVoice.emotion || '无' }}</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">穿着</span>
+                <span class="status-value">{{ currentVoice.outfit || '无' }}</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">姿态</span>
+                <span class="status-value">{{ currentVoice.posture || '无' }}</span>
+              </div>
             </div>
-            <div class="status-row">
-              <span class="status-label">穿着</span>
-              <span class="status-value">{{ currentVoice.outfit || '无' }}</span>
-            </div>
-            <div class="status-row">
-              <span class="status-label">姿态</span>
-              <span class="status-value">{{ currentVoice.posture || '无' }}</span>
-            </div>
-          </div>
 
-          <!-- Inner Voice -->
-          <div class="inner-voice-section">
-            <div class="section-title">Inner Voice</div>
-            <div class="inner-voice-box">
-              <p>{{ currentVoice.innerVoice || '（没有内心独白）' }}</p>
+            <!-- Inner Voice -->
+            <div class="inner-voice-section">
+              <div class="section-title">Inner Voice</div>
+              <div class="inner-voice-box">
+                <p>{{ currentVoice.innerVoice || '（没有内心独白）' }}</p>
+              </div>
             </div>
-          </div>
 
-          <!-- 没说出口的话 -->
-          <div class="unspoken-section">
-            <div class="unspoken-title">没说出口的话</div>
-            <div class="unspoken-text">{{ currentVoice.unspokenWords || '（没有想说的话）' }}</div>
+            <!-- 没说出口的话 -->
+            <div class="unspoken-section">
+              <div class="unspoken-title">没说出口的话</div>
+              <div class="unspoken-text">{{ currentVoice.unspokenWords || '（没有想说的话）' }}</div>
+            </div>
           </div>
         </div>
 
@@ -56,7 +61,9 @@
           <!-- 历史视图头部 -->
           <div class="note-header history-header">
             <div class="header-title">历史心声</div>
-            <button class="close-btn" @click="handleClose">✕</button>
+            <button class="close-btn" @click="handleClose">
+              <svg-icon name="x-mark" />
+            </button>
           </div>
 
           <!-- 滚动列表 -->
@@ -76,7 +83,12 @@
                   </button>
                   <span>{{ item.title }}</span>
                 </div>
-                <span class="item-date">{{ formatDate(item.timestamp) }}</span>
+                <div class="header-right">
+                  <span class="item-date">{{ formatDate(item.timestamp) }}</span>
+                  <button class="delete-btn" @click.stop="deleteVoice(item)">
+                    <svg-icon name="x-mark" />
+                  </button>
+                </div>
               </div>
               <div class="prop-row"><span class="prop-label">情绪：</span>{{ item.emotion }}</div>
               <div class="prop-row"><span class="prop-label">穿着：</span>{{ item.outfit }}</div>
@@ -95,9 +107,11 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, reactive } from 'vue'
 import { useSingleStore } from '@/stores/chat/singleStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { storeToRefs } from 'pinia'
+import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -107,6 +121,7 @@ const props = defineProps({
 })
 
 const singleStore = useSingleStore()
+const themeStore = useThemeStore()
 const { currentInnerVoice, innerVoices } = storeToRefs(singleStore)
 
 // 获取当前角色的实时心声
@@ -133,6 +148,13 @@ const isFavorited = (item) => {
 // 切换收藏
 const toggleFavorite = (item) => {
   singleStore.toggleThoughtFavorite(props.charId, item)
+}
+
+// 删除心声
+const deleteVoice = (item) => {
+  themeStore.showConfirm('删除心声', '确定要删除这条心声记录吗？', () => {
+    singleStore.deleteInnerVoice(props.charId, item.id)
+  })
 }
 
 // 格式化日期
@@ -289,10 +311,13 @@ const handleClose = () => {
   color: #999; font-size: 18px;
   cursor: pointer;
   transition: color 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.close-btn:hover {
-  color: #555;
-  transform: translateY(-50%) scale(1.1);
+.close-btn .svg-icon {
+  width: 20px;
+  height: 20px;
 }
 
 /* ===== 头像和名字 (实时视图) ===== */
@@ -403,9 +428,6 @@ const handleClose = () => {
   display: flex; align-items: center;
   transition: transform 0.2s;
 }
-.star-btn:hover {
-  transform: scale(1.1);
-}
 .item-date { font-weight: normal; color: #999; }
 .prop-row { font-size: 10px; line-height: 1.6; color: #333; }
 .prop-label { color: #777; margin-right: 5px; }
@@ -425,5 +447,24 @@ const handleClose = () => {
 .scroll-container::-webkit-scrollbar { width: 4px; }
 .scroll-container::-webkit-scrollbar-track { background: transparent; }
 .scroll-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
-.scroll-container::-webkit-scrollbar-thumb:hover { background: #999; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.delete-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #999;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.delete-btn .svg-icon {
+  width: 14px;
+  height: 14px;
+}
 </style>
