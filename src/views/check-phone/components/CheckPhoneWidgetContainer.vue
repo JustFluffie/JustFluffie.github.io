@@ -108,7 +108,7 @@ const handleUpdateBottomData = (newData) => {
   top: 31%;          /* 距离顶部的位置 */
   left: 0%;          /* 距离左侧的位置 */
   width: 100%;       /* widget宽度 */
-  height: 28%;       /* widget高度 */
+  height: 25%;       /* widget高度 */
   z-index: 5;
   
   /* 照片区域容器（.photo-section）宽度控制 */
@@ -122,7 +122,7 @@ const handleUpdateBottomData = (newData) => {
   --middle-right-width: 50%;     /* 右侧App区域容器宽度占比 */
   
   /* App网格（.app-grid）位置微调 */
-  --middle-right-offset: 0em;    /* App网格水平偏移 */
+  --middle-right-offset: -0.2em;    /* App网格水平偏移 */
   --middle-right-vertical-offset: 0.3em; /* App网格垂直偏移 */
 }
 
@@ -133,14 +133,14 @@ const handleUpdateBottomData = (newData) => {
   top: 61%;          /* 距离顶部的位置 */
   left: 0%;          /* 距离左侧的位置 */
   width: 100%;       /* widget宽度 */
-  height: 30%;       /* widget高度 */
+  height: 25%;       /* widget高度 */
   z-index: 5;
   
   /* App网格区域容器（.app-section）宽度控制 */
   --bottom-left-width: 50%;      /* 左侧App区域容器宽度占比 */
   
   /* App网格（.app-grid）位置微调 */
-  --bottom-left-offset: 0em;     /* App网格水平偏移 */
+  --bottom-left-offset: 0.2em;     /* App网格水平偏移 */
   --bottom-left-vertical-offset: 0em; /* App网格垂直偏移 */
   
   /* 照片区域容器（.photo-section）宽度控制 */
@@ -148,7 +148,7 @@ const handleUpdateBottomData = (newData) => {
   
   /* 照片容器（.photo-container）位置微调 */
   --bottom-right-offset: -0.5em; /* 照片水平偏移 */
-  --bottom-right-vertical-offset: -1.5em; /* 照片垂直偏移 */
+  --bottom-right-vertical-offset: -1.3em; /* 照片垂直偏移 */
 }
 
 /* ==========================================
