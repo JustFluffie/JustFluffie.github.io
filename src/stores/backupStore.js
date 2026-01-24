@@ -1,14 +1,23 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import LZString from 'lz-string';
 
 export const useBackupStore = defineStore('backup', () => {
   // 状态
-  const githubToken = ref('');
-  const githubRepo = ref(''); // 格式: 'owner/repo'
+  const githubToken = ref(localStorage.getItem('github_token') || '');
+  const githubRepo = ref(localStorage.getItem('github_repo') || ''); // 格式: 'owner/repo'
   const isBackingUp = ref(false);
   const isRestoring = ref(false);
   const lastBackupTime = ref(null);
+
+  // 当 token 或 repo 变化时，自动保存到 localStorage
+  watch(githubToken, (newValue) => {
+    localStorage.setItem('github_token', newValue);
+  });
+
+  watch(githubRepo, (newValue) => {
+    localStorage.setItem('github_repo', newValue);
+  });
 
   // 核心：创建备份数据（异步）
   function createBackupData(options = { chat: true, characters: true, settings: true, appearance: true, worldbook: true, presets: true }) {

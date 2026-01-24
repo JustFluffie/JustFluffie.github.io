@@ -118,7 +118,9 @@ onMounted(() => {
       target = target.parentNode;
     }
     // 如果不在可滚动元素内，或者在不可滚动的元素上，则阻止默认行为
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
   };
 
   document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
