@@ -2,6 +2,8 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { useChatStore } from '@/stores/chatStore'
+import { useSingleStore } from '@/stores/chat/singleStore'
+import { useMomentsStore } from '@/stores/chat/momentsStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useWalletStore } from '@/stores/chat/walletStore'
 
@@ -34,6 +36,12 @@ app.use(pinia)
 // 在挂载应用之前初始化 stores
 const chatStore = useChatStore()
 // chatStore.initData() // 持久化插件会自动处理
+
+const singleStore = useSingleStore()
+singleStore.initData()
+
+const momentsStore = useMomentsStore()
+momentsStore.initData()
 
 const walletStore = useWalletStore()
 // walletStore.initData() // 持久化插件会自动处理

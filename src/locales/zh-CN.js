@@ -483,8 +483,7 @@ export default {
     pin: '置顶',
     unpin: '取消置顶',
   },
-  checkPhone: {
-    title: '查看手机',
-    locked: '手机已锁定',
+  charPhone: {
+    title: '角色手机',
   }
 };
