@@ -78,7 +78,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:widgetData'])
+const emit = defineEmits(['update:widgetData', 'app-click'])
 
 const showUploadModal = ref(false)
 
@@ -99,9 +99,8 @@ const handlePhotoClick = () => {
 }
 
 const handleAppClick = (app) => {
-  // 这里可以添加路由跳转或其他逻辑
-  console.log('打开应用:', app.label)
-  // 例如: router.push(app.route)
+  console.log('Bottom widget - 打开应用:', app.label)
+  emit('app-click', app)
 }
 
 const handleUploadComplete = (image) => {

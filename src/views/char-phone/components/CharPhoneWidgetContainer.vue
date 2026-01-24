@@ -65,6 +65,7 @@ const handleAppClick = (app) => {
       <CharPhoneBottomWidget 
         :widget-data="bottomData"
         @update:widget-data="handleUpdateBottomData"
+        @app-click="handleAppClick"
       />
     </div>
   </div>

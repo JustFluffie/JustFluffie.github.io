@@ -6,7 +6,7 @@
         <!-- 灵动岛 -->
         <div class="char-notch"></div>
         
-        <div class="char-phone-screen">
+        <div class="char-phone-screen" :style="wallpaperStyle">
           <!-- 状态栏 -->
           <div class="char-status-bar">
             <span class="time">{{ currentTime }}</span>
@@ -49,6 +49,10 @@
               v-else-if="currentApp === 'schedule'" 
               @close="closeApp" 
             />
+            <CharTheme 
+              v-else-if="currentApp === 'theme'" 
+              @close="closeApp" 
+            />
           </Transition>
 
           <!-- 底部横条 -->
@@ -69,18 +73,24 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useSingleStore } from '@/stores/chat/singleStore'
+import { useCharThemeStore } from '@/stores/charphone/charThemeStore'
 import AppLayout from '@/components/common/AppLayout.vue'
 import CharPhoneWidgetContainer from './components/CharPhoneWidgetContainer.vue'
 import CharPhoneDock from './components/CharPhoneDock.vue'
 import CharDiary from './apps/CharDiary.vue'
 import CharMemo from './apps/CharMemo.vue'
 import CharSchedule from './apps/CharSchedule.vue'
+import CharTheme from './apps/CharTheme.vue'
 
 const { t } = useI18n()
 const route = useRoute()
 const singleStore = useSingleStore()
+const charThemeStore = useCharThemeStore()
 
 const charId = route.params.charId
+
+// 计算壁纸样式
+const wallpaperStyle = computed(() => charThemeStore.getWallpaperStyle(charId))
 
 // 动态时间显示
 const currentTime = ref('')
@@ -227,8 +237,10 @@ const handleAppClick = (app) => {
     currentApp.value = 'diary'
   } else if (app.label === '备忘录' || app.route === '/memo') {
     currentApp.value = 'memo'
-  } else if (app.label === '行程' || app.route === '/schedule') {
+  } else if (app.label === '行程' || app.label === '行程表' || app.route === '/schedule') {
     currentApp.value = 'schedule'
+  } else if (app.label === '主题' || app.route === '/theme') {
+    currentApp.value = 'theme'
   }
 }
 
