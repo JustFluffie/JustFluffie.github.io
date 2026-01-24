@@ -188,9 +188,15 @@ const handleTouchEnd = () => {
 
 const handleAppClick = (app) => {
   if (app.route) {
-    router.push(app.route)
+    router.push(app.route).catch(err => {
+      console.warn('Navigation failed:', err)
+    })
   } else if (app.action) {
-    app.action()
+    try {
+      app.action()
+    } catch (e) {
+      console.error('App action failed:', e)
+    }
   }
 }
 
@@ -215,7 +221,7 @@ const updateHomeImage = async (url) => {
 
 const selectCheckPhoneChar = (charId) => {
   showCheckPhoneModal.value = false
-  router.push({ name: 'check-phone', params: { charId } })
+  router.push({ name: 'char-phone', params: { charId } })
 }
 
 // ==========================================

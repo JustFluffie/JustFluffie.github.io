@@ -104,9 +104,9 @@ const router = createRouter({
       props: true
     },
     {
-      path: '/check-phone/:charId',
-      name: 'check-phone',
-      component: () => import('../views/check-phone/CheckPhone.vue'),
+      path: '/char-phone/:charId',
+      name: 'char-phone',
+      component: () => import('../views/char-phone/CharPhone.vue'),
       props: true
     },
   ]

@@ -1,11 +1,11 @@
 <template>
-  <div class="check-phone-bottom-widget">
+  <div class="char-phone-bottom-widget">
     <!-- 左侧：App网格区域容器 -->
     <div class="app-section">
       <div class="app-grid-wrapper">
         <div class="app-grid">
           <div 
-            v-for="(app, index) in apps" 
+            v-for="(app, index) in widgetData.apps" 
             :key="index"
             class="app-item"
             @click="handleAppClick(app)"
@@ -72,7 +72,8 @@ const props = defineProps({
     default: () => ({
       photo: '',
       text1: '',
-      text2: ''
+      text2: '',
+      apps: []
     })
   }
 })
@@ -80,14 +81,6 @@ const props = defineProps({
 const emit = defineEmits(['update:widgetData'])
 
 const showUploadModal = ref(false)
-
-// 固定的 App 配置 - 布局：购买记录|搜索记录 在上，主题|app1 在下
-const apps = [
-  { label: '购买记录', color: 'rgba(255, 255, 255, 0.9)', route: '/purchase' },
-  { label: '搜索记录', color: 'rgba(255, 255, 255, 0.9)', route: '/search' },
-  { label: '主题', color: 'rgba(255, 255, 255, 0.9)', route: '/theme' },
-  { label: 'app1', color: 'rgba(255, 255, 255, 0.9)', route: '/app1' }
-]
 
 // 样式计算
 const photoStyle = computed(() => {
@@ -123,25 +116,25 @@ const handleTextInput = () => {
 </script>
 
 <style scoped>
-.check-phone-bottom-widget {
+.char-phone-bottom-widget {
   width: 100%;
   height: 100%;
   display: flex;
-  gap: 1.2em;
+  gap: 10px;
   padding: 0;
   box-sizing: border-box;
 }
 
 /* 左侧App网格区域容器 */
 .app-section {
-  flex: 0 0 calc(var(--bottom-left-width, 50%) - 0.6em);  /* 使用CSS变量控制宽度，减去gap的一半 */
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
 
-/* 左侧App网格包裹层 - 用于固定网格位置 */
+/* 左侧App网格包裹层 */
 .app-grid-wrapper {
   width: 100%;
   height: 100%;
@@ -149,10 +142,6 @@ const handleTextInput = () => {
   align-items: center;
   justify-content: center;
   position: relative;
-  transform: translate(
-    var(--bottom-left-offset, 0em),
-    var(--bottom-left-vertical-offset, 0em)
-  );  /* 使用CSS变量控制水平和垂直偏移，默认值为0（无偏移） */
 }
 
 /* 左侧App网格 */
@@ -162,7 +151,7 @@ const handleTextInput = () => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  row-gap: 0.2em;  /* 调整此值来控制上下两行的间距，数值越大间距越大 */
+  row-gap: 5px;
   align-content: center;
   justify-items: center;
 }
@@ -171,7 +160,7 @@ const handleTextInput = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2em;
+  gap: 4px;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -188,7 +177,7 @@ const handleTextInput = () => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 0.1em 0.3em rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
 
@@ -205,15 +194,11 @@ const handleTextInput = () => {
 
 /* 右侧照片区域容器 */
 .photo-section {
-  flex: 0 0 calc(var(--bottom-right-width, 50%) - 0.6em);  /* 使用CSS变量控制宽度，减去gap的一半 */
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  transform: translate(
-    var(--bottom-right-offset, 0em),
-    var(--bottom-right-vertical-offset, 0em)
-  );  /* 使用CSS变量控制水平和垂直偏移，默认值为0（无偏移） */
 }
 
 /* 右侧照片包裹层 - 垂直布局 */
@@ -224,7 +209,7 @@ const handleTextInput = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.7em;
+  gap: 8px;
   position: relative;
 }
 
@@ -241,14 +226,14 @@ const handleTextInput = () => {
   align-items: center;
   justify-content: center;
   border: 3px solid white;
-  box-shadow: 0 0.15em 0.5em rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   flex-shrink: 0;
 }
 
 .upload-hint {
   color: #999;
-  font-size: 0.7em;
+  font-size: 12px;
   pointer-events: none;
   text-align: center;
 }
@@ -257,19 +242,19 @@ const handleTextInput = () => {
 .text-inputs {
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: 6px;
   width: 100%;
-  max-width: 15em;
+  max-width: 120px;
 }
 
 /* 自定义文本输入框 */
 .custom-input {
   width: 100%;
-  padding: 0em 0.6em;
+  padding: 2px 6px;
   background: transparent;  /* 底色透明 */
   border: none;
   color: var(--text-darkest, #333);
-  font-size: 1em;
+  font-size: 14px;
   font-family: 'Times New Roman', Times, serif;
   text-align: center;
   outline: none;
@@ -278,6 +263,6 @@ const handleTextInput = () => {
 
 .custom-input::placeholder {
   color: rgba(0, 0, 0, 0.3);
-  font-size: 0.9em;
+  font-size: 12px;
 }
 </style>

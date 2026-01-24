@@ -1,5 +1,5 @@
 <template>
-  <div class="check-phone-header" @click.stop="handleBackgroundClick">
+  <div class="char-phone-header" @click.stop="handleBackgroundClick">
     <!-- 背景图片模块 -->
     <div 
       class="widget-background"
@@ -212,7 +212,7 @@ const handlePhotoTextBlur = (index) => {
 
 <style scoped>
 /* Widget 容器 */
-.check-phone-header {
+.char-phone-header {
   width: 100%;
   height: 100%;
   border-radius: 2em;

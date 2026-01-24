@@ -17,6 +17,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
   title: {

@@ -1,6 +1,6 @@
 <template>
-  <AppLayout :title="t('checkPhone.title', '查看手机')" no-padding>
-    <div class="check-phone-container">
+  <AppLayout :title="t('charPhone.title', '查看手机')" no-padding :class="{ 'hide-back-btn': currentApp }">
+    <div class="char-phone-container">
       <!-- Char的手机框架 -->
       <div class="char-phone-frame">
         <!-- 灵动岛 -->
@@ -18,22 +18,39 @@
           
           <!-- 屏幕内容 -->
           <div class="char-content">
-            <CheckPhoneWidgetContainer 
+            <CharPhoneWidgetContainer 
               :header-data="headerData"
               :middle-data="middleData"
               :bottom-data="bottomData"
               @update:header-data="updateHeaderData"
               @update:middle-data="updateMiddleData"
               @update:bottom-data="updateBottomData"
+              @app-click="handleAppClick"
             />
           </div>
 
-          <!-- Dock栏 -->
-          <CheckPhoneDock 
-            :apps="dockApps"
-            @app-click="handleAppClick"
+          <!-- Dock栏 (消息气泡) -->
+          <CharPhoneDock 
+            :dock-data="dockData"
+            @update:dock-data="updateDockData"
           />
           
+          <!-- 应用层 -->
+          <Transition name="app-fade">
+            <CharDiary 
+              v-if="currentApp === 'diary'" 
+              @close="closeApp" 
+            />
+            <CharMemo 
+              v-else-if="currentApp === 'memo'" 
+              @close="closeApp" 
+            />
+            <CharSchedule 
+              v-else-if="currentApp === 'schedule'" 
+              @close="closeApp" 
+            />
+          </Transition>
+
           <!-- 底部横条 -->
           <div class="char-home-indicator"></div>
         </div>
@@ -53,16 +70,17 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useSingleStore } from '@/stores/chat/singleStore'
 import AppLayout from '@/components/common/AppLayout.vue'
-import CheckPhoneWidgetContainer from './components/CheckPhoneWidgetContainer.vue'
-import CheckPhoneDock from './components/CheckPhoneDock.vue'
+import CharPhoneWidgetContainer from './components/CharPhoneWidgetContainer.vue'
+import CharPhoneDock from './components/CharPhoneDock.vue'
+import CharDiary from './apps/CharDiary.vue'
+import CharMemo from './apps/CharMemo.vue'
+import CharSchedule from './apps/CharSchedule.vue'
 
 const { t } = useI18n()
 const route = useRoute()
 const singleStore = useSingleStore()
 
 const charId = route.params.charId
-const char = computed(() => singleStore.getCharacter(charId))
-const charName = computed(() => char.value ? char.value.name : t('chat.unknownCharacter'))
 
 // 动态时间显示
 const currentTime = ref('')
@@ -78,7 +96,7 @@ const updateTime = () => {
 onMounted(() => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
-  loadCheckPhoneData()
+  loadCharPhoneData()
 })
 
 onUnmounted(() => {
@@ -95,67 +113,86 @@ const headerData = ref({
   photoTexts: ['', '']
 })
 
+const defaultMiddleApps = [
+  { label: '微信', color: 'rgba(255, 255, 255, 0.9)', route: '/chat' },
+  { label: '行程表', color: 'rgba(255, 255, 255, 0.9)', route: '/schedule' },
+  { label: '日记', color: 'rgba(255, 255, 255, 0.9)', route: '/diary' },
+  { label: '备忘录', color: 'rgba(255, 255, 255, 0.9)', route: '/memo' }
+]
+
 const middleData = ref({
   photo: '',
-  apps: [
-    { icon: '', label: '' },
-    { icon: '', label: '' },
-    { icon: '', label: '' },
-    { icon: '', label: '' }
-  ]
+  apps: JSON.parse(JSON.stringify(defaultMiddleApps))
 })
+
+const defaultBottomApps = [
+  { label: '购买记录', color: 'rgba(255, 255, 255, 0.9)', route: '/purchase' },
+  { label: '搜索记录', color: 'rgba(255, 255, 255, 0.9)', route: '/search' },
+  { label: '主题', color: 'rgba(255, 255, 255, 0.9)', route: '/theme' },
+  { label: 'app1', color: 'rgba(255, 255, 255, 0.9)', route: '/app1' }
+]
 
 const bottomData = ref({
   photo: '',
-  apps: [
-    { icon: '', label: '' },
-    { icon: '', label: '' },
-    { icon: '', label: '' },
-    { icon: '', label: '' }
-  ]
+  text1: '',
+  text2: '',
+  apps: JSON.parse(JSON.stringify(defaultBottomApps))
 })
 
-// Dock应用数据
-const dockApps = ref([
-  { id: 'messages', label: '消息', icon: '' },
-  { id: 'photos', label: '相册', icon: '' },
-  { id: 'music', label: '音乐', icon: '' },
-  { id: 'settings', label: '设置', icon: '' }
-])
+const dockData = ref({
+  avatars: {
+    other: '',
+    mine: ''
+  },
+  messages: {
+    other: '',
+    mine: ''
+  }
+})
+
+// 应用状态
+const currentApp = ref(null)
 
 // 加载保存的数据
-const loadCheckPhoneData = () => {
-  const storageKey = `checkphone_${charId}`
+const loadCharPhoneData = () => {
+  const storageKey = `charphone_${charId}`
   const savedData = localStorage.getItem(storageKey)
   if (savedData) {
     try {
       const parsed = JSON.parse(savedData)
-      if (parsed.header) {
-        headerData.value = parsed.header
-      }
+      if (parsed.header) headerData.value = { ...headerData.value, ...parsed.header }
+      
       if (parsed.middle) {
-        middleData.value = parsed.middle
+        middleData.value = { ...middleData.value, ...parsed.middle }
+        // 确保 apps 存在且不为空，否则使用默认值
+        if (!middleData.value.apps || middleData.value.apps.length === 0 || !middleData.value.apps[0].label) {
+          middleData.value.apps = JSON.parse(JSON.stringify(defaultMiddleApps))
+        }
       }
+      
       if (parsed.bottom) {
-        bottomData.value = parsed.bottom
+        bottomData.value = { ...bottomData.value, ...parsed.bottom }
+        // 确保 apps 存在且不为空，否则使用默认值
+        if (!bottomData.value.apps || bottomData.value.apps.length === 0 || !bottomData.value.apps[0].label) {
+          bottomData.value.apps = JSON.parse(JSON.stringify(defaultBottomApps))
+        }
       }
-      if (parsed.dockApps) {
-        dockApps.value = parsed.dockApps
-      }
+      
+      if (parsed.dock) dockData.value = { ...dockData.value, ...parsed.dock }
     } catch (e) {
-      console.error('Failed to load check phone data:', e)
+      console.error('Failed to load char phone data:', e)
     }
   }
 }
 
 // 保存数据
-const saveCheckPhoneData = () => {
-  const storageKey = `checkphone_${charId}`
+const saveCharPhoneData = () => {
+  const storageKey = `charphone_${charId}`
   const dataToSave = {
     header: headerData.value,
     middle: middleData.value,
     bottom: bottomData.value,
-    dockApps: dockApps.value
+    dock: dockData.value
   }
   localStorage.setItem(storageKey, JSON.stringify(dataToSave))
 }
@@ -163,25 +200,40 @@ const saveCheckPhoneData = () => {
 // 更新Header数据
 const updateHeaderData = (newData) => {
   headerData.value = newData
-  saveCheckPhoneData()
+  saveCharPhoneData()
 }
 
 // 更新Middle数据
 const updateMiddleData = (newData) => {
   middleData.value = newData
-  saveCheckPhoneData()
+  saveCharPhoneData()
 }
 
 // 更新Bottom数据
 const updateBottomData = (newData) => {
   bottomData.value = newData
-  saveCheckPhoneData()
+  saveCharPhoneData()
 }
 
-// 处理Dock应用点击
+const updateDockData = (newData) => {
+  dockData.value = newData
+  saveCharPhoneData()
+}
+
+// 处理应用点击
 const handleAppClick = (app) => {
   console.log('App clicked:', app)
-  // 未来可以添加应用打开逻辑
+  if (app.label === '日记' || app.route === '/diary') {
+    currentApp.value = 'diary'
+  } else if (app.label === '备忘录' || app.route === '/memo') {
+    currentApp.value = 'memo'
+  } else if (app.label === '行程' || app.route === '/schedule') {
+    currentApp.value = 'schedule'
+  }
+}
+
+const closeApp = () => {
+  currentApp.value = null
 }
 </script>
 
@@ -194,7 +246,7 @@ const handleAppClick = (app) => {
   width: 100%;
   background: transparent;
   border: none;
-  z-index: 100;
+  z-index: 20;
   pointer-events: none; /* 让点击穿透 */
 }
 
@@ -202,6 +254,12 @@ const handleAppClick = (app) => {
   pointer-events: auto; /* 恢复按钮点击 */
   color: #333; /* 深色按钮适配白色背景 */
   filter: drop-shadow(0 0 2px rgba(0,0,0,0.2));
+  transition: opacity 0.3s ease;
+}
+
+.hide-back-btn :deep(.app-header .back-btn) {
+  opacity: 0;
+  pointer-events: none;
 }
 
 :deep(.app-header .title),
@@ -214,7 +272,7 @@ const handleAppClick = (app) => {
   overflow: hidden; /* 防止滚动 */
 }
 
-.check-phone-container {
+.char-phone-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -257,14 +315,14 @@ const handleAppClick = (app) => {
 /* 灵动岛 */
 .char-notch {
   position: absolute;
-  top: 2.8%;
+  top: 2%;
   left: 50%;
   transform: translateX(-50%);
   width: 21%; /* 灵动岛更宽 */
-  height: 3%; /* 灵动岛更高 */
+  height: 2.8%; /* 灵动岛更高 */
   background: #000;
   border-radius: 20px; /* 完全圆角的胶囊形状 */
-  z-index: 10;
+  z-index: 11;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
@@ -277,7 +335,7 @@ const handleAppClick = (app) => {
   align-items: center;
   font-size: 12px;
   color: #000000;
-  z-index: 5;
+  z-index: 11;
 }
 
 .icons {
@@ -304,8 +362,8 @@ const handleAppClick = (app) => {
 }
 
 /* 内容区 
-   说明：现在widget的尺寸由CheckPhoneWidgetContainer统一管理
-   调整widget高度：请修改 CheckPhoneWidgetContainer.vue 中的百分比值
+   说明：现在widget的尺寸由CharPhoneWidgetContainer统一管理
+   调整widget高度：请修改 CharPhoneWidgetContainer.vue 中的百分比值
 */
 .char-content {
   flex: 1;
@@ -344,5 +402,17 @@ const handleAppClick = (app) => {
   height: 40px;
   background: #333;
   border-radius: 2px 0 0 2px;
+}
+
+/* 应用切换动画 */
+.app-fade-enter-active,
+.app-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.app-fade-enter-from,
+.app-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 </style>

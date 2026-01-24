@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import CheckPhoneHeader from './CheckPhoneHeader.vue'
-import CheckPhoneMiddleWidget from './CheckPhoneMiddleWidget.vue'
-import CheckPhoneBottomWidget from './CheckPhoneBottomWidget.vue'
+import CharPhoneHeader from './CharPhoneHeader.vue'
+import CharPhoneMiddleWidget from './CharPhoneMiddleWidget.vue'
+import CharPhoneBottomWidget from './CharPhoneBottomWidget.vue'
 
 // 定义 props
 const props = defineProps({
@@ -21,7 +21,7 @@ const props = defineProps({
 })
 
 // 定义 emits
-const emit = defineEmits(['update:headerData', 'update:middleData', 'update:bottomData'])
+const emit = defineEmits(['update:headerData', 'update:middleData', 'update:bottomData', 'app-click'])
 
 // 事件处理
 const handleUpdateHeaderData = (newData) => {
@@ -35,13 +35,17 @@ const handleUpdateMiddleData = (newData) => {
 const handleUpdateBottomData = (newData) => {
   emit('update:bottomData', newData)
 }
+
+const handleAppClick = (app) => {
+  emit('app-click', app)
+}
 </script>
 
 <template>
-  <div class="check-phone-widget-container">
+  <div class="char-phone-widget-container">
     <!-- 上部区域 - Header Widget -->
     <div class="widget-item top-widget">
-      <CheckPhoneHeader 
+      <CharPhoneHeader 
         :widget-data="headerData"
         @update:widget-data="handleUpdateHeaderData"
       />
@@ -49,15 +53,16 @@ const handleUpdateBottomData = (newData) => {
 
     <!-- 中部区域 - 左照片右App -->
     <div class="widget-item middle-widget">
-      <CheckPhoneMiddleWidget 
+      <CharPhoneMiddleWidget 
         :widget-data="middleData"
         @update:widget-data="handleUpdateMiddleData"
+        @app-click="handleAppClick"
       />
     </div>
 
     <!-- 下部区域 - 左App右照片 -->
     <div class="widget-item bottom-widget">
-      <CheckPhoneBottomWidget 
+      <CharPhoneBottomWidget 
         :widget-data="bottomData"
         @update:widget-data="handleUpdateBottomData"
       />
@@ -65,25 +70,21 @@ const handleUpdateBottomData = (newData) => {
   </div>
 </template>
 
-<style>
-/* 注意这里没有 scoped，或者是用 :root */
-:root {
-  --global-icon-size: 6.5vh;
-  --global-icon-font-size: 1.4vh;
-  --global-icon-radius: 1.3vh;
-}
-</style>
-
 <style scoped>
 /* ==========================================
    Widget 容器
    说明：使用百分比统一管理所有widget的尺寸和位置
    ========================================== */
-.check-phone-widget-container {
+.char-phone-widget-container {
   position: relative;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  
+  /* 定义局部变量，替代全局 :root 变量 */
+  --global-icon-size: 6.5vh;
+  --global-icon-font-size: 1.4vh;
+  --global-icon-radius: 1.3vh;
 }
 
 /* ==========================================
@@ -106,7 +107,7 @@ const handleUpdateBottomData = (newData) => {
   top: 0%;           /* 距离顶部的位置 */
   left: 0%;          /* 距离左侧的位置 */
   width: 100%;       /* widget宽度 */
-  height: 25%;       /* widget高度，调整此值来改变CheckPhoneHeader的高度 */
+  height: 25%;       /* widget高度，调整此值来改变CharPhoneHeader的高度 */
   z-index: 10;
 }
 
@@ -164,7 +165,7 @@ const handleUpdateBottomData = (newData) => {
    调整指南：
    
    1. 调整整个容器的尺寸和位置：
-      在 .check-phone-widget-container 中添加 width, height, top, left 属性
+      在 .char-phone-widget-container 中添加 width, height, top, left 属性
       例如：width: 90% 控制容器宽度，top: 2% 控制距离顶部位置
    
    2. 调整widget高度和位置：
@@ -186,7 +187,7 @@ const handleUpdateBottomData = (newData) => {
       例如：--bottom-right-width: 55% 让右侧照片占55%
    
    6. 完整示例：
-      容器整体缩小并居中 - 在.check-phone-widget-container添加
+      容器整体缩小并居中 - 在.char-phone-widget-container添加
         width: 90%, height: 95%, top: 2.5%, left: 5%
       
       大Header - 在.top-widget修改

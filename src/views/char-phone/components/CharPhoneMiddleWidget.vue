@@ -1,5 +1,5 @@
 <template>
-  <div class="check-phone-middle-widget">
+  <div class="char-phone-middle-widget">
     <!-- 左侧：照片区域容器 -->
     <div class="photo-section">
       <div class="photo-wrapper">
@@ -20,7 +20,7 @@
       <div class="app-grid-wrapper">
         <div class="app-grid">
           <div 
-            v-for="(app, index) in apps" 
+            v-for="(app, index) in widgetData.apps" 
             :key="index"
             class="app-item"
             @click="handleAppClick(app)"
@@ -51,22 +51,15 @@ const props = defineProps({
   widgetData: {
     type: Object,
     default: () => ({
-      photo: ''
+      photo: '',
+      apps: []
     })
   }
 })
 
-const emit = defineEmits(['update:widgetData'])
+const emit = defineEmits(['update:widgetData', 'app-click'])
 
 const showUploadModal = ref(false)
-
-// 固定的 App 配置 - 布局：微信|行程表 在上，日记|备忘录 在下
-const apps = [
-  { label: '日记', color: 'rgba(255, 255, 255, 0.9)', route: '/diary' },
-  { label: '备忘录', color: 'rgba(255, 255, 255, 0.9)', route: '/memo' },
-  { label: '微信', color: 'rgba(255, 255, 255, 0.9)', route: '/chat' },
-  { label: '行程表', color: 'rgba(255, 255, 255, 0.9)', route: '/schedule' }
-]
 
 // 样式计算
 const photoStyle = computed(() => {
@@ -85,9 +78,7 @@ const handlePhotoClick = () => {
 }
 
 const handleAppClick = (app) => {
-  // 这里可以添加路由跳转或其他逻辑
-  console.log('打开应用:', app.label)
-  // 例如: router.push(app.route)
+  emit('app-click', app)
 }
 
 const handleUploadComplete = (image) => {
@@ -98,7 +89,7 @@ const handleUploadComplete = (image) => {
 </script>
 
 <style scoped>
-.check-phone-middle-widget {
+.char-phone-middle-widget {
   width: 100%;
   height: 100%;
   display: flex;

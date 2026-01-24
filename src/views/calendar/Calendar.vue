@@ -247,7 +247,16 @@ const eventMarkers = computed(() => {
   const markers = {};
   for (const event of calendarStore.events) {
     if (!event.date) continue;
-    const dateKey = formatISO(new Date(event.date), { representation: 'date' });
+    
+    let dateKey;
+    try {
+      const dateObj = new Date(event.date);
+      if (isNaN(dateObj.getTime())) continue; // 跳过无效日期
+      dateKey = formatISO(dateObj, { representation: 'date' });
+    } catch (e) {
+      console.warn('Skipping event with invalid date:', event);
+      continue;
+    }
     
     if (event.type === 'period_day') {
       // 经期追踪最优先

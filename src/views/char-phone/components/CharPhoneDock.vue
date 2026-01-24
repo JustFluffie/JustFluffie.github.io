@@ -1,5 +1,5 @@
 <template>
-  <div class="check-phone-dock">
+  <div class="char-phone-dock">
     <!-- 对方的消息（上行） -->
     <div class="message-row other-message">
       <div 
@@ -176,7 +176,7 @@ const handleMessageBlur = (type) => {
 </script>
 
 <style scoped>
-.check-phone-dock {
+.char-phone-dock {
   position: absolute;
   bottom: max(15px, env(safe-area-inset-bottom) + 25px);
   left: 50%;
@@ -197,7 +197,7 @@ const handleMessageBlur = (type) => {
   flex-direction: column;
   justify-content: center;
   gap: 0.5em;
-  z-index: 500;
+  z-index: 1;
   font-size: 16px; /* 基准字体大小，调整这个值可以整体缩放 */
 }
 

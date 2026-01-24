@@ -132,7 +132,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import { useApiStore } from '@/stores/apiStore'
 import { useWalletStore } from '@/stores/chat/walletStore'
 import { useMessageSelection } from '@/composables/chat/useMessageSelection.js'
-import { useAiResponder } from '@/composables/chat/useAiResponder.js'
+import { useAiHandler } from '@/composables/chat/useAiHandler.js'
 import { useMessageEditing } from '@/composables/chat/useMessageEditing.js'
 import { useMessageSender } from '@/composables/chat/useMessageSender.js'
 import { useMessageInteraction } from '@/composables/chat/useMessageInteraction.js'
@@ -233,7 +233,7 @@ const {
   handleConfirmForward,
 } = useMessageSelection(toRef(props, 'charId'))
 
-const { isTyping, triggerAiResponse } = useAiResponder(toRef(props, 'charId'), apiStore)
+const { isTyping, triggerAiResponse } = useAiHandler(toRef(props, 'charId'), apiStore)
 
 const {
   inputText,
