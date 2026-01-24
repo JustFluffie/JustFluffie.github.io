@@ -185,15 +185,6 @@ const handleAppClick = (app) => {
 }
 </script>
 
-<style>
-/* 注意这里没有 scoped，或者是用 :root */
-:root {
-  --global-icon-size: 5.5vh;
-  --global-icon-font-size: 1.1vh;
-  --global-icon-radius: 1.3vh;
-}
-</style>
-
 <style scoped>
 /* 覆盖 AppLayout 样式 */
 :deep(.app-header) {

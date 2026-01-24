@@ -21,6 +21,7 @@
     <!-- 右侧：照片区域容器 -->
     <div class="photo-section">
       <div class="photo-wrapper">
+        <!-- 圆形照片容器 -->
         <div 
           class="photo-container"
           :style="photoStyle"
@@ -29,6 +30,24 @@
           <div v-if="!widgetData.photo" class="upload-hint">
             点击上传
           </div>
+        </div>
+        
+        <!-- 两行文本输入框 -->
+        <div class="text-inputs">
+          <input 
+            type="text" 
+            class="custom-input"
+            v-model="widgetData.text1"
+            placeholder="输入文本1"
+            @input="handleTextInput"
+          />
+          <input 
+            type="text" 
+            class="custom-input"
+            v-model="widgetData.text2"
+            placeholder="输入文本2"
+            @input="handleTextInput"
+          />
         </div>
       </div>
     </div>
@@ -51,7 +70,9 @@ const props = defineProps({
   widgetData: {
     type: Object,
     default: () => ({
-      photo: ''
+      photo: '',
+      text1: '',
+      text2: ''
     })
   }
 })
@@ -95,6 +116,10 @@ const handleUploadComplete = (image) => {
   newData.photo = image.content
   emit('update:widgetData', newData)
 }
+
+const handleTextInput = () => {
+  emit('update:widgetData', { ...props.widgetData })
+}
 </script>
 
 <style scoped>
@@ -124,6 +149,10 @@ const handleUploadComplete = (image) => {
   align-items: center;
   justify-content: center;
   position: relative;
+  transform: translate(
+    var(--bottom-left-offset, 0em),
+    var(--bottom-left-vertical-offset, 0em)
+  );  /* 使用CSS变量控制水平和垂直偏移，默认值为0（无偏移） */
 }
 
 /* 左侧App网格 */
@@ -136,10 +165,6 @@ const handleUploadComplete = (image) => {
   row-gap: 0.2em;  /* 调整此值来控制上下两行的间距，数值越大间距越大 */
   align-content: center;
   justify-items: center;
-  transform: translate(
-    var(--bottom-left-offset, 0em),
-    var(--bottom-left-vertical-offset, 0em)
-  );  /* 使用CSS变量控制水平和垂直偏移，默认值为0（无偏移） */
 }
 
 .app-item {
@@ -185,51 +210,74 @@ const handleUploadComplete = (image) => {
   align-items: center;
   justify-content: center;
   position: relative;
-}
-
-/* 右侧照片包裹层 - 用于固定照片位置 */
-.photo-wrapper {
-  width: 100%;
-  height: 95%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-/* 右侧照片容器 - 正方形 */
-.photo-container {
-  aspect-ratio: 1 / 1;
-  height: 85%;
-  border-radius: 1.8em;
-  background-size: cover;
-  background-position: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0.15em 0.5em rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  flex-shrink: 0;
   transform: translate(
     var(--bottom-right-offset, 0em),
     var(--bottom-right-vertical-offset, 0em)
   );  /* 使用CSS变量控制水平和垂直偏移，默认值为0（无偏移） */
 }
 
-.photo-container:hover {
-  transform: translateY(-0.1em);
-  box-shadow: 0 0.25em 0.8em rgba(0, 0, 0, 0.12);
+/* 右侧照片包裹层 - 垂直布局 */
+.photo-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  position: relative;
 }
 
-.photo-container:active {
-  transform: scale(0.98);
+/* 右侧照片容器 - 圆形 */
+.photo-container {
+  width: 48%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;  /* 圆形 */
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  box-shadow: 0 0.15em 0.5em rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
 }
 
 .upload-hint {
   color: #999;
-  font-size: 0.8em;
+  font-size: 0.7em;
   pointer-events: none;
   text-align: center;
+}
+
+/* 文本输入框容器 */
+.text-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  width: 100%;
+  max-width: 15em;
+}
+
+/* 自定义文本输入框 */
+.custom-input {
+  width: 100%;
+  padding: 0em 0.6em;
+  background: transparent;  /* 底色透明 */
+  border: none;
+  color: var(--text-darkest, #333);
+  font-size: 1em;
+  font-family: 'Times New Roman', Times, serif;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.custom-input::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+  font-size: 0.9em;
 }
 </style>

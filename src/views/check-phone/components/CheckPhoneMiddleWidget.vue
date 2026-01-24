@@ -129,7 +129,7 @@ const handleUploadComplete = (image) => {
 /* 左侧照片容器 - 正方形 */
 .photo-container {
   aspect-ratio: 1 / 1;
-  height: 85%;
+  height: 95%;
   border-radius: 1.8em;
   background-size: cover;
   background-position: center;
