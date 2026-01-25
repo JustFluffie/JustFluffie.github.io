@@ -1,6 +1,10 @@
 <script setup>
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineProps, defineEmits, computed, ref } from 'vue'
 import MusicPlayer from './MusicPlayer.vue'
+import AppGrid2 from './AppGrid2.vue'
+import SocialPortal from './SocialPortal.vue'
+import { useThemeStore } from '@/stores/themeStore'
+import { storeToRefs } from 'pinia'
 
 // 定义 props
 const props = defineProps({
@@ -37,6 +41,31 @@ const containerStyle = computed(() => {
 const handleUpdateHomeData = (newData) => emit('update:homeData', newData)
 const handleShowSourceSelect = (type) => emit('show-source-select', type)
 const handleSaveHomeData = () => emit('save-home-data')
+
+const themeStore = useThemeStore()
+const { appIcons } = storeToRefs(themeStore)
+
+// App Grid Data
+const apps = ref([
+  { id: 'social-portal', label: '社交圈' },
+  { id: 'placeholder-1', label: 'App 1' },
+  { id: 'placeholder-2', label: 'App 2' },
+  { id: 'placeholder-3', label: 'App 3' },
+])
+
+// Social Portal State
+const isSocialPortalVisible = ref(false)
+
+const handleAppClick = (app) => {
+  if (app.id === 'social-portal') {
+    isSocialPortalVisible.value = true
+  }
+  // Handle other apps later
+}
+
+const closeSocialPortal = () => {
+  isSocialPortalVisible.value = false
+}
 </script>
 
 <template>
@@ -54,8 +83,19 @@ const handleSaveHomeData = () => emit('save-home-data')
       </div>
 
       <!-- 未来可以在这里添加更多 Widget -->
-
+      <div class="widget-item app-grid-widget">
+        <AppGrid2
+          :apps="apps"
+          :appIcons="appIcons"
+          @app-click="handleAppClick"
+        />
+      </div>
     </div>
+
+    <SocialPortal
+      v-if="isSocialPortalVisible"
+      @close="closeSocialPortal"
+    />
   </div>
 </template>
 
@@ -88,5 +128,14 @@ const handleSaveHomeData = () => emit('save-home-data')
   width: 100%;
   height: 15%; /* 扁平高度 */
   font-size: 10px; /* 控制 MusicPlayer 内部缩放的基准 */
+}
+
+/* --- 定位 App Grid --- */
+.app-grid-widget {
+  top: 55%; /* 放在 Music Player 下方 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 25%; /* 调整高度以适应单行应用 */
 }
 </style>

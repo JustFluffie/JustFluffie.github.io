@@ -265,7 +265,14 @@ const apps = computed(() => [
   { key: 'api', name: t('homeScreen.apps.apiSettings') },
   { key: 'theme', name: t('homeScreen.apps.theme') },
   { key: 'spy', name: t('homeScreen.apps.spy') },
-  { key: 'char_phone', name: '查手机' }
+  { key: 'char_phone', name: '查手机' },
+  { key: 'social-portal', name: '社交圈' },
+  { key: 'placeholder-1', name: 'App 1' },
+  { key: 'placeholder-2', name: 'App 2' },
+  { key: 'placeholder-3', name: 'App 3' },
+  { key: 'xiaohongshu', name: '小红书' },
+  { key: 'weibo', name: '微博' },
+  { key: 'anonymous', name: '豆瓣' }
 ])
 
 const wallpaperModalTitle = computed(() => {

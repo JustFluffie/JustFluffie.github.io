@@ -109,6 +109,23 @@ const router = createRouter({
       component: () => import('../views/char-phone/CharPhone.vue'),
       props: true
     },
+    {
+      path: '/douban',
+      name: 'douban',
+      component: () => import('../views/douban/DouBanXiaoZu.vue')
+    },
+    {
+      path: '/douban/group/:groupName',
+      name: 'group-detail',
+      component: () => import('../views/douban/GroupDetail.vue'),
+      props: true
+    },
+    {
+      path: '/douban/post/:postId',
+      name: 'douban-post-detail',
+      component: () => import('../views/douban/DoubanPostDetail.vue'),
+      props: true
+    },
   ]
 })
 

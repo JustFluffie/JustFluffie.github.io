@@ -24,7 +24,7 @@ const handleAppClick = (app) => {
 </script>
 
 <template>
-  <div class="app-grid">
+  <div class="app-grid-2">
     <div 
       v-for="app in apps" 
       :key="app.id" 
@@ -40,20 +40,13 @@ const handleAppClick = (app) => {
 </template>
 
 <style scoped>
-.app-grid {
+.app-grid-2 {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    /* 1. 撑满父容器 (40% 高度那个框) */
+    grid-template-columns: repeat(4, 1fr); /* 改为4列 */
     width: 100%;
     height: 100%; 
-    /* 2. 垂直方向的对齐 */
-    /* 如果你想让图标群在容器里垂直居中： */
     align-content: center; 
-    /* 3. 网格行之间的间距 (原来是 gap: 0.25em) */
-    /* 建议可以稍微加大一点行间距，避免标签和下一行图标挨太近 */
-    row-gap: 0.5em; 
-    column-gap: 0.25em;
-    /* --- 修改建议结束 --- */
+    gap: 0.5em;
     box-sizing: border-box;
     justify-items: center; /* 水平居中 */
 }
@@ -62,17 +55,16 @@ const handleAppClick = (app) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.12em;
+    gap: 0.25em; /* 稍微增加图标和标签的间距 */
     cursor: pointer;
     transition: transform 0.2s ease;
-    width: 1em; /* 让图标容器宽度与图标一致 */
 }
 
 .app-icon:active { transform: scale(0.95); }
 
 .app-icon .icon {
-    width: var(--global-icon-size);     /* 绝对和 Dock 一样大 */
-    height: var(--global-icon-size);    /* 绝对和 Dock 一样大 */
+    width: var(--global-icon-size);
+    height: var(--global-icon-size);
     border-radius: var(--global-icon-radius);
     font-size: var(--global-icon-font-size);
     display: flex;
@@ -84,13 +76,13 @@ const handleAppClick = (app) => {
 }
 
 .app-icon .label {
-    font-size: 0.2em; /* 相对图标大小缩放 */
+    font-size: 12px; /* 直接设置字体大小 */
     color: var(--home-text-color, var(--text-darkest));
     text-align: center;
     white-space: nowrap; 
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 4em;
+    width: 100%;
 }
 
 .icon:has(img.custom-app-icon) {
