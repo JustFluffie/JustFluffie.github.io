@@ -37,7 +37,10 @@
 
       <!-- 帖子列表 -->
       <main class="post-list">
-        <div v-if="doubanStore.posts.length === 0" class="empty-state">
+        <div v-if="doubanStore.isLoading" class="empty-state">
+          <p>正在刷新帖子...</p>
+        </div>
+        <div v-else-if="doubanStore.posts.length === 0" class="empty-state">
           <p>选择角色和人设后，点击右上角刷新</p>
         </div>
         <article v-else v-for="post in doubanStore.posts" :key="post.id" class="post-item" @click="goToPost(post.id)">

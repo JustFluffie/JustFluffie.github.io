@@ -42,6 +42,7 @@ JSON格式: [{"title": "帖子标题", "summary": "帖子摘要(1-2句话)"}, ..
 
 export const useDoubanStore = defineStore('douban', () => {
   const posts = ref([]);
+  const isLoading = ref(false);
   const apiStore = useApiStore();
   const singleStore = useSingleStore();
 
@@ -50,21 +51,22 @@ export const useDoubanStore = defineStore('douban', () => {
   }
 
   async function fetchAndSetPosts(groupName, characterId, userPersonaId) {
-    const character = singleStore.getCharacter(characterId);
-    if (!character) {
-      console.error("No character found for the given ID.");
-      posts.value = [];
-      return;
-    }
-
-    const userPersona = singleStore.userPersonas.find(p => p.id === userPersonaId);
-    const recentMessages = singleStore.getFormattedRecentMessages(characterId, 10);
-
-    const prompt = buildDoubanPostPrompt(groupName, character, userPersona, recentMessages);
-    const messages = [{ role: 'user', content: prompt }];
-
+    isLoading.value = true;
+    posts.value = [];
     try {
-      const response = await apiStore.getGenericCompletion(messages, { max_tokens: 800 });
+      const character = singleStore.getCharacter(characterId);
+      if (!character) {
+        console.error("No character found for the given ID.");
+        return;
+      }
+
+      const userPersona = singleStore.userPersonas.find(p => p.id === userPersonaId);
+      const recentMessages = singleStore.getFormattedRecentMessages(characterId, 10);
+
+      const prompt = buildDoubanPostPrompt(groupName, character, userPersona, recentMessages);
+      const messages = [{ role: 'user', content: prompt }];
+
+      const response = await apiStore.getGenericCompletion(messages, {});
       if (response && response.choices && response.choices[0]) {
         const content = response.choices[0].message.content;
         
@@ -105,6 +107,8 @@ export const useDoubanStore = defineStore('douban', () => {
         comments: 0,
         likes: 0,
       }];
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -112,5 +116,5 @@ export const useDoubanStore = defineStore('douban', () => {
     return posts.value.find(p => p.id === postId);
   }
 
-  return { posts, setPosts, fetchAndSetPosts, getPostById };
+  return { posts, isLoading, setPosts, fetchAndSetPosts, getPostById };
 });

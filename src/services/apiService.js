@@ -11,8 +11,7 @@ export const apiService = {
    * @returns {Promise<string[]>} - 模型 ID 列表
    */
   async fetchModels(baseUrl, apiKey) {
-    // 在开发模式下，强制使用代理路径，忽略传入的 baseUrl
-    const effectiveUrl = import.meta.env.DEV ? '/v1' : baseUrl.replace(/\/+$/, '');
+    const effectiveUrl = baseUrl.replace(/\/+$/, '');
 
     try {
       const response = await fetch(`${effectiveUrl}/models`, {
@@ -57,8 +56,7 @@ export const apiService = {
    * @returns {Promise<string>} - AI 回复内容
    */
   async fetchChatCompletion(baseUrl, apiKey, model, messages, maxTokens) {
-    // 在开发模式下，强制使用代理路径，忽略传入的 baseUrl
-    const effectiveUrl = import.meta.env.DEV ? '/v1' : baseUrl.replace(/\/+$/, '');
+    const effectiveUrl = baseUrl.replace(/\/+$/, '');
 
     const requestBody = {
       model: model,
@@ -66,7 +64,6 @@ export const apiService = {
     };
 
     if (maxTokens) {
-      requestBody.max_tokens = parseInt(maxTokens, 10);
     }
 
     try {
@@ -101,14 +98,21 @@ export const apiService = {
         throw new Error(data.error.message || 'API返回了一个未知错误');
       }
 
-      if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-        let content = data.choices[0].message.content;
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        let content = data.choices[0].message.content || '';
         // 过滤掉 <think>...</think> 标签及其内容
         content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        return content;
+        return {
+          content: content,
+          usage: data.usage // 返回整个 usage 对象
+        };
       } else {
         console.error('[ApiService] Unexpected response format:', data);
-        throw new Error('API响应格式不符合预期。请检查控制台中的错误详情。');
+        // 即使没有 choices，也尝试返回一个空内容和可能的 usage
+        return {
+          content: '',
+          usage: data.usage || null
+        };
       }
 
     } catch (error) {

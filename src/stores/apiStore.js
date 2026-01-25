@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, reactive, watch } from 'vue';
 import { useSingleStore } from '@/stores/chat/singleStore';
 import { useThemeStore } from '@/stores/themeStore';
+import { useDebugStore } from '@/stores/debugStore'; // 引入 Debug Store
 import { usePromptBuilder } from '@/composables/chat/usePromptBuilder';
 import { apiService } from '@/services/apiService';
 
@@ -21,14 +22,10 @@ export const useApiStore = defineStore('api', () => {
       apiKey: '',
       apiUrl: '',
       model: '',
-      max_tokens: 1500,
     }
   ];
 
   initialPresets.forEach(preset => {
-    if (preset.max_tokens === undefined || preset.max_tokens === null) {
-      preset.max_tokens = 1500;
-    }
   });
 
   const presets = reactive(initialPresets);
@@ -113,6 +110,7 @@ export const useApiStore = defineStore('api', () => {
   async function getChatCompletion(charId, options = {}) {
     const singleStore = useSingleStore();
     const themeStore = useThemeStore();
+    const debugStore = useDebugStore(); // 获取 Debug Store 实例
     const character = singleStore.getCharacter(charId);
     const activePreset = getActivePreset();
 
@@ -127,31 +125,48 @@ export const useApiStore = defineStore('api', () => {
     }
 
     const systemPrompt = buildSystemPrompt(character);
-    const memoryCount = character.memoryCount || 10;
-    const formattedMessages = singleStore.getFormattedRecentMessages(charId, memoryCount);
+    debugStore.addLog(`--- System Prompt for ${character.name} ---\n${systemPrompt}\n--------------------`);
+
+    // --- 动态上下文长度调整 ---
+    // 目标：为线下模式的长回复腾出token空间
+    const baseMemoryCount = character.memoryCount || 15; // 获取用户设置的上下文长度, 默认为15
+    const isOnline = options.isOnline !== false; // 从 useAiHandler 传入，默认为线上
+    
+    let finalMemoryCount = baseMemoryCount;
+    if (!isOnline) {
+      // 如果是线下模式，将上下文消息数量减半，但最少保留4条，以防上下文丢失
+      finalMemoryCount = Math.max(4, Math.floor(baseMemoryCount / 2));
+    }
+
+    const formattedMessages = singleStore.getFormattedRecentMessages(charId, finalMemoryCount);
     const apiMessages = [{ role: 'system', content: systemPrompt.trim() }, ...formattedMessages];
     if (formattedMessages.length === 0) {
       apiMessages.push({ role: 'user', content: '（用户刚刚上线）' });
     }
 
-    const maxTokens = options.max_tokens || activePreset.max_tokens;
+    const maxTokens = options.max_tokens;
 
     try {
-      return await apiService.fetchChatCompletion(
+      const response = await apiService.fetchChatCompletion(
         activePreset.apiUrl,
         activePreset.apiKey,
         modelToUse,
         apiMessages,
         maxTokens
       );
+      if (response.content) {
+        debugStore.addLog(`--- AI Raw Response ---\n${response.content}\n--------------------`);
+      }
+      return response; // 返回完整的响应对象
     } catch (error) {
       themeStore.showToast(`获取AI回复失败: ${error.message}`, 'error');
-      return null;
+      return { content: null, usage: null };
     }
   }
 
   async function getGenericCompletion(messages, options = {}) {
     const themeStore = useThemeStore();
+    const debugStore = useDebugStore();
     const activePreset = options.preset || getActivePreset();
 
     if (!activePreset || !activePreset.apiUrl || !activePreset.apiKey) {
@@ -164,19 +179,23 @@ export const useApiStore = defineStore('api', () => {
       return null;
     }
     
-    const maxTokens = options.max_tokens || activePreset.max_tokens;
+    const maxTokens = options.max_tokens;
 
     try {
-      return await apiService.fetchChatCompletion(
+      const response = await apiService.fetchChatCompletion(
         activePreset.apiUrl,
         activePreset.apiKey,
         modelToUse,
         messages,
         maxTokens
       );
+      if (response.content) {
+        debugStore.addLog(`--- AI Generic Raw Response (Inner Voice) ---\n${response.content}\n--------------------`);
+      }
+      return response; // 返回完整的响应对象
     } catch (error) {
       themeStore.showToast(`获取AI回复失败: ${error.message}`, 'error');
-      return null;
+      return { content: null, usage: null };
     }
   }
 
@@ -197,19 +216,20 @@ export const useApiStore = defineStore('api', () => {
       apiMessages.push({ role: 'user', content: '（用户刚刚上线，请根据指令主动发起话题）' });
     }
 
-    const maxTokens = options.max_tokens || activePreset.max_tokens;
+    const maxTokens = options.max_tokens;
 
     try {
-      return await apiService.fetchChatCompletion(
+      const response = await apiService.fetchChatCompletion(
         activePreset.apiUrl,
         activePreset.apiKey,
         modelToUse,
         apiMessages,
         maxTokens
       );
+      return response; // 返回完整的响应对象
     } catch (error) {
       console.error('获取主动消息失败:', error);
-      return null;
+      return { content: null, usage: null };
     }
   }
 

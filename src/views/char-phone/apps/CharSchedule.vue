@@ -173,8 +173,8 @@ ${chatLog}
     }
 
     const scheduleContent = await apiStore.getGenericCompletion(
-        [{ role: 'user', content: prompt }], 
-        { preset: presetToUse, max_tokens: 8000 }
+        [{ role: 'user', content: prompt }],
+        { preset: presetToUse }
     )
     
     if (scheduleContent) {

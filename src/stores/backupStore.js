@@ -99,7 +99,7 @@ export const useBackupStore = defineStore('backup', () => {
 
         // 6. Presets
         if (options.presets) {
-            const keys = ['api_presets', 'api_activePresetName'];
+            const keys = ['api_presets', 'api_activePresetName', 'presets', 'presetNextId'];
             keys.forEach(key => {
                 const val = localStorage.getItem(key);
                 if (val !== null) backupData[key] = val;
@@ -363,12 +363,20 @@ export const useBackupStore = defineStore('backup', () => {
       const backupData = JSON.parse(jsonString);
 
       // 应用备份
+      const currentToken = localStorage.getItem('github_token');
+      const currentRepo = localStorage.getItem('github_repo');
+
       localStorage.clear();
+      
       for (const key in backupData) {
         if (Object.hasOwnProperty.call(backupData, key)) {
           localStorage.setItem(key, backupData[key]);
         }
       }
+
+      // 恢复当前的 token 和 repo
+      if (currentToken) localStorage.setItem('github_token', currentToken);
+      if (currentRepo) localStorage.setItem('github_repo', currentRepo);
 
       alert('数据恢复成功！请刷新页面以应用更改。');
 

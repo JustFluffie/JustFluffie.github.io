@@ -195,7 +195,7 @@ ${chatLog}
 
     const diaryContent = await apiStore.getGenericCompletion(
         [{ role: 'user', content: prompt }], 
-        { preset: presetToUse, max_tokens: 3000 }
+        { preset: presetToUse }
     )
     
     if (diaryContent) {

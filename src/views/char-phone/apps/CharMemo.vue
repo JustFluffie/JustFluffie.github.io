@@ -118,7 +118,7 @@ ${chatLog}
 
     const memoContent = await apiStore.getGenericCompletion(
         [{ role: 'user', content: prompt }], 
-        { preset: presetToUse, max_tokens: 4000 }
+        { preset: presetToUse }
     )
     
     if (memoContent) {

@@ -17,7 +17,14 @@
       </div>
     </div>
     <div v-if="!isCollapsed" class="content" ref="logContainer">
-      <div v-for="(log, index) in logs" :key="index" :class="['log-item', log.type]">
+      <div class="token-stats">
+        <span>Total: {{ debugStore.tokenUsage.total_tokens }}</span> |
+        <span>Prompt: {{ debugStore.tokenUsage.prompt_tokens }}</span> |
+        <span>Completion: {{ debugStore.tokenUsage.completion_tokens }}</span> |
+        <span>Last: {{ debugStore.tokenUsage.last_request_tokens }}</span>
+        <button @click.stop="debugStore.resetTokenUsage()">Reset</button>
+      </div>
+      <div v-for="(log, index) in allLogs" :key="index" :class="['log-item', log.type]">
         <pre>{{ formatLog(log.args) }}</pre>
       </div>
     </div>
@@ -25,14 +32,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useDebugStore } from '@/stores/debugStore';
 
 const emit = defineEmits(['hide']);
+const debugStore = useDebugStore();
 
 const isCollapsed = ref(true);
-const logs = ref([]);
+const consoleLogs = ref([]);
 const position = ref({ x: 10, y: 10 });
 const logContainer = ref(null);
+
+const allLogs = computed(() => {
+  const combined = [
+    ...debugStore.logs.map(log => ({ type: 'debug', args: [log], timestamp: new Date() })),
+    ...consoleLogs.value.map(log => ({ ...log, timestamp: new Date() }))
+  ];
+  // Since we are unshifting, the array is already mostly sorted.
+  // A full sort might be needed if timestamps are critical and logs arrive out of order.
+  return combined;
+});
 
 let originalConsole = {};
 const isDragging = ref(false);
@@ -44,7 +63,8 @@ const toggleCollapse = () => {
 };
 
 const clearLogs = () => {
-  logs.value = [];
+  consoleLogs.value = [];
+  debugStore.logs.splice(0, debugStore.logs.length);
 };
 
 const exitDebugMode = () => {
@@ -112,7 +132,7 @@ const captureLogs = () => {
   types.forEach(type => {
     originalConsole[type] = console[type];
     console[type] = (...args) => {
-      logs.value.unshift({ type, args });
+      consoleLogs.value.unshift({ type, args });
       originalConsole[type](...args);
     };
   });
@@ -138,8 +158,8 @@ onUnmounted(() => {
 .debug-console {
   position: fixed;
   z-index: 9999;
-  background-color: rgba(255, 255, 255, 0.5);
-  color: rgb(26, 26, 26);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: rgb(255, 255, 255);
   border-radius: 8px;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
   transition: width 0.2s ease, height 0.2s ease, border-radius 0.2s ease;
@@ -190,7 +210,7 @@ onUnmounted(() => {
 
 .header button {
   background: rgba(255, 255, 255, 0);
-  color: rgb(26, 26, 26);
+  color: rgb(255, 255, 255);
   border: none;
   padding: 4px 8px;
   border-radius: 4px;
@@ -218,15 +238,39 @@ onUnmounted(() => {
   border-bottom: none;
 }
 
-.log-item.log { color: #000000; }
+.log-item.log { color: #ffffff; }
 .log-item.warn { color: #ffc107; }
 .log-item.error { color: #f44336; }
 .log-item.info { color: #2196f3; }
-.log-item.debug { color: #000000; }
+.log-item.debug { color: #ffffff; }
 
 pre {
   margin: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.token-stats {
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.token-stats span {
+  margin-right: 8px;
+}
+
+.token-stats button {
+  background: rgba(0,0,0,0.2);
+  border: none;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
 }
 </style>

@@ -163,6 +163,7 @@ export function usePromptBuilder() {
         "记录用户日程：在回复末尾加 `[待办：YYYY-MM-DD HH:mm 内容]`。仅限用户，内容精简（18字内）。例：`[待办：14:00 开会]`。\n\n";
         
     if (character.isOnline === false) {
+        // --- 线下模式 ---
         systemPrompt += "【当前状态：线下见面中】\n" +
             "你现在正与用户面对面在一起（线下模式），你的回复是面对面的互动，而不是手机消息。\n" +
             `1. **回复长度**：总字数应控制在 ${replyLengthMin} 到 ${replyLengthMax} 字之间，以保证描写的沉浸感。\n` +
@@ -177,6 +178,7 @@ export function usePromptBuilder() {
             }
         }
     } else {
+        // --- 线上模式 ---
         systemPrompt += "【当前状态：手机聊天中（线上模式）】\n" +
             "你现在正通过手机与用户聊天，你们**不**在一起。\n" +
             "1. **回复节奏与长度**：\n" +
@@ -220,16 +222,26 @@ export function usePromptBuilder() {
         `根据记忆、人设等，向用户发起一个简短、生活化、不重复的新话题，要自然。`;
   }
 
-  function buildInnerVoicePrompt(char, chatHistory, nextIndex) {
+  function buildInnerVoicePrompt(char, chatHistory, nextIndex, previousVoice = null) {
     const historyText = chatHistory.map(msg => `${msg.role === 'user' ? '用户' : char.name}: ${msg.content}`).join('\n');
     const indexStr = nextIndex.toString().padStart(2, '0');
 
-    return `
+    let prompt = `
 扮演“${char.name}”，根据设定和对话生成JSON格式的实时“心声”，不要加额外解释。
 
 **角色人设:**
 ${char.charPersona}
+`;
 
+    if (previousVoice) {
+      const previousVoiceText = `- ${previousVoice.title || ''}: ${previousVoice.innerVoice || ''}`;
+      prompt += `
+**上一条心声 (你的内心想法):**
+${previousVoiceText}
+`;
+    }
+
+    prompt += `
 **最近对话:**
 ${historyText}
 
@@ -252,6 +264,7 @@ ${historyText}
   "title": "#${indexStr} ..."
 }
 `;
+    return prompt;
   }
 
   return {

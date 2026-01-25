@@ -5,6 +5,7 @@ import { useApiStore } from '@/stores/apiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { useMomentsStore } from '@/stores/chat/momentsStore';
+import { useDebugStore } from '@/stores/debugStore';
 import { parseAiResponse } from '@/utils/messageParser';
 import { formatISO } from 'date-fns';
 import { usePromptBuilder } from '@/composables/chat/usePromptBuilder';
@@ -14,6 +15,7 @@ export function useAiHandler(charId, apiStore) {
   const notificationStore = useNotificationStore();
   const calendarStore = useCalendarStore();
   const momentsStore = useMomentsStore();
+  const debugStore = useDebugStore();
   const router = useRouter();
   const route = useRoute();
   const { buildInnerVoicePrompt } = usePromptBuilder();
@@ -169,10 +171,15 @@ export function useAiHandler(charId, apiStore) {
       const latestIndex = voices[0]?.title.match(/#(\d+)/)?.[1];
       let nextIndex = (latestIndex ? parseInt(latestIndex, 10) : voices.length) + 1;
 
-      const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 10);
-      const prompt = buildInnerVoicePrompt(character, recentMessages, nextIndex);
+      // 获取上一条心声
+      const previousVoice = voices.length > 0 ? voices[0] : null;
+
+      // 使用更少的消息来生成心声，防止因主回复过长导致上下文溢出
+      const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 3);
+      const prompt = buildInnerVoicePrompt(character, recentMessages, nextIndex, previousVoice);
       
-      const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { max_tokens: 2000 });
+      const { content: voiceResponse, usage: voiceUsage } = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], {});
+      debugStore.addTokenUsage(voiceUsage);
 
       if (voiceResponse) {
         // 移除潜在的Markdown代码块
@@ -216,39 +223,22 @@ export function useAiHandler(charId, apiStore) {
         return;
       }
       
-      // --- 修正后的动态 max_tokens 计算 ---
-      const activePreset = apiStore.getActivePreset();
-      const presetMaxTokens = activePreset?.max_tokens || 10000;
-
       // 使用 isOnline 属性 (true:线上, false:线下)
       const isOnline = character.isOnline !== false; // 默认为线上模式
-      const replyLength = character.replyLength || { min: 50, max: 100 }; // 默认线上长度
-      const replyLengthMin = character.replyLengthMin || replyLength.min;
-      const replyLengthMax = character.replyLengthMax || replyLength.max;
 
-      let calculatedTokens;
-      if (isOnline) {
-        // 线上模式：使用较小的基数，并确保不超过预设
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 5;
-      } else { // offline
-        // 线下模式：使用更大的系数，为详细描写提供充足空间
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 10;
-      }
-      
-      // 确保 calculatedTokens 不超过 presetMaxTokens，同时不低于一个最小值
-      const finalMaxTokens = Math.min(presetMaxTokens, Math.max(100, calculatedTokens));
-      // --- 结束计算 ---
-
-      let responseText = await apiStore.getChatCompletion(charId.value, { max_tokens: finalMaxTokens });
+      const { content: responseText, usage: responseUsage } = await apiStore.getChatCompletion(charId.value, { 
+        isOnline: isOnline // 传递在线状态
+      });
+      debugStore.addTokenUsage(responseUsage);
       
       if (responseText) {
         apiCallSuccessful = true; // API调用成功且有内容
-        responseText = handleRevokeInstruction(responseText);
-        responseText = handleMomentInteraction(responseText);
-        responseText = handlePostMoment(responseText);
-        responseText = handleTodoInstruction(responseText);
+        let processedText = handleRevokeInstruction(responseText);
+        processedText = handleMomentInteraction(processedText);
+        processedText = handlePostMoment(processedText);
+        processedText = handleTodoInstruction(processedText);
 
-        if (!responseText) {
+        if (!processedText) {
             // 即使主回复为空，也触发心声
             // generateAndSaveInnerVoice(); 移动到 finally
             return;
@@ -256,9 +246,9 @@ export function useAiHandler(charId, apiStore) {
 
         const isCharBlocked = character?.isBlocked || false;
         const separatorRegex = /(?:\||\\\||｜)\s*(?:\||\\\||｜)\s*(?:\||\\\||｜)+/;
-        let rawSegments = responseText.split(separatorRegex);
-        if (rawSegments.length === 1 && responseText.includes('\n')) {
-            rawSegments = responseText.split('\n').map(s => s.trim()).filter(s => s);
+        let rawSegments = processedText.split(separatorRegex);
+        if (rawSegments.length === 1 && processedText.includes('\n')) {
+            rawSegments = processedText.split('\n').map(s => s.trim()).filter(s => s);
         }
         
         const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账)：.+?\])/g;
