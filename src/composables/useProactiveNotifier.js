@@ -84,7 +84,7 @@ ${character.charPersona}
 
     // 1.1 检查过期未完成的待办事项 (每天只提醒一次)
     const overdueTodos = calendarStore.events.filter(e => {
-        if (e.type !== 'todo' || e.done) return false;
+        if (e.type !== 'todo' || e.done || !e.title) return false;
         return e.date < today; // 日期早于今天
     });
 
