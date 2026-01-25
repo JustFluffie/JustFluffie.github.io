@@ -1,0 +1,1 @@
+import{ch as r,r as u}from"./index-DVQm_1x6.js";const f=r("douban",()=>{const t=u([]);function e(o){t.value=o}function n(o){return t.value.find(s=>s.id===o)}return{posts:t,setPosts:e,getPostById:n}});export{f as u};
