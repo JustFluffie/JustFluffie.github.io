@@ -228,10 +228,10 @@ export function useAiHandler(charId, apiStore) {
       let calculatedTokens;
       if (isOnline) {
         // 线上模式：使用较小的基数，并确保不超过预设
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 1.5;
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 3;
       } else { // offline
         // 线下模式：使用更大的系数，为详细描写提供充足空间
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 4;
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 6;
       }
       
       // 确保 calculatedTokens 不超过 presetMaxTokens，同时不低于一个最小值
@@ -256,8 +256,8 @@ export function useAiHandler(charId, apiStore) {
         const isCharBlocked = character?.isBlocked || false;
         const separatorRegex = /(?:\||\\\||｜)\s*(?:\||\\\||｜)\s*(?:\||\\\||｜)+/;
         let rawSegments = responseText.split(separatorRegex);
-        if (rawSegments.length === 1) {
-            rawSegments = responseText.split(/\n\s*\n/).map(s => s.trim()).filter(s => s);
+        if (rawSegments.length === 1 && responseText.includes('\n')) {
+            rawSegments = responseText.split('\n').map(s => s.trim()).filter(s => s);
         }
         
         const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账)：.+?\])/g;
@@ -298,7 +298,11 @@ export function useAiHandler(charId, apiStore) {
               blocked: isCharBlocked
             });
 
-            if (route.path !== `/chat/room/${charId.value}`) {
+            // A notification should be sent if the user is not actively viewing the chat.
+            // This is true if they are on a different page OR if the current page is hidden (e.g., another tab).
+            const isChatCurrentlyVisible = route.path === `/chat/room/${charId.value}` && !document.hidden;
+
+            if (!isChatCurrentlyVisible) {
               singleStore.incrementUnreadCount(charId.value);
               notificationStore.triggerNotification(
                 character.nickname || character.name,
