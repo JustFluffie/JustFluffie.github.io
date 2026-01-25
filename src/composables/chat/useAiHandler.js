@@ -22,13 +22,11 @@ export function useAiHandler(charId, apiStore) {
 
   /**
    * 处理撤回指令
-   * 格式: [撤回]
    */
   const handleRevokeInstruction = (text) => {
     const revokePattern = /\[撤回\]/g;
     if (revokePattern.test(text)) {
       const charMessages = singleStore.messages[charId.value] || [];
-      // 从后往前找最近一条未撤回的消息
       for (let i = charMessages.length - 1; i >= 0; i--) {
         const msg = charMessages[i];
         if (msg.sender === 'char' && !msg.isRevoked) {
@@ -44,7 +42,6 @@ export function useAiHandler(charId, apiStore) {
 
   /**
    * 处理朋友圈互动指令
-   * 格式: [互动朋友圈：{"action":"like"}] 或 [互动朋友圈：{"action":"comment","response":"..."}]
    */
   const handleMomentInteraction = (text) => {
     const interactMomentPattern = /\[互动朋友圈：(.+?)\]/g;
@@ -60,7 +57,6 @@ export function useAiHandler(charId, apiStore) {
           
           if (action === 'like') {
             momentsStore.likeMoment(latestUserMoment.id, charId.value);
-            console.log(`[useAiHandler] Liked user's latest moment: ${latestUserMoment.id}`);
           } else if (action === 'comment' && response) {
             momentsStore.likeMoment(latestUserMoment.id, charId.value);
             momentsStore.addComment(latestUserMoment.id, {
@@ -68,7 +64,6 @@ export function useAiHandler(charId, apiStore) {
               content: response,
               time: Date.now(),
             });
-            console.log(`[useAiHandler] Commented on user's latest moment: ${latestUserMoment.id}`);
           }
         }
       } catch (e) {
@@ -80,7 +75,6 @@ export function useAiHandler(charId, apiStore) {
 
   /**
    * 处理发布朋友圈指令
-   * 格式: [朋友圈：{"text": "...", "imageDescription": "..."}]
    */
   const handlePostMoment = (text) => {
     const momentPattern = /\[朋友圈：(.+?)\]/g;
@@ -92,10 +86,7 @@ export function useAiHandler(charId, apiStore) {
         
         const images = [];
         if (imageDescription) {
-          images.push({
-            content: imageDescription,
-            isTextGenerated: true
-          });
+          images.push({ content: imageDescription, isTextGenerated: true });
         }
 
         if (contentText || images.length > 0) {
@@ -105,10 +96,9 @@ export function useAiHandler(charId, apiStore) {
             images: images,
             time: Date.now(),
           });
-          console.log(`[useAiHandler] Added new moment for ${charId.value}`);
         }
       } catch (e) {
-        console.error('[useAiHandler] Failed to parse moment data from AI response:', e);
+        console.error('[useAiHandler] Failed to parse moment data:', e);
       }
     }
     return text.replace(momentPattern, '').trim();
@@ -116,7 +106,6 @@ export function useAiHandler(charId, apiStore) {
 
   /**
    * 处理待办事项指令
-   * 格式: [待办：YYYY-MM-DD HH:mm 内容] 等
    */
   const handleTodoInstruction = (text) => {
     const todoPattern = /\[待办：(?:((?:\d{4}-\d{2}-\d{2}\s)?\d{1,2}:\d{2}|\d{4}-\d{2}-\d{2})\s)?(.+?)\]/g;
@@ -142,7 +131,6 @@ export function useAiHandler(charId, apiStore) {
              timeStr = dateTimeStr;
          }
       } else {
-          // 默认延迟
           const now = new Date();
           const delays = [15, 30, 60];
           const randomDelay = delays[Math.floor(Math.random() * delays.length)];
@@ -153,11 +141,7 @@ export function useAiHandler(charId, apiStore) {
       }
 
       if (todoContent) {
-        let finalContent = todoContent;
-        if (finalContent.length > 18) {
-            finalContent = finalContent.substring(0, 18) + '...';
-        }
-
+        let finalContent = todoContent.substring(0, 18) + (todoContent.length > 18 ? '...' : '');
         calendarStore.addEvent({
           type: 'todo',
           title: finalContent,
@@ -166,7 +150,6 @@ export function useAiHandler(charId, apiStore) {
           done: false,
           time: timeStr
         });
-        console.log(`[useAiHandler] Added new todo: "${finalContent}"`);
       }
     }
     return text.replace(todoPattern, '').trim();
@@ -181,25 +164,12 @@ export function useAiHandler(charId, apiStore) {
       if (!character) return;
 
       const voices = singleStore.innerVoices[charId.value] || [];
-      let nextIndex = 1;
-      if (voices.length > 0) {
-        const lastTitle = voices[0].title;
-        if (lastTitle) {
-            const match = lastTitle.match(/#(\d+)/);
-            if (match) {
-                nextIndex = parseInt(match[1], 10) + 1;
-            } else {
-                nextIndex = voices.length + 1;
-            }
-        } else {
-             nextIndex = voices.length + 1;
-        }
-      }
+      let nextIndex = (voices[0]?.title.match(/#(\d+)/)?.[1] || voices.length) + 1;
 
       const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 10);
       const prompt = buildInnerVoicePrompt(character, recentMessages, nextIndex);
-
-      const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }]);
+      
+      const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { max_tokens: 500 });
 
       if (voiceResponse) {
         const startIndex = voiceResponse.indexOf('{');
@@ -208,9 +178,6 @@ export function useAiHandler(charId, apiStore) {
           const jsonString = voiceResponse.substring(startIndex, endIndex + 1);
           const voiceData = JSON.parse(jsonString);
           singleStore.addInnerVoice(charId.value, voiceData);
-          console.log('[useAiHandler] Inner voice generated and saved:', voiceData);
-        } else {
-          console.warn('[useAiHandler] Failed to find JSON in inner voice response.');
         }
       }
     } catch (error) {
@@ -219,88 +186,87 @@ export function useAiHandler(charId, apiStore) {
   };
 
   const triggerAiResponse = async () => {
-    console.log('[useAiHandler] triggerAiResponse triggered');
     isTyping.value = true;
     try {
       const character = singleStore.getCharacter(charId.value);
+      if (!character) {
+        isTyping.value = false;
+        return;
+      }
       
-      const pendingTransfers = singleStore.getPendingUserTransfers(charId.value);
-      console.log('[useAiHandler] Pending transfers to accept:', pendingTransfers.length);
+      // --- 修正后的动态 max_tokens 计算 ---
+      const activePreset = apiStore.getActivePreset();
+      const presetMaxTokens = activePreset?.max_tokens || 1500;
+
+      // 使用 isOnline 属性 (true:线上, false:线下)
+      const isOnline = character.isOnline !== false; // 默认为线上模式
+      const replyLength = character.replyLength || { min: 10, max: 50 }; // 默认线上长度
+      const replyLengthMin = character.replyLengthMin || replyLength.min;
+      const replyLengthMax = character.replyLengthMax || replyLength.max;
+
+      let calculatedTokens;
+      if (isOnline) {
+        calculatedTokens = (replyLengthMin + replyLengthMax) || 100;
+      } else { // offline
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 2;
+      }
       
-      let responseText = await apiStore.getChatCompletion(charId.value);
-      console.log('[useAiHandler] AI Response:', responseText);
+      const finalMaxTokens = Math.min(presetMaxTokens, Math.max(50, calculatedTokens));
+      // --- 结束计算 ---
+
+      let responseText = await apiStore.getChatCompletion(charId.value, { max_tokens: finalMaxTokens });
       
       if (responseText) {
-        // 依次处理各种指令
         responseText = handleRevokeInstruction(responseText);
         responseText = handleMomentInteraction(responseText);
         responseText = handlePostMoment(responseText);
         responseText = handleTodoInstruction(responseText);
 
         if (!responseText) {
-            isTyping.value = false;
             generateAndSaveInnerVoice();
             return;
         }
 
-        if (!singleStore.messages[charId.value]) {
-            singleStore.messages[charId.value] = [];
-        }
         const isCharBlocked = character?.isBlocked || false;
-
-        // 拆分消息
-        const separatorRegex = /(?:\||\\\||｜)\s*(?:\||\\\||｜)\s*(?:\||\\\||｜)+/g;
-        let cleanText = responseText.replace(separatorRegex, '|||');
-
-        let rawSegments = cleanText.split('|||');
-        let segments = [];
+        const separatorRegex = /(?:\||\\\||｜)\s*(?:\||\\\||｜)\s*(?:\||\\\||｜)+/;
+        let rawSegments = responseText.split(separatorRegex);
+        if (rawSegments.length === 1) {
+            rawSegments = responseText.split(/\n\s*\n/).map(s => s.trim()).filter(s => s);
+        }
+        
         const specialMsgPattern = /(\[(?:图片|表情包|语音|位置|转账)：.+?\])/g;
-
-        rawSegments.forEach(seg => {
-            const subSegments = seg.split(specialMsgPattern).map(s => s.trim()).filter(s => s);
-            segments.push(...subSegments);
-        });
+        const segments = rawSegments.flatMap(seg => seg.split(specialMsgPattern).map(s => s.trim()).filter(s => s));
 
         for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i];
-            
-            if (i > 0) {
-                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-            }
+            if (i > 0) await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
 
-            let { type, content } = parseAiResponse(segment);
-            let extraData = {};
+            let { type, content, extraData = {} } = parseAiResponse(segments[i]);
 
             if (type === 'transfer_accepted') {
               await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
               singleStore.autoAcceptPendingTransfers(charId.value);
-              console.log('[useAiHandler] Transfer acceptance message processed.');
               continue;
             }
 
             if (type === 'sticker') {
-                const stickerName = content;
-                const sticker = singleStore.stickers.find(e => e.name === stickerName);
+                const sticker = singleStore.stickers.find(e => e.name === content);
                 if (sticker) {
                     content = sticker.url;
-                    extraData.name = stickerName;
+                    extraData.name = sticker.name;
                 } else {
                     type = 'text';
-                    content = `[表情包：${stickerName}]`;
+                    content = `[表情包：${content}]`;
                 }
             }
 
-            let isTextGenerated = false;
-            if (type === 'image' && !content.startsWith('http') && !content.startsWith('data:')) {
-                isTextGenerated = true;
-            }
+            const isTextGenerated = type === 'image' && !content.startsWith('http') && !content.startsWith('data:');
 
             singleStore.addMessage(charId.value, {
               id: Date.now().toString() + i,
               sender: 'char',
               type: type,
               content: content,
-              isTextGenerated: isTextGenerated,
+              isTextGenerated,
               ...extraData,
               time: Date.now(),
               blocked: isCharBlocked
@@ -312,26 +278,18 @@ export function useAiHandler(charId, apiStore) {
                 character.nickname || character.name,
                 type === 'text' ? content : `[${type}]`,
                 character.avatar,
-                () => {
-                  router.push(`/chat/room/${charId.value}`);
-                },
+                () => router.push(`/chat/room/${charId.value}`),
                 3000,
                 type
               );
             }
-        }
-
-        if (pendingTransfers.length > 0 && singleStore.getPendingUserTransfers(charId.value).length > 0) {
-          await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
-          singleStore.autoAcceptPendingTransfers(charId.value);
-          console.log('[useAiHandler] Fallback transfer acceptance executed at the end');
         }
       }
     } catch (error) {
       console.error("[useAiHandler] triggerAiResponse failed:", error);
     } finally {
       isTyping.value = false;
-      generateAndSaveInnerVoice();
+      if (responseText) generateAndSaveInnerVoice();
     }
   };
 

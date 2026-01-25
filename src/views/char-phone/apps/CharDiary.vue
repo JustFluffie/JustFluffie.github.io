@@ -126,13 +126,10 @@ const charId = route.params.charId
 const isGenerating = ref(false)
 
 // --- 3. 计算属性 ---
-// 获取角色信息用于显示头像和名字
 const characterInfo = computed(() => singleStore.getCharacter(charId))
 const diaryTitle = computed(() => characterInfo.value ? `${characterInfo.value.name}的日记` : '日记')
-
 const diaries = computed(() => diaryStore.getDiaries(charId))
 const currentDiary = computed(() => diaries.value.length > 0 ? diaries.value[0] : null)
-// 如果正在生成，使用当前时间，否则使用日记时间
 const currentTimestamp = computed(() => isGenerating.value ? Date.now() : (currentDiary.value?.timestamp || Date.now()))
 
 const formattedContent = computed(() => {
@@ -141,7 +138,6 @@ const formattedContent = computed(() => {
 })
 
 // --- 4. 辅助方法 ---
-// 拆分日期显示
 const getDay = (ts) => new Date(Number(ts)).getDate().toString().padStart(2, '0')
 const getMonth = (ts) => {
   const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -153,7 +149,6 @@ const getWeekday = (ts) => {
   return days[new Date(Number(ts)).getDay()]
 }
 
-// 图片加载失败处理
 const handleImgError = (e) => {
   e.target.style.display = 'none'
   e.target.parentElement.style.backgroundColor = '#eee'
@@ -198,7 +193,10 @@ ${chatLog}
         presetToUse = apiStore.presets.find(p => p.name === character.api)
     }
 
-    const diaryContent = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], presetToUse)
+    const diaryContent = await apiStore.getGenericCompletion(
+        [{ role: 'user', content: prompt }], 
+        { preset: presetToUse, max_tokens: 500 }
+    )
     
     if (diaryContent) {
       diaryStore.addDiary(charId, diaryContent.trim())
@@ -224,7 +222,6 @@ ${chatLog}
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
-  /* 桌面背景：改为深色木纹或简单的深灰，突出书本 */
   background-color: #f8f6f3; 
   padding: 0px 10px 20px 10px;
 }
@@ -241,45 +238,7 @@ ${chatLog}
   align-items: center;
 }
 
-/* --- 操作按钮 --- */
-.action-group {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.action-btn {
-  border-radius: 50%;
-  align-items: center;
-  justify-content: center;
-  box-shadow: none;
-  cursor: pointer;
-  color: #555;
-  transition: all 0.2s;
-  pointer-events: auto;
-}
-
-.action-btn:active {
-  transform: scale(0.9);
-}
-
-.action-btn.disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.refresh-btn.spinning {
-  animation: spin 1s linear infinite;
-}
-
-.action-icon {
-  width: 20px;
-  height: 20px;
-}
-
 /* --- 打开的书本结构 --- */
-
-/* 1. 皮革底衬 */
 .open-book-leather {
   width: 100%;
   max-width: 620px;
@@ -297,7 +256,6 @@ ${chatLog}
   box-sizing: border-box;
 }
 
-/* 2. 纸张堆叠层 */
 .paper-stack {
   width: 100%;
   height: 100%;
@@ -312,7 +270,6 @@ ${chatLog}
   padding-right: 2px;
 }
 
-/* 3. 实际书写页 */
 .paper-sheet {
   background-color: #fffbf6;
   width: 100%;
@@ -320,7 +277,7 @@ ${chatLog}
   border-radius: 2px 4px 4px 2px;
   position: relative;
   overflow: hidden;
-  padding: 30px 24px 15px; /* 调整底部内边距，让页码位置更低 */
+  padding: 30px 24px 15px;
   box-sizing: border-box;
   background-image: 
     linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 5%, rgba(0,0,0,0) 15%),
@@ -328,9 +285,6 @@ ${chatLog}
   background-size: 100% 100%, 20px 20px;
 }
 
-/* --- 装饰元素 --- */
-
-/* 丝带书签 */
 .bookmark-ribbon {
   position: absolute;
   top: -10px;
@@ -341,10 +295,8 @@ ${chatLog}
   box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
   z-index: 10;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-  transition: height 0.3s;
 }
 
-/* 拍立得样式 */
 .polaroid {
   position: absolute;
   top: 2%;
@@ -355,7 +307,6 @@ ${chatLog}
   box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
   transform: rotate(3deg);
   z-index: 5;
-  transition: transform 0.3s;
 }
 
 .photo-frame {
@@ -384,9 +335,6 @@ ${chatLog}
   text-overflow: ellipsis;
 }
 
-/* --- 日记内容 --- */
-
-/* 纸张内容容器 */
 .paper-content {
   display: flex;
   flex-direction: column;
@@ -394,7 +342,6 @@ ${chatLog}
   position: relative;
 }
 
-/* 头部 */
 .diary-header {
   display: flex;
   align-items: flex-end;
@@ -405,7 +352,7 @@ ${chatLog}
   padding-bottom: 10px;
   border-bottom: 1px dashed #a1887f;
   position: relative;
-  flex-shrink: 0; /* 防止被压缩 */
+  flex-shrink: 0;
 }
 
 .date-group {
@@ -469,20 +416,17 @@ ${chatLog}
   border-radius: 4px;
 }
 
-/* 正文 */
 .diary-body {
   position: relative;
   padding: 5px 10px 10px 10px; 
-  flex: 1; /* 占据剩余空间 */
-  overflow-y: auto; /* 允许滚动 */
-  
-  /* 隐藏滚动条 */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .diary-body::-webkit-scrollbar { 
-  display: none; /* Chrome/Safari/Webkit */
+  display: none;
 }
 
 .handwritten-text {
@@ -491,11 +435,7 @@ ${chatLog}
   color: #3e2723;
   line-height: 35px; 
   text-align: justify;
-  background-image: linear-gradient(
-    to bottom, 
-    transparent 29px,
-    #e0d8cf 30px
-  );
+  background-image: linear-gradient( to bottom, transparent 29px, #e0d8cf 30px );
   background-size: 100% 30px;
   background-attachment: local;
   padding-top: 2px; 
@@ -506,17 +446,15 @@ ${chatLog}
   margin: 0;
 }
 
-/* 页码 */
 .page-number {
   text-align: center;
   font-family: 'Times New Roman', serif;
   font-size: 12px;
   color: #a1887f;
   padding-bottom: 0px;
-  flex-shrink: 0; /* 防止被压缩 */
+  flex-shrink: 0;
 }
 
-/* --- 加载状态 --- */
 .generating-container {
   display: flex;
   flex-direction: column;
@@ -540,7 +478,6 @@ ${chatLog}
   width: 40px;
   height: 40px;
   color: #8d6e63;
-  /* 简单的书写动画 */
   animation: writing 1s infinite alternate ease-in-out;
 }
 
@@ -549,7 +486,6 @@ ${chatLog}
   to { transform: rotate(5deg) translate(5px, -5px); }
 }
 
-/* --- 封面（空状态） --- */
 .diary-book-cover {
   width: 100%;
   max-width: 400px;
@@ -678,7 +614,6 @@ ${chatLog}
   z-index: 3;
 }
 
-/* --- 动画 --- */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

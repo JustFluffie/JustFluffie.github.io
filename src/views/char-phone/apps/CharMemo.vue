@@ -116,7 +116,10 @@ ${chatLog}
         presetToUse = apiStore.presets.find(p => p.name === character.value.api)
     }
 
-    const memoContent = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], presetToUse)
+    const memoContent = await apiStore.getGenericCompletion(
+        [{ role: 'user', content: prompt }], 
+        { preset: presetToUse, max_tokens: 600 }
+    )
     
     if (memoContent) {
       const newMemos = memoContent.split('\n').map(s => s.trim()).filter(s => s.length > 0);

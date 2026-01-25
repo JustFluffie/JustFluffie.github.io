@@ -170,7 +170,10 @@ ${chatLog}
         presetToUse = apiStore.presets.find(p => p.name === character.value.api)
     }
 
-    const scheduleContent = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], presetToUse)
+    const scheduleContent = await apiStore.getGenericCompletion(
+        [{ role: 'user', content: prompt }], 
+        { preset: presetToUse, max_tokens: 1000 }
+    )
     
     if (scheduleContent) {
       // 过滤掉未来时间点的兜底逻辑

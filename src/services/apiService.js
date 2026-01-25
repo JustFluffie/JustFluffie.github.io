@@ -55,11 +55,21 @@ export const apiService = {
    * @param {string} apiKey - API Key
    * @param {string} model - 模型名称
    * @param {Array} messages - 消息列表
+   * @param {number} [maxTokens] - 最大令牌数
    * @returns {Promise<string>} - AI 回复内容
    */
-  async fetchChatCompletion(baseUrl, apiKey, model, messages) {
+  async fetchChatCompletion(baseUrl, apiKey, model, messages, maxTokens) {
     // 去除 URL 末尾的斜杠
     const cleanUrl = baseUrl.replace(/\/+$/, '');
+
+    const requestBody = {
+      model: model,
+      messages: messages,
+    };
+
+    if (maxTokens) {
+      requestBody.max_tokens = parseInt(maxTokens, 10);
+    }
 
     try {
       const response = await fetch(`${cleanUrl}/chat/completions`, {
@@ -68,10 +78,7 @@ export const apiService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({
-          model: model,
-          messages: messages,
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {

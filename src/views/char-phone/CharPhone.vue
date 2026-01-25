@@ -37,20 +37,9 @@
           
           <!-- 应用层 -->
           <Transition name="app-fade">
-            <CharDiary 
-              v-if="currentApp === 'diary'" 
-              @close="closeApp" 
-            />
-            <CharMemo 
-              v-else-if="currentApp === 'memo'" 
-              @close="closeApp" 
-            />
-            <CharSchedule 
-              v-else-if="currentApp === 'schedule'" 
-              @close="closeApp" 
-            />
-            <CharTheme 
-              v-else-if="currentApp === 'theme'" 
+            <component 
+              :is="currentAppComponent" 
+              v-if="currentAppComponent"
               @close="closeApp" 
             />
           </Transition>
@@ -163,6 +152,22 @@ const dockData = ref({
 // 应用状态
 const currentApp = ref(null)
 
+// 计算当前应用组件
+const currentAppComponent = computed(() => {
+  switch (currentApp.value) {
+    case 'diary':
+      return CharDiary
+    case 'memo':
+      return CharMemo
+    case 'schedule':
+      return CharSchedule
+    case 'theme':
+      return CharTheme
+    default:
+      return null
+  }
+})
+
 // 加载保存的数据
 const loadCharPhoneData = () => {
   const storageKey = `charphone_${charId}`
@@ -233,14 +238,23 @@ const updateDockData = (newData) => {
 // 处理应用点击
 const handleAppClick = (app) => {
   console.log('App clicked:', app)
-  if (app.label === '日记' || app.route === '/diary') {
-    currentApp.value = 'diary'
-  } else if (app.label === '备忘录' || app.route === '/memo') {
-    currentApp.value = 'memo'
-  } else if (app.label === '行程' || app.label === '行程表' || app.route === '/schedule') {
-    currentApp.value = 'schedule'
-  } else if (app.label === '主题' || app.route === '/theme') {
-    currentApp.value = 'theme'
+  
+  try {
+    // 检查是否是内置应用
+    if (app.label === '日记' || app.route === '/diary') {
+      currentApp.value = 'diary'
+    } else if (app.label === '备忘录' || app.route === '/memo') {
+      currentApp.value = 'memo'
+    } else if (app.label === '行程' || app.label === '行程表' || app.route === '/schedule') {
+      currentApp.value = 'schedule'
+    } else if (app.label === '主题' || app.route === '/theme') {
+      currentApp.value = 'theme'
+    } else {
+      // 未知应用，暂不处理
+      console.warn('未识别的应用:', app)
+    }
+  } catch (error) {
+    console.error('打开应用时出错:', error)
   }
 }
 
