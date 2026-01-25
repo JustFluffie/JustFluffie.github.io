@@ -325,7 +325,7 @@ export const messageAiActions = {
       return `${senderName}: ${msg.content}`;
     }).join('\n');
 
-    let systemPrompt = `你是一个对话总结助手。请根据以下聊天记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的关键信息、情感或决定，用于未来的回忆。`;
+    let systemPrompt = `你是一个对话总结助手。请根据以下聊天记录，为角色“${character.name}”生成一段简短的、以第一人称视角（“我”的角度）写的核心记忆。这段记忆应该捕捉对话的时间、关键信息、情感或决定，用于未来的回忆。请直接输出总结内容，不要添加任何前缀、标题或解释。`;
     
     if (character.summaryPrompt) {
         systemPrompt = character.summaryPrompt;
@@ -351,7 +351,7 @@ export const messageAiActions = {
         character.memories.unshift({
           id: Date.now(),
           time: Date.now(), // 确保包含时间戳，以便在界面上正确排序
-          content: `【${summaryTitle}】\n${summary.trim()}`
+          content: summary.trim()
         });
         this.saveData();
         console.log(`[Summary] Added to ${character.name}'s memory: ${summary}`);
