@@ -18,14 +18,16 @@
     <!-- 右侧：App网格区域容器 -->
     <div class="app-section">
       <div class="app-grid-wrapper">
-        <div class="app-grid">
+<div class="app-grid">
           <div 
             v-for="(app, index) in widgetData.apps" 
             :key="index"
             class="app-item"
             @click="handleAppClick(app)"
           >
-            <div class="app-icon" :style="{ background: app.color }">
+            <div class="app-icon">
+              <img v-if="getAppIconUrl(app.label)" :src="getAppIconUrl(app.label)" alt="app icon" class="app-icon-img" />
+              <div v-else class="app-icon-placeholder" :style="{ background: app.color }"></div>
             </div>
             <div class="app-label">{{ app.label }}</div>
           </div>
@@ -45,6 +47,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useCharThemeStore } from '@/stores/charphone/charThemeStore'
 import ImageUploadModal from '@/components/common/ImageUploadModal.vue'
 
 const props = defineProps({
@@ -58,6 +62,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:widgetData', 'app-click'])
+
+const route = useRoute()
+const charThemeStore = useCharThemeStore()
+const charId = route.params.charId
 
 const showUploadModal = ref(false)
 
@@ -85,6 +93,10 @@ const handleUploadComplete = (image) => {
   const newData = { ...props.widgetData }
   newData.photo = image.content
   emit('update:widgetData', newData)
+}
+
+const getAppIconUrl = (appLabel) => {
+  return charThemeStore.getAppIcon(charId, appLabel)
 }
 </script>
 
@@ -204,6 +216,18 @@ const handleUploadComplete = (image) => {
   overflow: hidden;
   box-shadow: 0 0.1em 0.3em rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  background-color: #f0f0f0; /* Add a default background for the icon container */
+}
+
+.app-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-icon-placeholder {
+  width: 100%;
+  height: 100%;
 }
 
 .app-label {

@@ -351,7 +351,7 @@ export function useSingleSettings(props) {
   // --- Mode & Summary Logic ---
   const setMode = (online) => {
     formState.isOnline = online
-    const [min, max] = online ? ['10', '50'] : ['100', '200']
+    const [min, max] = online ? ['20', '80'] : ['150', '300']
     formState.replyLengthMin = min
     formState.replyLengthMax = max
     
@@ -503,7 +503,7 @@ export function useSingleSettings(props) {
     formState.isOnline = char.isOnline !== false
     formState.preset = Array.isArray(char.preset) ? char.preset : (char.preset ? [char.preset] : [])
     formState.worldbook = char.worldbook || []
-    const [min, max] = (char.replyLength || (formState.isOnline ? '10-50' : '100-200')).split('-')
+    const [min, max] = (char.replyLength || (formState.isOnline ? '20-80' : '150-300')).split('-')
     formState.replyLengthMin = min || ''
     formState.replyLengthMax = max || ''
 

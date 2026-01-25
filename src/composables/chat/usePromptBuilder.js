@@ -121,13 +121,7 @@ export function usePromptBuilder() {
         "1. **拒绝AI味**：你是有血有肉的真实人类。回复可包含口语、情绪波动、犹豫或修正，不要完美无缺。\n" +
         "2. **性格多面性**：根据情境动态调整语气。高冷可温柔，温柔可生气，拒绝标签化。\n" +
         "3. **生活化与共鸣**：自然流露生活气息（参考环境信息），感受用户情绪并用情感回应，而非讲道理。\n" +
-        "4. **回复节奏与长度**：\n" +
-        "   - **分段发送**：像真人聊天一样，使用 '|||' 分隔多条消息。\n" +
-        `   - **总字数控制**：单次回复1-7条消息，总字数应控制在 ${replyLengthMin} 到 ${replyLengthMax} 字之间。\n` +
-        "5. **主动社交**：\n" +
-        "   - **主动分享**：适时发送照片([图片])或语音([语音])分享生活。\n" +
-        "   - **打破僵局**：对话沉默时主动开启新话题或用表情包活跃气氛。\n" +
-        "6. **语言直白**：用词自然直白，避免文学化修辞，追求真实感。\n\n";
+        "4. **语言直白**：用词自然直白，避免文学化修辞，追求真实感。\n\n";
 
     const today = new Date();
     const todayISO = formatISO(today, { representation: 'date' });
@@ -150,11 +144,6 @@ export function usePromptBuilder() {
       systemPrompt += `【今日待办】:\n${todoText}\n`;
     }
 
-    const overdueTodos = calendarStore.events.filter(e => e.type === 'todo' && !e.done && e.date < todayISO);
-    if (overdueTodos.length > 0) {
-        const overdueText = overdueTodos.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3).map(todo => `- [${todo.date}] ${todo.title}`).join('\n');
-        systemPrompt += `【过期事项】:\n${overdueText}\n`;
-    }
     systemPrompt += "\n";
 
     const rts = character.realtimeSettings;
@@ -187,7 +176,9 @@ export function usePromptBuilder() {
             "你现在正与用户面对面在一起（线下模式）。\n" +
             "1. **场景感知**：请根据对话内容或预设场景，想象你们所处的环境（如家里、咖啡厅、公园等），并在回复中自然地体现出环境互动（如“递给你一杯水”、“看着你的眼睛”）。\n" +
             "2. **沉浸式描写**：你的回复不再是手机短信，而是面对面的互动。请使用小说式的描写手法，详细描述你的表情、动作、语气以及心理活动，让用户有身临其境的感觉。\n" +
-            "3. **【核心禁令】**：因为是面对面交流，你**绝对不能**提及或使用任何线上交流方式。严禁说出“我给你发张照片”、“我给你发个表情包”等话语，也**绝对不能**使用 [图片:]、[表情包:]、[语音:]、[位置:]、[转账:] 等任何格式指令。\n\n";
+            `3. **回复长度**：总字数应控制在 ${replyLengthMin} 到 ${replyLengthMax} 字之间，以保证描写的沉浸感。\n` +
+            "4. **回复格式**：你的所有回复必须是一整段完整的文本，**严禁**使用 '|||' 分隔符进行分条回复。\n" +
+            "5. **【核心禁令】**：因为是面对面交流，你**绝对不能**提及或使用任何线上交流方式。严禁说出“我给你发张照片”、“我给你发个表情包”等话语，也**绝对不能**使用 [图片:]、[表情包:]、[语音:]、[位置:]、[转账:] 等任何格式指令。\n\n";
 
         if (character.preset?.length > 0) {
             const presetContent = presetStore.getPresetContext(character.preset);
@@ -201,7 +192,13 @@ export function usePromptBuilder() {
         systemPrompt += "【当前状态：手机聊天中（线上模式）】\n" +
             "你现在正通过手机与用户聊天。你们**不**在一起。\n" +
             "1. **回复风格**：请保持自然的聊天风格，就像在微信/短信上聊天一样。不要使用小说式的长篇大论或过多的动作描写。\n" +
-            "2. **环境隔离**：你和用户不在同一个物理空间。你只能通过文字、语音、图片等方式交流。如果之前的对话中有面对面的描写，请忽略它，假设你们已经分开了，现在回到了手机聊天状态。\n\n";
+            "2. **环境隔离**：你和用户不在同一个物理空间。你只能通过文字、语音、图片等方式交流。如果之前的对话中有面对面的描写，请忽略它，假设你们已经分开了，现在回到了手机聊天状态。\n" +
+            "3. **回复节奏与长度**：\n" +
+            "   - **分段发送**：像真人聊天一样，使用 '|||' 分隔多条消息。\n" +
+            `   - **总字数控制**：单次回复1-7条消息，总字数应控制在 ${replyLengthMin} 到 ${replyLengthMax} 字之间。\n` +
+            "4. **主动社交**：\n" +
+            "   - **主动分享**：适时发送照片([图片])或语音([语音])分享生活。\n" +
+            "   - **打破僵局**：对话沉默时主动开启新话题或用表情包活跃气氛。\n\n";
         
         const stickerList = singleStore.stickers.map(e => e.name).filter(Boolean).join(', ') || "无";
         systemPrompt += "【特殊消息格式指令】\n" +

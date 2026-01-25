@@ -161,7 +161,9 @@ export function useAiHandler(charId, apiStore) {
   const generateAndSaveInnerVoice = async () => {
     try {
       const character = singleStore.getCharacter(charId.value);
-      if (!character) return;
+      if (!character) {
+        return;
+      }
 
       const voices = singleStore.innerVoices[charId.value] || [];
       let nextIndex = (voices[0]?.title.match(/#(\d+)/)?.[1] || voices.length) + 1;
@@ -169,15 +171,29 @@ export function useAiHandler(charId, apiStore) {
       const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 10);
       const prompt = buildInnerVoicePrompt(character, recentMessages, nextIndex);
       
-      const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { max_tokens: 500 });
+      const voiceResponse = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { max_tokens: 2000 });
 
       if (voiceResponse) {
-        const startIndex = voiceResponse.indexOf('{');
-        const endIndex = voiceResponse.lastIndexOf('}');
+        // 移除潜在的Markdown代码块
+        let cleanedResponse = voiceResponse.trim();
+        if (cleanedResponse.startsWith('```json')) {
+          cleanedResponse = cleanedResponse.substring(7);
+        }
+        if (cleanedResponse.endsWith('```')) {
+          cleanedResponse = cleanedResponse.slice(0, -3);
+        }
+        
+        const startIndex = cleanedResponse.indexOf('{');
+        const endIndex = cleanedResponse.lastIndexOf('}');
+        
         if (startIndex !== -1 && endIndex !== -1) {
-          const jsonString = voiceResponse.substring(startIndex, endIndex + 1);
-          const voiceData = JSON.parse(jsonString);
-          singleStore.addInnerVoice(charId.value, voiceData);
+          const jsonString = cleanedResponse.substring(startIndex, endIndex + 1);
+          try {
+            const voiceData = JSON.parse(jsonString);
+            singleStore.addInnerVoice(charId.value, voiceData);
+          } catch (e) {
+            console.error('[InnerVoice] Failed to parse JSON:', e, jsonString);
+          }
         }
       }
     } catch (error) {
@@ -187,6 +203,7 @@ export function useAiHandler(charId, apiStore) {
 
   const triggerAiResponse = async () => {
     isTyping.value = true;
+    let apiCallSuccessful = false; // 标志位
     try {
       const character = singleStore.getCharacter(charId.value);
       if (!character) {
@@ -196,34 +213,39 @@ export function useAiHandler(charId, apiStore) {
       
       // --- 修正后的动态 max_tokens 计算 ---
       const activePreset = apiStore.getActivePreset();
-      const presetMaxTokens = activePreset?.max_tokens || 1500;
+      const presetMaxTokens = activePreset?.max_tokens || 6000;
 
       // 使用 isOnline 属性 (true:线上, false:线下)
       const isOnline = character.isOnline !== false; // 默认为线上模式
-      const replyLength = character.replyLength || { min: 10, max: 50 }; // 默认线上长度
+      const replyLength = character.replyLength || { min: 50, max: 100 }; // 默认线上长度
       const replyLengthMin = character.replyLengthMin || replyLength.min;
       const replyLengthMax = character.replyLengthMax || replyLength.max;
 
       let calculatedTokens;
       if (isOnline) {
-        calculatedTokens = (replyLengthMin + replyLengthMax) || 100;
+        // 线上模式：使用较小的基数，并确保不超过预设
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 1.5;
       } else { // offline
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 2;
+        // 线下模式：使用更大的系数，为详细描写提供充足空间
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 4;
       }
       
-      const finalMaxTokens = Math.min(presetMaxTokens, Math.max(50, calculatedTokens));
+      // 确保 calculatedTokens 不超过 presetMaxTokens，同时不低于一个最小值
+      const finalMaxTokens = Math.min(presetMaxTokens, Math.max(100, calculatedTokens));
       // --- 结束计算 ---
 
       let responseText = await apiStore.getChatCompletion(charId.value, { max_tokens: finalMaxTokens });
       
       if (responseText) {
+        apiCallSuccessful = true; // API调用成功且有内容
         responseText = handleRevokeInstruction(responseText);
         responseText = handleMomentInteraction(responseText);
         responseText = handlePostMoment(responseText);
         responseText = handleTodoInstruction(responseText);
 
         if (!responseText) {
-            generateAndSaveInnerVoice();
+            // 即使主回复为空，也触发心声
+            // generateAndSaveInnerVoice(); 移动到 finally
             return;
         }
 
@@ -284,12 +306,18 @@ export function useAiHandler(charId, apiStore) {
               );
             }
         }
+      } else {
+        // API调用成功但返回空内容
+        apiCallSuccessful = true;
       }
     } catch (error) {
       console.error("[useAiHandler] triggerAiResponse failed:", error);
+      apiCallSuccessful = false; // API调用失败
     } finally {
       isTyping.value = false;
-      if (responseText) generateAndSaveInnerVoice();
+      if (apiCallSuccessful) {
+        generateAndSaveInnerVoice();
+      }
     }
   };
 

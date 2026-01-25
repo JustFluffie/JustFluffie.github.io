@@ -195,7 +195,7 @@ ${chatLog}
 
     const diaryContent = await apiStore.getGenericCompletion(
         [{ role: 'user', content: prompt }], 
-        { preset: presetToUse, max_tokens: 500 }
+        { preset: presetToUse, max_tokens: 3000 }
     )
     
     if (diaryContent) {
@@ -431,7 +431,7 @@ ${chatLog}
 
 .handwritten-text {
   font-family: 'KaiTi', 'STKaiti', 'DFKai-SB', '楷体', 'Georgia', serif;
-  font-size: 19px;
+  font-size: 16px;
   color: #3e2723;
   line-height: 35px; 
   text-align: justify;
@@ -495,10 +495,6 @@ ${chatLog}
   cursor: pointer;
   perspective: 1000px;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.diary-book-cover:hover {
-  transform: translateY(-5px) scale(1.02);
 }
 
 .cover-texture {

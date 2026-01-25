@@ -97,10 +97,10 @@ const generateMemos = async () => {
     }).join('\n')
 
     const prompt = `角色: ${character.value.name}
-任务: 你正在写一些私密的备忘录便利贴。请基于你的人设的日常琐事（如工作、爱好、生活习惯）以及最近和用户的聊天内容，写5-8条简短的备忘录。
+任务: 你正在写一些私密的备忘录便利贴。请基于你的人设的日常琐事（如工作、爱好、生活习惯）以及最近和用户的聊天内容，写5-10条简短的备忘录。
 
 规则:
-1.  输出5-8条备忘录，每条字数控制在10-30字。
+1.  输出5-10条备忘录，每条字数控制在15-20字。
 2.  每条备忘录都是独立的、零散的想法。
 3.  内容可以关于你的日常生活、不为人知的小秘密、对用户的真实想法、或和用户聊天中产生的想法。
 4.  风格要口语化、生活化，就像随手写下的笔记，体现角色性格和生活气息。
@@ -118,7 +118,7 @@ ${chatLog}
 
     const memoContent = await apiStore.getGenericCompletion(
         [{ role: 'user', content: prompt }], 
-        { preset: presetToUse, max_tokens: 600 }
+        { preset: presetToUse, max_tokens: 4000 }
     )
     
     if (memoContent) {

@@ -133,14 +133,15 @@ const generateSchedule = async () => {
       // 增量更新模式
       prompt = `角色:${character.value.name}
 当前时间:${todayStr} ${currentTimeStr}
-任务:以角色的口吻补充现有行程表(仅补充${currentTimeStr}之前未记录的)。
+任务:根据参考聊天和角色设定，补充现有行程表(仅补充${currentTimeStr}之前未记录的)。
 
 规则:
 1.严禁包含晚于${currentTimeStr}的时间点。
 2.格式:HH:MM 事件内容
 3.输出完整列表(含旧数据)，按时间排序。
 4.内容基于角色人设的日常（如工作、爱好、生活习惯），体现角色性格和生活气息，要有真实感。
-5.每条字数控制在10-20字。
+5.每条字数控制在15-30字。
+6.【重要】直接输出行程列表，不要包含任何解释、标题或总结性文字。
 
 现有行程:
 ${existingSchedule.content}
@@ -150,13 +151,14 @@ ${existingSchedule.content}
       // 全新生成模式
       prompt = `角色:${character.value.name}
 当前时间:${todayStr} ${currentTimeStr}
-任务:根据参考聊天和角色设定，以角色的口吻生成截止到目前的今日行程(已发生的事)。
+任务:根据参考聊天和角色设定，生成截止到目前为止角色的今日行程(已发生的事)。
 
 规则:
 1.严禁包含晚于${currentTimeStr}的时间点。
 2.格式:HH:MM 事件内容
 3.内容基于角色人设的日常（如工作、爱好、生活习惯），体现角色性格和生活气息，要有真实感。
-4.每条字数控制在10-20字。
+4.每条字数控制在15-30字。
+5.【重要】直接输出行程列表，不要包含任何解释、标题或总结性文字。
 
 参考聊天:
 ${chatLog}
@@ -172,7 +174,7 @@ ${chatLog}
 
     const scheduleContent = await apiStore.getGenericCompletion(
         [{ role: 'user', content: prompt }], 
-        { preset: presetToUse, max_tokens: 1000 }
+        { preset: presetToUse, max_tokens: 8000 }
     )
     
     if (scheduleContent) {

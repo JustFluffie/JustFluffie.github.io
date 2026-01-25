@@ -18,7 +18,7 @@
           >
             <div v-if="!currentWallpaper" class="upload-hint">
               <svg-icon name="image" class="hint-icon" />
-              <span>点击上传壁纸</span>
+              <span>点击上传</span>
             </div>
           </div>
           <button 
@@ -33,8 +33,8 @@
 
       <!-- App图标设置模块 -->
       <div class="theme-section">
-        <div class="section-title">App图标设置</div>
-        <div class="app-icons-grid">
+        <div class="section-title">App图标自定义</div>
+        <div class="app-icons-grid-new">
           <div 
             v-for="app in availableApps" 
             :key="app.label" 
@@ -48,17 +48,10 @@
                 alt="app icon"
               />
               <div v-else class="app-icon-placeholder">
-                <span>{{ app.label.charAt(0) }}</span>
+                <span>点击上传</span>
               </div>
             </div>
             <span class="app-name">{{ app.label }}</span>
-            <button 
-              v-if="getAppIconUrl(app.label)" 
-              class="btn-clear-icon"
-              @click.stop="clearAppIcon(app.label)"
-            >
-              ×
-            </button>
           </div>
         </div>
       </div>
@@ -77,7 +70,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useSingleStore } from '@/stores/chat/singleStore'
 import { useCharThemeStore } from '@/stores/charphone/charThemeStore'
@@ -87,6 +81,7 @@ import SvgIcon from '@/components/common/SvgIcon.vue'
 
 // --- 1. 设置与钩子 ---
 const emit = defineEmits(['close'])
+const { t } = useI18n()
 const route = useRoute()
 const singleStore = useSingleStore()
 const charThemeStore = useCharThemeStore()
@@ -114,44 +109,21 @@ const wallpaperStyle = computed(() => {
     }
   }
   return {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    background: '#e0e0e0'
   }
 })
 
-// 获取当前CharPhone中可用的所有app
-const availableApps = computed(() => {
-  const storageKey = `charphone_${charId}`
-  const savedData = localStorage.getItem(storageKey)
-  const apps = []
-  
-  if (savedData) {
-    try {
-      const parsed = JSON.parse(savedData)
-      
-      // 从middle获取apps
-      if (parsed.middle?.apps) {
-        parsed.middle.apps.forEach(app => {
-          if (app.label && !apps.find(a => a.label === app.label)) {
-            apps.push({ label: app.label, route: app.route })
-          }
-        })
-      }
-      
-      // 从bottom获取apps
-      if (parsed.bottom?.apps) {
-        parsed.bottom.apps.forEach(app => {
-          if (app.label && !apps.find(a => a.label === app.label)) {
-            apps.push({ label: app.label, route: app.route })
-          }
-        })
-      }
-    } catch (e) {
-      console.error('Failed to parse charphone data:', e)
-    }
-  }
-  
-  return apps
-})
+// 静态数据：App列表 (响应式)
+const availableApps = computed(() => [
+  { label: '微信', key: 'chat' },
+  { label: '行程表', key: 'schedule' },
+  { label: '日记', key: 'diary' },
+  { label: '备忘录', key: 'memo' },
+  { label: '购买记录', key: 'purchase' },
+  { label: '搜索记录', key: 'search' },
+  { label: '主题', key: 'theme' },
+  { label: 'app1', key: 'app1' }
+])
 
 // --- 4. 方法 ---
 const handleClose = () => {
@@ -173,6 +145,11 @@ const openAppIconUpload = (appLabel) => {
 }
 
 const handleImageUpload = (image) => {
+  if (!currentUploadTarget.value) {
+    console.error('currentUploadTarget is null. Aborting image upload handling.');
+    return;
+  }
+
   const url = image.content
   
   if (currentUploadTarget.value.type === 'wallpaper') {
@@ -233,11 +210,12 @@ const getAppIconUrl = (appLabel) => {
 .wallpaper-preview-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
 }
 
 .wallpaper-preview {
-  width: 100%;
+  width: 50%;
   aspect-ratio: 9/16;
   border-radius: 12px;
   overflow: hidden;
@@ -291,49 +269,36 @@ const getAppIconUrl = (appLabel) => {
 }
 
 /* App图标网格 */
-.app-icons-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+.app-icons-grid-new {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
 }
 
 .app-icon-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  position: relative;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.app-icon-item:hover {
-  background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
 }
 
 .app-icon-box {
-  width: 55px;
-  height: 55px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
-}
-
-.app-icon-item:active .app-icon-box {
-  transform: scale(0.95);
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .app-icon-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .app-icon-placeholder {
@@ -342,45 +307,15 @@ const getAppIconUrl = (appLabel) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  font-size: 24px;
+  background: #e0e0e0;
+  color: #9e9e9e;
+  font-size: 10px;
   font-weight: 600;
 }
 
 .app-name {
-  font-size: 12px;
-  color: #37474f;
-  text-align: center;
-  word-break: break-word;
-  max-width: 100%;
-}
-
-.btn-clear-icon {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #ff5252;
-  color: #fff;
-  border: none;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.app-icon-item:hover .btn-clear-icon {
-  opacity: 1;
-}
-
-.btn-clear-icon:hover {
-  background: #ff1744;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 </style>

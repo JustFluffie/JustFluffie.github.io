@@ -11,12 +11,11 @@ export const apiService = {
    * @returns {Promise<string[]>} - 模型 ID 列表
    */
   async fetchModels(baseUrl, apiKey) {
-    // 去除 URL 末尾的斜杠
-    const cleanUrl = baseUrl.replace(/\/+$/, '');
-    console.log(`[ApiService] Fetching models from ${cleanUrl}...`);
+    // 在开发模式下，强制使用代理路径，忽略传入的 baseUrl
+    const effectiveUrl = import.meta.env.DEV ? '/v1' : baseUrl.replace(/\/+$/, '');
 
     try {
-      const response = await fetch(`${cleanUrl}/models`, {
+      const response = await fetch(`${effectiveUrl}/models`, {
         headers: {
           'Authorization': `Bearer ${apiKey}`
         }
@@ -33,7 +32,6 @@ export const apiService = {
       }
 
       const data = await response.json();
-      console.log('[ApiService] Models response:', JSON.stringify(data, null, 2));
       
       // 解析模型列表
       const fetchedModels = data.data ? data.data.map(model => model.id) : [];
@@ -59,8 +57,8 @@ export const apiService = {
    * @returns {Promise<string>} - AI 回复内容
    */
   async fetchChatCompletion(baseUrl, apiKey, model, messages, maxTokens) {
-    // 去除 URL 末尾的斜杠
-    const cleanUrl = baseUrl.replace(/\/+$/, '');
+    // 在开发模式下，强制使用代理路径，忽略传入的 baseUrl
+    const effectiveUrl = import.meta.env.DEV ? '/v1' : baseUrl.replace(/\/+$/, '');
 
     const requestBody = {
       model: model,
@@ -72,7 +70,7 @@ export const apiService = {
     }
 
     try {
-      const response = await fetch(`${cleanUrl}/chat/completions`, {
+      const response = await fetch(`${effectiveUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
