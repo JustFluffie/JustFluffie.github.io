@@ -63,7 +63,7 @@ const currentDate = ref('--/--/--  --')
 // leftApps 显示在左侧（Header下方），rightApps 显示在右侧（PhotoWall下方）
 const leftApps = computed(() => [
   { id: 'spy', label: '', action: () => {} },
-  { id: 'check_phone', label: '查手机', action: () => { showCheckPhoneModal.value = true } }
+  { id: 'char_phone', label: '查手机', action: () => { showCheckPhoneModal.value = true } }
 ])
 
 const rightApps = computed(() => [

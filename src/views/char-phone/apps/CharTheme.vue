@@ -37,14 +37,14 @@
         <div class="app-icons-grid-new">
           <div 
             v-for="app in availableApps" 
-            :key="app.label" 
+            :key="app.key" 
             class="app-icon-item"
-            @click="openAppIconUpload(app.label)"
+            @click="openAppIconUpload(app)"
           >
             <div class="app-icon-box">
               <img 
-                v-if="getAppIconUrl(app.label)" 
-                :src="getAppIconUrl(app.label)" 
+                v-if="getAppIconUrl(app.key)" 
+                :src="getAppIconUrl(app.key)" 
                 alt="app icon"
               />
               <div v-else class="app-icon-placeholder">
@@ -115,14 +115,14 @@ const wallpaperStyle = computed(() => {
 
 // 静态数据：App列表 (响应式)
 const availableApps = computed(() => [
-  { label: '微信', key: 'chat' },
-  { label: '行程表', key: 'schedule' },
-  { label: '日记', key: 'diary' },
-  { label: '备忘录', key: 'memo' },
-  { label: '购买记录', key: 'purchase' },
-  { label: '搜索记录', key: 'search' },
-  { label: '主题', key: 'theme' },
-  { label: 'app1', key: 'app1' }
+  { label: '微信', key: 'char_chat' },
+  { label: '行程表', key: 'char_schedule' },
+  { label: '日记', key: 'char_diary' },
+  { label: '备忘录', key: 'char_memo' },
+  { label: '购买记录', key: 'char_purchase' },
+  { label: '搜索记录', key: 'char_search' },
+  { label: '主题', key: 'char_theme' },
+  { label: 'app1', key: 'char_app1' }
 ])
 
 // --- 4. 方法 ---
@@ -137,10 +137,10 @@ const openWallpaperUpload = () => {
   isUploadModalVisible.value = true
 }
 
-const openAppIconUpload = (appLabel) => {
-  uploadModalTitle.value = `设置 ${appLabel} 图标`
+const openAppIconUpload = (app) => {
+  uploadModalTitle.value = `设置 ${app.label} 图标`
   uploadBizType.value = 'avatar'
-  currentUploadTarget.value = { type: 'appIcon', appLabel }
+  currentUploadTarget.value = { type: 'appIcon', appKey: app.key }
   isUploadModalVisible.value = true
 }
 
@@ -155,7 +155,7 @@ const handleImageUpload = (image) => {
   if (currentUploadTarget.value.type === 'wallpaper') {
     charThemeStore.setWallpaper(charId, url)
   } else if (currentUploadTarget.value.type === 'appIcon') {
-    charThemeStore.setAppIcon(charId, currentUploadTarget.value.appLabel, url)
+    charThemeStore.setAppIcon(charId, currentUploadTarget.value.appKey, url)
   }
   
   isUploadModalVisible.value = false
@@ -168,14 +168,14 @@ const clearWallpaper = () => {
   }
 }
 
-const clearAppIcon = (appLabel) => {
+const clearAppIcon = (appKey, appLabel) => {
   if (confirm(`确定要清除 ${appLabel} 的图标吗？`)) {
-    charThemeStore.deleteAppIcon(charId, appLabel)
+    charThemeStore.deleteAppIcon(charId, appKey)
   }
 }
 
-const getAppIconUrl = (appLabel) => {
-  return charThemeStore.getAppIcon(charId, appLabel)
+const getAppIconUrl = (appKey) => {
+  return charThemeStore.getAppIcon(charId, appKey)
 }
 </script>
 

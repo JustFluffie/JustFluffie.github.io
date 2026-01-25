@@ -113,10 +113,10 @@ const headerData = ref({
 })
 
 const defaultMiddleApps = [
-  { label: '微信', color: 'rgba(255, 255, 255, 0.9)', route: '/chat' },
-  { label: '行程表', color: 'rgba(255, 255, 255, 0.9)', route: '/schedule' },
-  { label: '日记', color: 'rgba(255, 255, 255, 0.9)', route: '/diary' },
-  { label: '备忘录', color: 'rgba(255, 255, 255, 0.9)', route: '/memo' }
+  { label: '微信', color: 'rgba(255, 255, 255, 0.9)', route: '/char_chat' },
+  { label: '行程表', color: 'rgba(255, 255, 255, 0.9)', route: '/char_schedule' },
+  { label: '日记', color: 'rgba(255, 255, 255, 0.9)', route: '/char_diary' },
+  { label: '备忘录', color: 'rgba(255, 255, 255, 0.9)', route: '/char_memo' }
 ]
 
 const middleData = ref({
@@ -125,10 +125,10 @@ const middleData = ref({
 })
 
 const defaultBottomApps = [
-  { label: '购买记录', color: 'rgba(255, 255, 255, 0.9)', route: '/purchase' },
-  { label: '搜索记录', color: 'rgba(255, 255, 255, 0.9)', route: '/search' },
-  { label: '主题', color: 'rgba(255, 255, 255, 0.9)', route: '/theme' },
-  { label: 'app1', color: 'rgba(255, 255, 255, 0.9)', route: '/app1' }
+  { label: '购买记录', color: 'rgba(255, 255, 255, 0.9)', route: '/char_purchase' },
+  { label: '搜索记录', color: 'rgba(255, 255, 255, 0.9)', route: '/char_search' },
+  { label: '主题', color: 'rgba(255, 255, 255, 0.9)', route: '/char_theme' },
+  { label: 'app1', color: 'rgba(255, 255, 255, 0.9)', route: '/char_app1' }
 ]
 
 const bottomData = ref({
@@ -241,13 +241,13 @@ const handleAppClick = (app) => {
   
   try {
     // 检查是否是内置应用
-    if (app.label === '日记' || app.route === '/diary') {
+    if (app.label === '日记' || app.route === '/char_diary') {
       currentApp.value = 'diary'
-    } else if (app.label === '备忘录' || app.route === '/memo') {
+    } else if (app.label === '备忘录' || app.route === '/char_memo') {
       currentApp.value = 'memo'
-    } else if (app.label === '行程' || app.label === '行程表' || app.route === '/schedule') {
+    } else if (app.label === '行程' || app.label === '行程表' || app.route === '/char_schedule') {
       currentApp.value = 'schedule'
-    } else if (app.label === '主题' || app.route === '/theme') {
+    } else if (app.label === '主题' || app.route === '/char_theme') {
       currentApp.value = 'theme'
     } else {
       // 未知应用，暂不处理

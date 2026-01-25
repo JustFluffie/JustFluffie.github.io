@@ -26,21 +26,21 @@ export const useCharThemeStore = defineStore('charTheme', () => {
   }
 
   // 设置app图标
-  const setAppIcon = (charId, appLabel, imageUrl) => {
+  const setAppIcon = (charId, appKey, imageUrl) => {
     if (!charThemes.value[charId]) {
       getCharTheme(charId)
     }
     if (!charThemes.value[charId].appIcons) {
       charThemes.value[charId].appIcons = {}
     }
-    charThemes.value[charId].appIcons[appLabel] = imageUrl
+    charThemes.value[charId].appIcons[appKey] = imageUrl
     saveThemes()
   }
 
   // 删除app图标
-  const deleteAppIcon = (charId, appLabel) => {
-    if (charThemes.value[charId]?.appIcons?.[appLabel]) {
-      delete charThemes.value[charId].appIcons[appLabel]
+  const deleteAppIcon = (charId, appKey) => {
+    if (charThemes.value[charId]?.appIcons?.[appKey]) {
+      delete charThemes.value[charId].appIcons[appKey]
       saveThemes()
     }
   }
@@ -59,9 +59,9 @@ export const useCharThemeStore = defineStore('charTheme', () => {
   }
 
   // 获取app图标
-  const getAppIcon = (charId, appLabel) => {
+  const getAppIcon = (charId, appKey) => {
     const theme = getCharTheme(charId)
-    return theme.appIcons?.[appLabel] || null
+    return theme.appIcons?.[appKey] || null
   }
 
   // 保存到 localStorage

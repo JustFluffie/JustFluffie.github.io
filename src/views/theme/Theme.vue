@@ -265,7 +265,7 @@ const apps = computed(() => [
   { key: 'api', name: t('homeScreen.apps.apiSettings') },
   { key: 'theme', name: t('homeScreen.apps.theme') },
   { key: 'spy', name: t('homeScreen.apps.spy') },
-  { key: 'check', name: t('homeScreen.apps.check') }
+  { key: 'char_phone', name: '查手机' }
 ])
 
 const wallpaperModalTitle = computed(() => {
