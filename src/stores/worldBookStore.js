@@ -186,7 +186,7 @@ export const useWorldBookStore = defineStore('worldBook', {
                 entries: []
               };
             }
-            contextByBook[entry.bookTitle].entries.push(`【${entry.title}】: ${entry.content}`);
+            contextByBook[entry.bookTitle].entries.push(`${entry.title}: ${entry.content}`);
           }
         } else {
           // 否则，假设它是一个世界书的 ID
@@ -202,7 +202,7 @@ export const useWorldBookStore = defineStore('worldBook', {
                 };
               }
               activeEntries.forEach(entry => {
-                contextByBook[book.title].entries.push(`【${entry.title}】: ${entry.content}`);
+                contextByBook[book.title].entries.push(`${entry.title}: ${entry.content}`);
               });
             }
           }
@@ -221,7 +221,7 @@ export const useWorldBookStore = defineStore('worldBook', {
       sortedBookTitles.forEach(title => {
         const bookData = contextByBook[title];
         if (bookData.entries.length > 0) {
-          finalContext += `[世界书: ${title}]\n`;
+          finalContext += `[${title}]\n`;
           finalContext += bookData.entries.join('\n') + '\n\n';
         }
       });

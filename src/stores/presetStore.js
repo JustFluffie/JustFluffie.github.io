@@ -184,7 +184,7 @@ export const usePresetStore = defineStore('preset', {
                 entries: []
               };
             }
-            contextByPreset[entry.presetTitle].entries.push(`【${entry.title}】: ${entry.content}`);
+            contextByPreset[entry.presetTitle].entries.push(`${entry.title}: ${entry.content}`);
           }
         } else {
           // 否则，假设它是一个预设的 ID
@@ -200,7 +200,7 @@ export const usePresetStore = defineStore('preset', {
                 };
               }
               activeEntries.forEach(entry => {
-                contextByPreset[preset.title].entries.push(`【${entry.title}】: ${entry.content}`);
+                contextByPreset[preset.title].entries.push(`${entry.title}: ${entry.content}`);
               });
             }
           }
@@ -219,7 +219,7 @@ export const usePresetStore = defineStore('preset', {
       sortedPresetTitles.forEach(title => {
         const presetData = contextByPreset[title];
         if (presetData.entries.length > 0) {
-          finalContext += `[预设: ${title}]\n`;
+          finalContext += `[${title}]\n`;
           finalContext += presetData.entries.join('\n') + '\n\n';
         }
       });

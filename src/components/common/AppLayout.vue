@@ -1,6 +1,6 @@
 ﻿<template>
   <div class="app-screen active">
-    <div class="app-header">
+    <div class="app-header" :class="{ 'no-border': noHeaderBorder }">
       <div class="back-btn" @click="handleBack">
         <svg-icon name="back-btn" />
       </div>
@@ -29,6 +29,10 @@ const props = defineProps({
     default: null
   },
   noPadding: {
+    type: Boolean,
+    default: false
+  },
+  noHeaderBorder: {
     type: Boolean,
     default: false
   }
@@ -119,6 +123,9 @@ function handleBack() {
     justify-content: center;
     cursor: pointer;
     color: #1a1a1a;
+}
+.app-header.no-border {
+    border-bottom: none;
 }
 /* .app-header .action-btn svg 样式已移除，使用全局 .svg-icon 样式 */
 

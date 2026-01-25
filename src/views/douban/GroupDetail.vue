@@ -1,60 +1,88 @@
 <template>
-  <AppLayout :title="groupData.title">
-    <template #header-actions>
-      <span class="material-icons" @click="refreshPosts">refresh</span>
+  <AppLayout :title="''" no-padding no-header-border>
+    <template #action>
+      <SvgIcon name="refresh" @click="refreshPosts" class="icon-refresh"/>
     </template>
 
     <div class="group-page">
+      <!-- 选择器横条 -->
+      <div class="controls-bar">
+        <div class="post-controls">
+          <div class="control-group">
+            <select id="character-select" v-model="selectedCharacterId">
+              <option :value="null" disabled>角色</option>
+              <option v-for="char in characters" :key="char.id" :value="char.id">
+                {{ char.name }}
+              </option>
+            </select>
+          </div>
+          <div class="control-group">
+            <select id="persona-select" v-model="selectedUserPersonaId">
+              <option :value="null" disabled>用户</option>
+              <option v-for="persona in userPersonas" :key="persona.id" :value="persona.id">
+                {{ persona.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- 小组头部 -->
       <header class="group-header">
-        <h1>{{ groupData.title }}</h1>
-        <p>{{ groupData.description }}</p>
+        <div class="group-info">
+          <h1>{{ groupData.title }}</h1>
+          <p>{{ groupData.description }}</p>
+        </div>
       </header>
 
       <!-- 帖子列表 -->
       <main class="post-list">
         <div v-if="doubanStore.posts.length === 0" class="empty-state">
-          <p>点击右上角刷新看看大家在说什么</p>
+          <p>选择角色和人设后，点击右上角刷新</p>
         </div>
         <article v-else v-for="post in doubanStore.posts" :key="post.id" class="post-item" @click="goToPost(post.id)">
+          <div class="post-stats">
+            <SvgIcon name="comment" class="comment-icon" />
+            <span class="comment-count">{{ post.comments }}</span>
+          </div>
+          <div class="post-details">
+            <h2 class="post-title">{{ post.title }}</h2>
+            <p class="post-summary">{{ post.summary }}</p>
             <div class="post-meta">
               <div class="avatar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="12" cy="8" r="4" :fill="post.avatarColor"></circle>
                   <path d="M12 14C8.68629 14 6 16.6863 6 20H18C18 16.6863 15.3137 14 12 14Z" :fill="post.avatarColor"></path>
                 </svg>
               </div>
-              <div class="user-info">
-                <div class="username">匿名豆友</div>
-                <div class="timestamp">{{ post.timestamp }}</div>
-              </div>
+              <span class="username">匿名豆友</span>
+              <span class="timestamp">{{ post.timestamp }}</span>
             </div>
-            <div class="post-content">
-              <h2>{{ post.title }}</h2>
-              <p>{{ post.summary }}</p>
-            </div>
-            <footer class="post-footer">
-              <span><span class="icon">💬</span>{{ post.comments }}</span>
-              <span><span class="icon">👍</span>{{ post.likes }}</span>
-            </footer>
+          </div>
         </article>
       </main>
     </div>
-
-    <!-- 悬浮发帖按钮 -->
-    <button class="fab-create-post" title="发新帖">+</button>
   </AppLayout>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDoubanStore } from '@/stores/doubanStore';
+import { useSingleStore } from '@/stores/chat/singleStore';
 import AppLayout from '@/components/common/AppLayout.vue';
+import SvgIcon from '@/components/common/SvgIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
 const doubanStore = useDoubanStore();
+const singleStore = useSingleStore();
+
+const selectedCharacterId = ref(null);
+const selectedUserPersonaId = ref(null);
+
+const characters = computed(() => singleStore.characters);
+const userPersonas = computed(() => singleStore.userPersonas);
 
 const groupInfoMap = {
   '校园热线': { description: '你的课表、我的吐槽，青春的回忆与回响。' },
@@ -73,192 +101,199 @@ const groupData = computed(() => {
   };
 });
 
-const samplePostsData = [
-    { id: 1, title: '今天中午吃什么，求推荐！', summary: '楼下那几家都吃腻了，黄焖鸡、麻辣烫、沙县... 感觉人生已经失去了乐趣。', fullText: '楼下那几家都吃腻了，黄焖鸡、麻辣烫、沙县... 感觉人生已经失去了乐趣。大家有什么外卖推荐吗？预算30以内，不要太油腻的，谢谢各位摸鱼搭子！', avatarColor: '#ccc', commentsList: [{id: 1, user: '摸鱼大师', text: '试试XX家的轻食沙拉，健康又好吃！', time: '10分钟前', likes: 25}] },
-    { id: 2, title: '分享一个刚发现的宝藏歌手', summary: '最近疯狂循环一个叫Khruangbin的乐队，他们的音乐特别放松，简直是打工人的精神按摩油。', fullText: '最近疯狂循环一个叫Khruangbin的乐队，中文名叫“团员飞机”，他们的音乐特别放松，有点迷幻，又有点东南亚风情，简直是打工人的精神按摩油。强烈推荐《White Gloves》这首！', avatarColor: '#bada55', commentsList: [] },
-    { id: 3, title: '大家会介意开会的时候领导突然cue你发言吗？', summary: '我真的会心跳漏一拍，本来在神游天外，突然被点名，大脑一片空白...', fullText: '我真的会心跳漏一拍，本来在神游天外，突然被点名，大脑一片空白，只能支支吾吾说一些没有营养的废话。感觉好社死啊，有什么办法可以破解吗？', avatarColor: '#ffc0cb', commentsList: [{id: 1, user: '会议隐形人', text: '同感！我一般会说“XX总刚才的观点我非常认同，我补充两点...”，然后开始临场发挥。', time: '1小时前', likes: 102}] },
-    { id: 4, title: '求助！租房合同里的这个条款是不是坑？', summary: '房东在补充协议里加了一条“因市场变化可调整租金”，这合法吗？我有点慌。', fullText: '房东在补充协议里加了一条“因市场变化可调整租金”，这合法吗？我有点慌。有没有懂法律的朋友帮忙看看？', avatarColor: '#add8e6', commentsList: [] },
-    { id: 5, title: '有没有适合一个人周末去逛的地方？', summary: '不想总是宅在家里，求推荐一些人少、安静、适合放空自己的地方。', fullText: '不想总是宅在家里，求推荐一些人少、安静、适合放空自己的地方。博物馆、美术馆之类的都行。', avatarColor: '#f0e68c', commentsList: [] },
-];
-
 const refreshPosts = () => {
-  const shuffled = [...samplePostsData].sort(() => 0.5 - Math.random());
-  const postCount = Math.floor(Math.random() * 3) + 3;
-  
-  const newPosts = shuffled.slice(0, postCount).map((post, index) => ({
-    ...post,
-    id: index + 1, // Assign new sequential IDs
-    timestamp: `${Math.floor(Math.random() * 59) + 1}分钟前`,
-    comments: Math.floor(Math.random() * 500),
-    likes: Math.floor(Math.random() * 2000),
-  }));
-  doubanStore.setPosts(newPosts);
+  if (!selectedCharacterId.value || !selectedUserPersonaId.value) {
+    console.log("Waiting for character and persona selection...");
+    return;
+  }
+  doubanStore.fetchAndSetPosts(
+    groupData.value.title,
+    selectedCharacterId.value,
+    selectedUserPersonaId.value
+  );
 };
 
 const goToPost = (postId) => {
   router.push({ name: 'douban-post-detail', params: { postId } });
 };
 
+onMounted(() => {
+  // 清空旧数据
+  doubanStore.setPosts([]);
+
+  // 初始化选择器数据，但不自动选择
+  selectedCharacterId.value = null;
+  selectedUserPersonaId.value = null;
+});
+
 </script>
 
 <style scoped>
-/* --- 全局样式 --- */
-:root {
-    --douban-green: #007722;
-    --background-color: #f6f6f6;
-    --card-background: #ffffff;
-    --text-primary: #111;
-    --text-secondary: #999;
-    --border-color: #e8e8e8;
-}
-
-.material-icons {
-  cursor: pointer;
-}
-
 /* --- 页面主容器 --- */
 .group-page {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: var(--background-color);
+    background-color: var(--bg-light);
     height: 100%;
     overflow-y: auto;
 }
 
 /* --- 小组头部 --- */
 .group-header {
-    background-color: var(--card-background);
-    padding: 20px 16px;
+    background-color: var(--bg-white);
+    padding: 0px 16px 16px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.icon-refresh {
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--text-darkest);
+}
+
+.group-info {
+  flex-grow: 1;
 }
 
 .group-header h1 {
     font-size: 22px;
+    font-weight: 600;
     margin: 0 0 8px 0;
-    color: var(--douban-green);
+    color: #007722;
 }
 
 .group-header p {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     margin: 0;
+}
+
+.controls-bar {
+  background-color: var(--bg-white);
+  padding: 0px 12px;
+}
+
+.post-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+}
+
+.control-group select {
+  background-color: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  color: #3890f5;
+  text-align: right;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.control-group select:focus {
+  outline: none;
 }
 
 /* --- 帖子列表 --- */
 .post-list {
-    padding: 0;
-    background-color: var(--card-background);
+    background-color: var(--bg-white);
 }
 
 .empty-state {
   text-align: center;
   padding: 80px 40px;
-  color: var(--text-secondary);
-  background-color: var(--background-color);
+  color: var(--text-tertiary);
+  background-color: var(--bg-light);
 }
 
-/* --- 单个帖子卡片样式 --- */
+/* --- 单个帖子卡片样式 (新) --- */
 .post-item {
+    display: flex;
+    align-items: flex-start;
     padding: 16px;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s;
 }
-
 .post-item:hover {
     background-color: #f9f9f9;
 }
 
-/* --- 帖子头部：头像和昵称 --- */
+.post-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 16px;
+  flex-shrink: 0;
+  width: 40px;
+  color: var(--text-tertiary);
+}
+
+.comment-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+  color: var(--C-pink);
+}
+
+.comment-count {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.post-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.post-title {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-darkest);
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+}
+
+.post-summary {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+  
+  /* Ellipsis for 1 line */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .post-meta {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
 }
 
 .post-meta .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: #eee; /* 匿名头像底色 */
-    margin-right: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.post-meta .user-info .username {
-    font-size: 15px;
-    font-weight: 500;
-    color: #444;
-}
-
-.post-meta .user-info .timestamp {
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-
-/* --- 帖子内容：标题和摘要 --- */
-.post-content h2 {
-    font-size: 18px;
-    margin: 0 0 8px 0;
-    line-height: 1.4;
-    color: var(--text-primary);
-}
-
-.post-content p {
-    font-size: 15px;
-    line-height: 1.6;
-    margin: 0;
-    color: #333;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* --- 帖子底部：互动数据 --- */
-.post-footer {
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    display: flex;
-    gap: 20px; /* 控制图标间距 */
-}
-
-.post-footer span {
-    display: inline-flex;
-    align-items: center;
-}
-
-.post-footer .icon {
-    margin-right: 5px;
-}
-
-/* --- 悬浮发帖按钮 --- */
-.fab-create-post {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 56px;
-    height: 56px;
-    background-color: var(--douban-green);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    z-index: 100;
-}
-
-.fab-create-post:hover {
-    background-color: #005f1c; /* 鼠标悬浮时颜色加深 */
+.post-meta .username {
+  margin-right: 8px;
+  font-weight: 400;
 }
 </style>

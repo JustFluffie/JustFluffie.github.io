@@ -196,6 +196,16 @@ export const useSingleStore = defineStore('singleChat', {
       return this.characters.find(c => c.id === id);
     },
 
+    getActiveCharacter() {
+      const currentRoute = router.currentRoute.value;
+      const charId = currentRoute.params.charId;
+      if (charId) {
+        return this.getCharacter(charId);
+      }
+      // 如果没有 charId，可以返回第一个角色或 null
+      return this.characters.length > 0 ? this.characters[0] : null;
+    },
+
     // NPC 相关操作
     addNpc(name) {
       const newNpc = {

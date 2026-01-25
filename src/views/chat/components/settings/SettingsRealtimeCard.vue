@@ -72,11 +72,6 @@ const toggleCollapse = () => {
 .label-col { display: flex; flex-direction: column; }
 .label-main { font-size: 14px; color: #333; }
 
-.toggle-switch { width: 40px; height: 20px; background: #e0e0e0; border-radius: 10px; position: relative; cursor: pointer; transition: all 0.3s; }
-.toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.toggle-switch.active { background: #07C160; }
-.toggle-switch.active::after { left: 22px; }
-
 .form-item-vertical { padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
 .location-input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
 .location-display { font-size: 11px; color: #888; margin-top: 5px; white-space: pre-wrap; word-break: break-all; line-height: 1.4; }
