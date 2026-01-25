@@ -83,7 +83,7 @@ const handleAppClick = (app) => {
   box-sizing: border-box;
   
   /* 定义局部变量，替代全局 :root 变量 */
-  --global-icon-size: 6.5vh;
+  --global-icon-size: 7vh;
   --global-icon-font-size: 1.4vh;
   --global-icon-radius: 1.3vh;
 }

@@ -198,6 +198,10 @@ export function useAiHandler(charId, apiStore) {
       }
     } catch (error) {
       console.error('[useAiHandler] Failed to generate inner voice:', error);
+      notificationStore.addNotification({
+        type: 'error',
+        message: `心声生成失败: ${error.message}`,
+      });
     }
   };
 
@@ -312,6 +316,10 @@ export function useAiHandler(charId, apiStore) {
       }
     } catch (error) {
       console.error("[useAiHandler] triggerAiResponse failed:", error);
+      notificationStore.addNotification({
+        type: 'error',
+        message: `AI 响应失败: ${error.message}`,
+      });
       apiCallSuccessful = false; // API调用失败
     } finally {
       isTyping.value = false;
