@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 
@@ -49,7 +50,7 @@ const props = defineProps({
 
 const { t, formState, userPersonaOptions, saveUserPersona, deleteUserPersona } = props.settings
 
-const collapsed = props.settings.collapsedStates.userInfo
+const collapsed = computed(() => props.settings.collapsedStates.userInfo)
 const toggleCollapse = () => {
   props.settings.collapsedStates.userInfo = !props.settings.collapsedStates.userInfo
 }

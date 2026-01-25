@@ -39,6 +39,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import MultiSelect from '@/components/common/MultiSelect.vue'
 
@@ -51,7 +52,7 @@ const props = defineProps({
 
 const { t, formState, sortedPresets, sortedWorldBooks, setMode } = props.settings
 
-const collapsed = props.settings.collapsedStates.modeSettings
+const collapsed = computed(() => props.settings.collapsedStates.modeSettings)
 const toggleCollapse = () => {
   props.settings.collapsedStates.modeSettings = !props.settings.collapsedStates.modeSettings
 }

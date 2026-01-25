@@ -30,6 +30,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
@@ -39,9 +40,9 @@ const props = defineProps({
   }
 })
 
-const { t, collapsedStates, formState, charAvatar, currentUploadTarget, showImageUploadModal } = props.settings
+const { t, formState, charAvatar } = props.settings
 
-const collapsed =  props.settings.collapsedStates.roleInfo
+const collapsed = computed(() => props.settings.collapsedStates.roleInfo)
 const toggleCollapse = () => {
   props.settings.collapsedStates.roleInfo = !props.settings.collapsedStates.roleInfo
 }

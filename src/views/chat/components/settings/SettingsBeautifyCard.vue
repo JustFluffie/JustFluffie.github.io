@@ -67,6 +67,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 
@@ -79,7 +80,7 @@ const props = defineProps({
 
 const { t, formState, charAvatar, bubblePresetOptions, previewStyle, saveBubblePreset, deleteBubblePreset, applyBgToAll, clearChatBackground } = props.settings
 
-const collapsed = props.settings.collapsedStates.bubbleSettings
+const collapsed = computed(() => props.settings.collapsedStates.bubbleSettings)
 const toggleCollapse = () => {
   props.settings.collapsedStates.bubbleSettings = !props.settings.collapsedStates.bubbleSettings
 }

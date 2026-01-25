@@ -46,6 +46,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
@@ -57,7 +58,7 @@ const props = defineProps({
 
 const { formState, mapLocation } = props.settings
 
-const collapsed = props.settings.collapsedStates.realtimeSense
+const collapsed = computed(() => props.settings.collapsedStates.realtimeSense)
 const toggleCollapse = () => {
   props.settings.collapsedStates.realtimeSense = !props.settings.collapsedStates.realtimeSense
 }

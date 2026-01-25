@@ -57,6 +57,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
@@ -68,7 +69,7 @@ const props = defineProps({
 
 const { t, formState, backgroundStore, isBackgroundActivityEffective } = props.settings
 
-const collapsed = props.settings.collapsedStates.backgroundActivity
+const collapsed = computed(() => props.settings.collapsedStates.backgroundActivity)
 const toggleCollapse = () => {
   props.settings.collapsedStates.backgroundActivity = !props.settings.collapsedStates.backgroundActivity
 }

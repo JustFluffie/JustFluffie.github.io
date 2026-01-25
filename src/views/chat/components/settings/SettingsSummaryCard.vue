@@ -46,6 +46,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import { useRouter } from 'vue-router'
@@ -64,7 +65,7 @@ const props = defineProps({
 const { t, formState, apiConfigOptions, triggerManualSummary } = props.settings
 const router = useRouter()
 
-const collapsed = props.settings.collapsedStates.summarySettings
+const collapsed = computed(() => props.settings.collapsedStates.summarySettings)
 const toggleCollapse = () => {
   props.settings.collapsedStates.summarySettings = !props.settings.collapsedStates.summarySettings
 }

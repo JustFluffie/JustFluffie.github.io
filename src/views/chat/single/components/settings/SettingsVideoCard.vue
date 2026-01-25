@@ -32,6 +32,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
@@ -43,7 +44,7 @@ const props = defineProps({
 
 const { t, formState } = props.settings
 
-const collapsed = props.settings.collapsedStates.videoSettings
+const collapsed = computed(() => props.settings.collapsedStates.videoSettings)
 const toggleCollapse = () => {
   props.settings.collapsedStates.videoSettings = !props.settings.collapsedStates.videoSettings
 }

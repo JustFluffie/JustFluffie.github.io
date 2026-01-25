@@ -67,8 +67,8 @@ export const useDoubanStore = defineStore('douban', () => {
       const messages = [{ role: 'user', content: prompt }];
 
       const response = await apiStore.getGenericCompletion(messages, {});
-      if (response && response.choices && response.choices[0]) {
-        const content = response.choices[0].message.content;
+      if (response && response.content) {
+        const content = response.content;
         
         let jsonString = content;
         const jsonStartIndex = jsonString.indexOf('[');

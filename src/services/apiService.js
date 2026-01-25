@@ -64,6 +64,7 @@ export const apiService = {
     };
 
     if (maxTokens) {
+      requestBody.max_tokens = maxTokens;
     }
 
     try {

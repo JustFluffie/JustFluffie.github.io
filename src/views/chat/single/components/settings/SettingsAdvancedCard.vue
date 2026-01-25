@@ -26,6 +26,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 
 const props = defineProps({
@@ -37,7 +38,7 @@ const props = defineProps({
 
 const { t, formState, showNpcScopeModal, showCharScopeModal } = props.settings
 
-const collapsed = props.settings.collapsedStates.advancedSettings
+const collapsed = computed(() => props.settings.collapsedStates.advancedSettings)
 const toggleCollapse = () => {
   props.settings.collapsedStates.advancedSettings = !props.settings.collapsedStates.advancedSettings
 }
