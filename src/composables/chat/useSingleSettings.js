@@ -367,7 +367,9 @@ export function useSingleSettings(props) {
 
   const handleSummarizeRecent = async () => {
     showSummaryModal.value = false
+    themeStore.showToast('正在总结中，请稍候...', 'loading', 0)
     const result = await singleStore.summarizeMessages(props.id, { type: 'recent' })
+    themeStore.hideToast()
     themeStore.showToast(result.message, result.success ? 'success' : 'error')
   }
 
@@ -381,17 +383,21 @@ export function useSingleSettings(props) {
       return
     }
 
+    showRangeInputModal.value = false
+    themeStore.showToast('正在总结中，请稍候...', 'loading', 0)
     const result = await singleStore.summarizeMessages(props.id, { type: 'range', start, end })
+    themeStore.hideToast()
     themeStore.showToast(result.message, result.success ? 'success' : 'error')
     if (result.success) {
-      showRangeInputModal.value = false
       summaryRangeInput.value = ''
     }
   }
 
   const handleSummarizeVideo = async () => {
     showSummaryModal.value = false
+    themeStore.showToast('正在总结中，请稍候...', 'loading', 0)
     const result = await singleStore.summarizeMessages(props.id, { type: 'video' })
+    themeStore.hideToast()
     themeStore.showToast(result.message, result.success ? 'success' : 'error')
   }
 

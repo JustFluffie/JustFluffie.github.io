@@ -292,7 +292,7 @@ export const messageAiActions = {
 
     switch (options.type) {
       case 'recent':
-        const count = character.memoryCount || 10;
+        const count = character.summaryRange || 20;
         messagesToSummarize = (this.messages[charId] || []).slice(-count);
         summaryTitle = `最近 ${count} 条消息的记忆`;
         break;
@@ -342,7 +342,7 @@ export const messageAiActions = {
           presetToUse = apiStore.presets.find(p => p.name === character.api);
       }
 
-      const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { preset: presetToUse });
+      const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { preset: presetToUse, max_tokens: 6000 });
       if (summary) {
         if (!character.memories) {
           character.memories = [];
