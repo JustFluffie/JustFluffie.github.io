@@ -218,7 +218,7 @@ export function useAiHandler(charId, apiStore) {
       
       // --- 修正后的动态 max_tokens 计算 ---
       const activePreset = apiStore.getActivePreset();
-      const presetMaxTokens = activePreset?.max_tokens || 6000;
+      const presetMaxTokens = activePreset?.max_tokens || 10000;
 
       // 使用 isOnline 属性 (true:线上, false:线下)
       const isOnline = character.isOnline !== false; // 默认为线上模式
@@ -229,10 +229,10 @@ export function useAiHandler(charId, apiStore) {
       let calculatedTokens;
       if (isOnline) {
         // 线上模式：使用较小的基数，并确保不超过预设
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 3;
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 5;
       } else { // offline
         // 线下模式：使用更大的系数，为详细描写提供充足空间
-        calculatedTokens = (replyLengthMin + replyLengthMax) * 6;
+        calculatedTokens = (replyLengthMin + replyLengthMax) * 10;
       }
       
       // 确保 calculatedTokens 不超过 presetMaxTokens，同时不低于一个最小值
