@@ -606,6 +606,7 @@ export function useSingleSettings(props) {
       bubbleSettings: { css: formState.bubbleCss, fontSize: formState.bubbleFontSize },
       chatBackground: formState.chatBackground,
       videoBg: formState.videoBg,
+      api: formState.apiConfig,
       linkedNpcs: formState.linkedNpcs,
       linkedCharacters: formState.linkedCharacters,
       isBlocked: formState.isBlocked,

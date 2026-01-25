@@ -250,6 +250,7 @@ export const messageAiActions = {
     const character = this.getCharacter(charId);
     // 修复：直接从 character 读取 autoSummary 状态，与 Settings 页面保持一致
     if (!character || !character.autoSummary) {
+      // console.log(`[AutoSummary] Skipped for ${character?.name || 'Unknown'}: autoSummary is disabled.`);
       return;
     }
 
@@ -273,6 +274,11 @@ export const messageAiActions = {
         console.log(`[AutoSummary] Success. New lastSummaryCount: ${currentMessageCount}`);
       } else {
         console.error(`[AutoSummary] Failed: ${result.message}`);
+        const notificationStore = useNotificationStore();
+        notificationStore.addNotification({
+          type: 'error',
+          message: '自动总结失败，请尝试手动总结。',
+        });
       }
     }
   },
@@ -336,7 +342,7 @@ export const messageAiActions = {
           presetToUse = apiStore.presets.find(p => p.name === character.api);
       }
 
-      const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], presetToUse);
+      const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { preset: presetToUse });
       if (summary) {
         if (!character.memories) {
           character.memories = [];

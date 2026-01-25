@@ -10,6 +10,7 @@ export function useProactiveNotifier() {
   const singleStore = useSingleStore();
   const apiStore = useApiStore();
   let intervalId = null;
+  let isUnmounted = false; // 添加一个标志来跟踪组件是否已卸载
 
   // 辅助函数：生成符合人设的提醒消息
   const generateReminder = async (charId, context) => {
@@ -52,6 +53,8 @@ ${character.charPersona}
   };
 
   const checkNotifications = async () => {
+    if (isUnmounted) return; // 如果组件已卸载，则中止执行
+
     const now = new Date();
     const today = formatISO(now, { representation: 'date' });
     
@@ -75,6 +78,7 @@ ${character.charPersona}
             const rawContext = `用户的待办事项 '${todo.title}' 还有 ${minutesUntilDue} 分钟就要开始了。`;
             const reminderMessage = await generateReminder(notifierCharId, rawContext);
             
+            if (isUnmounted) return; // 在异步操作后再次检查
             singleStore.addMessageFromChar(notifierCharId, reminderMessage);
             console.log(`[useProactiveNotifier] Sent todo reminder for: ${todo.title}`);
           }
@@ -101,6 +105,7 @@ ${character.charPersona}
                 const rawContext = `用户有一个待办事项 '${randomTodo.title}' 已经过期了 (原定日期: ${randomTodo.date})。请用简短、自然的语气询问用户是否完成了，或者是不是忘了。`;
                 const reminderMessage = await generateReminder(notifierCharId, rawContext);
                 
+                if (isUnmounted) return; // 在异步操作后再次检查
                 singleStore.addMessageFromChar(notifierCharId, reminderMessage);
                 console.log(`[useProactiveNotifier] Sent overdue inquiry for: ${randomTodo.title}`);
             }
@@ -123,6 +128,7 @@ ${character.charPersona}
         
         const reminderMessage = await generateReminder(notifierCharId, rawContext);
         
+        if (isUnmounted) return; // 在异步操作后再次检查
         singleStore.addMessageFromChar(notifierCharId, reminderMessage);
         console.log(`[useProactiveNotifier] Sent period prediction reminder for ${startDate}.`);
       }
@@ -136,6 +142,7 @@ ${character.charPersona}
   });
 
   onUnmounted(() => {
+    isUnmounted = true; // 设置标志
     if (intervalId) {
       clearInterval(intervalId);
       console.log('[useProactiveNotifier] Proactive notifier service stopped.');

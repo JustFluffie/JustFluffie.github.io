@@ -166,7 +166,8 @@ export function useAiHandler(charId, apiStore) {
       }
 
       const voices = singleStore.innerVoices[charId.value] || [];
-      let nextIndex = (voices[0]?.title.match(/#(\d+)/)?.[1] || voices.length) + 1;
+      const latestIndex = voices[0]?.title.match(/#(\d+)/)?.[1];
+      let nextIndex = (latestIndex ? parseInt(latestIndex, 10) : voices.length) + 1;
 
       const recentMessages = singleStore.getFormattedRecentMessages(charId.value, 10);
       const prompt = buildInnerVoicePrompt(character, recentMessages, nextIndex);
