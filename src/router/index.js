@@ -4,11 +4,11 @@ import HomeScreen from '../views/screen/HomeScreen.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeScreen
-    },
+      {
+        path: '/prompt-presets',
+        name: 'PromptPresets',
+        component: () => import('@/views/preset/PromptPresets.vue')
+      },
     {
       path: '/chat',
       component: () => import('../views/chat/index.vue'),
@@ -80,7 +80,7 @@ const router = createRouter({
     {
       path: '/preset',
       name: 'preset',
-      component: () => import('../views/preset/Preset.vue')
+      component: () => import('../views/preset/PromptPresets.vue')
     },
     {
       path: '/api',

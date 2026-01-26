@@ -121,8 +121,8 @@ ${chatLog}
         { preset: presetToUse }
     )
     
-    if (memoContent) {
-      const newMemos = memoContent.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    if (memoContent && memoContent.content) {
+      const newMemos = memoContent.content.split('\n').map(s => s.trim()).filter(s => s.length > 0);
       if (newMemos.length > 0) {
         memoStore.addMemo(charId, newMemos)
       }

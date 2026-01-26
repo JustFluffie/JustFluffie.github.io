@@ -24,7 +24,10 @@
         <div class="comments-header">
           <h3>热门评论</h3>
         </div>
-        <div v-if="post.commentsList && post.commentsList.length > 0" class="comments-list">
+        <div v-if="areCommentsLoading" class="loading-state">
+          <p>评论加载中...</p>
+        </div>
+        <div v-else-if="post.commentsList && post.commentsList.length > 0" class="comments-list">
           <div v-for="comment in post.commentsList" :key="comment.id" class="comment-item">
             <div class="comment-meta">
               <div class="comment-avatar"></div>
@@ -57,10 +60,26 @@ import AppLayout from '@/components/common/AppLayout.vue';
 const route = useRoute();
 const doubanStore = useDoubanStore();
 const post = ref(null);
+const areCommentsLoading = ref(false);
 
-onMounted(() => {
+onMounted(async () => {
   const postId = parseInt(route.params.postId, 10);
-  post.value = doubanStore.getPostById(postId);
+  const fetchedPost = doubanStore.getPostById(postId);
+
+  if (fetchedPost) {
+    post.value = { ...fetchedPost, commentsList: [] };
+    areCommentsLoading.value = true;
+    try {
+      const comments = await doubanStore.fetchCommentsForPost(fetchedPost);
+      if (post.value) {
+        post.value.commentsList = comments;
+      }
+    } catch (error) {
+      console.error("Failed to load comments:", error);
+    } finally {
+      areCommentsLoading.value = false;
+    }
+  }
 });
 </script>
 

@@ -325,6 +325,7 @@ export const messageAiActions = {
       return `${senderName}: ${msg.content}`;
     }).join('\n');
 
+    const user = this.currentUserProfile;
     let systemPrompt = `# 任务
 你是一个对话总结助手，请为角色“${character.name}”生成一段第一人称的核心记忆。
 

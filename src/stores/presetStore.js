@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 
-export const usePresetStore = defineStore('preset', {
+export const usePresetStore = defineStore('prompt_preset', {
   state: () => ({
-    presets: JSON.parse(localStorage.getItem('presets') || '[]').map((preset, index) => {
+    presets: JSON.parse(localStorage.getItem('prompt_presets') || '[]').map((preset, index) => {
       if (preset.priority === 'front') preset.priority = 1;
       if (preset.priority === 'middle') preset.priority = 2;
       if (preset.priority === 'back') preset.priority = 3;
@@ -13,7 +13,7 @@ export const usePresetStore = defineStore('preset', {
       }
       return preset;
     }),
-    nextId: parseInt(localStorage.getItem('presetNextId') || '1'),
+    nextId: parseInt(localStorage.getItem('prompt_presetNextId') || '1'),
   }),
   getters: {
     sortedPresets: (state) => {
@@ -25,8 +25,8 @@ export const usePresetStore = defineStore('preset', {
   },
   actions: {
     _saveToLocalStorage() {
-      localStorage.setItem('presets', JSON.stringify(this.presets));
-      localStorage.setItem('presetNextId', this.nextId.toString());
+      localStorage.setItem('prompt_presets', JSON.stringify(this.presets));
+      localStorage.setItem('prompt_presetNextId', this.nextId.toString());
     },
     // Helper to find the real preset from a sorted index
     _findPresetBySortedIndex(sortedIndex) {

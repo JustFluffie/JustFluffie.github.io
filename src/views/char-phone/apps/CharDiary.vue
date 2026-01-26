@@ -198,8 +198,8 @@ ${chatLog}
         { preset: presetToUse }
     )
     
-    if (diaryContent) {
-      diaryStore.addDiary(charId, diaryContent.trim())
+    if (diaryContent && diaryContent.content) {
+      diaryStore.addDiary(charId, diaryContent.content.trim())
     }
   } catch (error) {
     console.error('Failed to generate diary:', error)

@@ -177,9 +177,9 @@ ${chatLog}
         { preset: presetToUse }
     )
     
-    if (scheduleContent) {
+    if (scheduleContent && scheduleContent.content) {
       // 过滤掉未来时间点的兜底逻辑
-      const filteredContent = scheduleContent.split('\n').filter(line => {
+      const filteredContent = scheduleContent.content.split('\n').filter(line => {
         const timeMatch = line.trim().match(/^(\d{1,2}:\d{2})/)
         if (timeMatch) {
           const [h, m] = timeMatch[1].split(':').map(Number)

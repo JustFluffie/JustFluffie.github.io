@@ -99,7 +99,7 @@ export const useBackupStore = defineStore('backup', () => {
 
         // 6. Presets
         if (options.presets) {
-            const keys = ['api_presets', 'api_activePresetName', 'presets', 'presetNextId'];
+            const keys = ['api_presets', 'api_activePresetName', 'prompt_presets', 'prompt_presetNextId'];
             keys.forEach(key => {
                 const val = localStorage.getItem(key);
                 if (val !== null) backupData[key] = val;
