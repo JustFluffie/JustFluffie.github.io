@@ -131,6 +131,11 @@ const router = createRouter({
       component: () => import('../views/douban/DoubanPostDetail.vue'),
       props: true
     },
+    {
+      path: '/ao3',
+      name: 'ao3',
+      component: () => import('../views/screen/apps/AO3.vue')
+    },
   ]
 })
 

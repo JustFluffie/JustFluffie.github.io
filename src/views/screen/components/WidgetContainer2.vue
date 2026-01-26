@@ -1,5 +1,6 @@
 <script setup>
 import { defineProps, defineEmits, computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import MusicPlayer from './MusicPlayer.vue'
 import AppGrid2 from './AppGrid2.vue'
 import SocialPortal from './SocialPortal.vue'
@@ -42,23 +43,26 @@ const handleUpdateHomeData = (newData) => emit('update:homeData', newData)
 const handleShowSourceSelect = (type) => emit('show-source-select', type)
 const handleSaveHomeData = () => emit('save-home-data')
 
+const router = useRouter()
 const themeStore = useThemeStore()
 const { appIcons } = storeToRefs(themeStore)
 
 // App Grid Data
 const apps = ref([
   { id: 'social-portal', label: '社交圈' },
-  { id: 'placeholder-1', label: 'App 1' },
+  { id: 'ao3', label: 'AO3' },
   { id: 'placeholder-2', label: 'App 2' },
   { id: 'placeholder-3', label: 'App 3' },
 ])
 
-// Social Portal State
+// App States
 const isSocialPortalVisible = ref(false)
 
 const handleAppClick = (app) => {
   if (app.id === 'social-portal') {
     isSocialPortalVisible.value = true
+  } else if (app.id === 'ao3') {
+    router.push('/ao3')
   }
   // Handle other apps later
 }
