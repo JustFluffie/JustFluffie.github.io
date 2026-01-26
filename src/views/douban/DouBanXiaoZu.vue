@@ -122,7 +122,7 @@ const goBackToHome2 = () => {
   position: absolute;
   bottom: 0;
   left: 92px; /* 16px padding + 60px avatar + 16px margin */
-  right: 16px;
+  right: 0px;
   height: 1px;
   background-color: #f0f0f0;
 }
