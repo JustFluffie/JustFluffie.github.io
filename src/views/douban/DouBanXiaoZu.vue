@@ -149,8 +149,8 @@ const goBackToHome2 = () => {
   flex-direction: column;
   justify-content: space-evenly; /* 使三行文字间距相等 */
   min-width: 0; /* 允许 flex item 收缩 */
-  height: 60px; /* 与头像高度一致 */
-  gap: 5px;
+  height: 65px; /* 与头像高度一致 */
+  gap: 3px;
 }
 
 .group-name {
