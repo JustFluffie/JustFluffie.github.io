@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="豆瓣小组" no-padding>
+  <AppLayout title="豆瓣小组" no-padding :back-action="goBackToHome2">
     <div class="group-list-page">
       <ul class="group-list">
         <!-- 小组1: 校园 -->
@@ -89,6 +89,10 @@ const router = useRouter();
 
 const goToGroup = (groupName) => {
   router.push({ name: 'group-detail', params: { groupName } });
+};
+
+const goBackToHome2 = () => {
+  router.push({ name: 'Home', query: { page: 2 } });
 };
 </script>
 

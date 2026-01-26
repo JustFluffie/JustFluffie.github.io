@@ -231,6 +231,12 @@ onMounted(() => {
   loadHomeData()
   themeStore.initTheme()
   weatherStore.autoUpdateWeather()
+
+  // 检查路由参数以设置初始页面
+  const initialPage = parseInt(router.currentRoute.value.query.page, 10);
+  if (initialPage && initialPage > 0) {
+    currentPage.value = initialPage;
+  }
 })
 </script>
 
@@ -421,7 +427,7 @@ onMounted(() => {
     position: absolute;
     /* --- 核心修改 3：位置调整 --- */
     /* 放在 Dock 栏正上方。Dock 大约占据底部 120px 空间 */
-    bottom: 108px; 
+    bottom: 120px; 
     left: 50%;
     transform: translateX(-50%);
     /* 把它显示出来！原来是 none */

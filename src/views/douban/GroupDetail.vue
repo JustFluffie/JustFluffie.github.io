@@ -208,8 +208,8 @@ onMounted(() => {
     height: 64px;
     border-radius: 12px;
     margin-right: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.5);
     object-fit: cover;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
 }
 
 .group-meta {
@@ -329,7 +329,7 @@ onMounted(() => {
   flex-shrink: 0;
   width: 40px;
   color: var(--text-tertiary);
-  margin-top: -5px; /* Move icon up */
+  margin-top: -3px; /* Move icon up */
 }
 
 .comment-icon {

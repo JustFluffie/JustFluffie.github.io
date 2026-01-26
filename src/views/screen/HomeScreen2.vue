@@ -4,10 +4,7 @@ import WidgetContainer2 from './components/WidgetContainer2.vue'
 
 // 定义 props
 const props = defineProps({
-  homeData: {
-    type: Object,
-    required: true
-  },
+  homeData: Object,
   showFrame: {
     type: Boolean,
     default: false
@@ -15,7 +12,11 @@ const props = defineProps({
 })
 
 // 定义 emits
-const emit = defineEmits(['update:homeData', 'show-source-select', 'save-home-data'])
+const emit = defineEmits([
+  'update:homeData',
+  'show-source-select',
+  'save-home-data'
+])
 
 // 事件处理函数
 const handleUpdateHomeData = (newData) => emit('update:homeData', newData)
@@ -26,8 +27,8 @@ const handleSaveHomeData = () => emit('save-home-data')
 <template>
   <div class="home-screen-2">
     <WidgetContainer2
-      :homeData="homeData"
-      :show-frame="showFrame"
+      :homeData="props.homeData"
+      :show-frame="props.showFrame"
       @update:homeData="handleUpdateHomeData"
       @show-source-select="handleShowSourceSelect"
       @save-home-data="handleSaveHomeData"

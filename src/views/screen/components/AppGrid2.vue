@@ -55,7 +55,7 @@ const handleAppClick = (app) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.25em; /* 稍微增加图标和标签的间距 */
+    gap: 0.5em; /* 稍微增加图标和标签的间距 */
     cursor: pointer;
     transition: transform 0.2s ease;
 }
