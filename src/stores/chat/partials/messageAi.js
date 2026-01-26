@@ -326,15 +326,24 @@ export const messageAiActions = {
     }).join('\n');
 
     const user = this.currentUserProfile;
+    
+    // 获取用户人设
+    const userPersonaId = character.userPersona || 'default';
+    const userPersona = this.userPersonas.find(p => p.id === userPersonaId);
+    const userDesc = userPersona?.description ? `\n【用户人设】\n${userPersona.description}\n` : '';
+
 let systemPrompt = `# 任务
 你是一个对话总结助手，请为角色"${character.name}"生成一段第一人称的核心记忆。
 
 这份记忆要**客观又自然**：
 
+${userDesc}
+
 ## 要求
 *   **字数限制**：总结控制在 150-200 字以内，只记录最核心的内容
 *   **我是叙述者，不是分析师**。只用我的口吻描述和用户 ${user.name} 发生了什么，不作总结评价。
-*   **分析关键点**：对话的起因、用户 ${user.name} 提到的重要情况、以及最后事情的走向或用户 ${user.name} 的反应。
+*   **称呼规范**：在记忆中，请直接用第二人称“你”来称呼用户 ${user.name}。
+*   **分析关键点**：对话的起因、你（用户）提到的重要情况、以及最后事情的走向或你（用户）的反应。
 *   **抓重点**：只记录每件事情最关键的 1-2 个要点，省略细节和过程
 *   **说人话**：务必避免"交互"、"需求"、"成功解决"这类报告式词汇。
 

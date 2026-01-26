@@ -267,7 +267,7 @@ const apps = computed(() => [
   { key: 'spy', name: t('homeScreen.apps.spy') },
   { key: 'char_phone', name: '查手机' },
   { key: 'social-portal', name: '社交圈' },
-  { key: 'placeholder-1', name: 'AO3' },
+  { key: 'ao3', name: 'AO3' },
   { key: 'placeholder-2', name: 'App 2' },
   { key: 'placeholder-3', name: 'App 3' },
   { key: 'xiaohongshu', name: '小红书' },
