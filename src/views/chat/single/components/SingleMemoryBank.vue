@@ -224,10 +224,26 @@ const toggleFavorite = (mem) => {
 }
 
 const showRefineModal = () => {
-  summaryPrompt.value = character.value.memorySummaryPrompt || ''
-  refineStart.value = 1
-  refineEnd.value = memories.value.length
-  showRefineSettingsModal.value = true
+  // 如果角色没有自定义提示词,使用默认的专业提示词(与对话总结风格一致)
+  const defaultPrompt = `# 任务
+你是一个记忆提炼助手,请对以下已有的长期记忆进行二次总结,生成一段更精炼的核心记忆。
+
+这份记忆要**客观又自然**:
+
+## 要求
+- **字数限制**:总结控制在 200-300 字以内,只记录最核心的内容
+- **我是叙述者,不是分析师**。只用我的口吻描述发生了什么,不作总结评价
+- **保留时间线索**:尊重原记忆中的时间信息,不要将不同时间的事件混淆或合并
+- **抓重点**:从已有记忆中提取最关键的事件、情感和关系变化
+- **保持真实**:不要添加原记忆中没有的信息,只提炼已有内容
+- **说人话**:务必避免"交互"、"需求"、"成功解决"这类报告式词汇
+
+直接输出提炼后的记忆内容,不要加任何其他东西。`;
+
+  summaryPrompt.value = character.value.memorySummaryPrompt || defaultPrompt;
+  refineStart.value = 1;
+  refineEnd.value = memories.value.length;
+  showRefineSettingsModal.value = true;
 }
 
 const doRefine = async () => {
@@ -256,18 +272,27 @@ const doRefine = async () => {
     return;
   }
 
-  const existingMemories = memoriesToRefine.map(mem => mem.content).join('\n---\n');
-  const prompt = summaryPrompt.value || '请总结以下内容，提取关键信息。';
+  const existingMemories = memoriesToRefine.map((mem, idx) => {
+    const timeStr = mem.time ? formatTime(mem.time) : '';
+    return `[${idx + 1}] ${timeStr ? `(${timeStr}) ` : ''}${mem.content}`;
+  }).join('\n\n');
+  
+  const prompt = summaryPrompt.value.trim();
+  
   const messages = [
-    { role: 'system', content: '你是一个记忆总结助手。' },
-    { role: 'user', content: `现有记忆如下：\n${existingMemories}\n\n请根据以下要求进行总结：\n${prompt}` }
+    { role: 'user', content: `${prompt}\n\n现有记忆如下：\n\n${existingMemories}` }
   ];
 
   try {
     const summaryResult = await apiStore.getGenericCompletion(messages);
-    if (summaryResult) {
+    if (summaryResult && summaryResult.trim()) {
       if (!char.memories) char.memories = [];
-      char.memories.unshift({ content: `[记忆再总结] ${summaryResult}`, time: Date.now(), charName: char.name, isFavorite: false });
+      char.memories.unshift({ 
+        content: `[记忆提炼 ${start}-${end}] ${summaryResult.trim()}`, 
+        time: Date.now(), 
+        charName: char.name, 
+        isFavorite: false 
+      });
       singleStore.saveData();
       themeStore.showToast('记忆提炼已完成', 'success');
     } else {

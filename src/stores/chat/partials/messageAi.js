@@ -326,16 +326,20 @@ export const messageAiActions = {
     }).join('\n');
 
     const user = this.currentUserProfile;
-    let systemPrompt = `# 任务
-你是一个对话总结助手，请为角色“${character.name}”生成一段第一人称的核心记忆。
+let systemPrompt = `# 任务
+你是一个对话总结助手，请为角色"${character.name}"生成一段第一人称的核心记忆。
 
-这份记忆要像一篇**客观又自然的个人日志**：
+这份记忆要**客观又自然**：
 
+## 要求
+*   **字数限制**：总结控制在 150-200 字以内，只记录最核心的内容
 *   **我是叙述者，不是分析师**。只用我的口吻描述和用户 ${user.name} 发生了什么，不作总结评价。
-*   **记录关键点**：对话的起因、用户 ${user.name} 提到的重要情况、以及最后事情的走向或用户 ${user.name} 的反应。
-*   **说人话**：务必避免“交互”、“需求”、“成功解决”这类报告式词汇。
+*   **分析关键点**：对话的起因、用户 ${user.name} 提到的重要情况、以及最后事情的走向或用户 ${user.name} 的反应。
+*   **抓重点**：只记录每件事情最关键的 1-2 个要点，省略细节和过程
+*   **说人话**：务必避免"交互"、"需求"、"成功解决"这类报告式词汇。
 
 直接输出记忆内容，不要加任何其他东西。`;
+
     
     if (character.summaryPrompt) {
         systemPrompt = character.summaryPrompt;
