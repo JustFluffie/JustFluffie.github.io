@@ -352,7 +352,7 @@ export const messageAiActions = {
           presetToUse = apiStore.presets.find(p => p.name === character.api);
       }
 
-      const summary = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { preset: presetToUse });
+      const { content: summary } = await apiStore.getGenericCompletion([{ role: 'user', content: prompt }], { preset: presetToUse });
       if (summary) {
         if (!character.memories) {
           character.memories = [];
