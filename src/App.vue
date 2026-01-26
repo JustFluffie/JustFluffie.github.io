@@ -72,6 +72,8 @@ onMounted(() => {
   // 检查是否启用调试模式
   isDebugEnabled.value = localStorage.getItem('debug-mode') === 'true';
 
+  // 初始化 Pinia stores
+  singleStore.initData(); // 加载聊天数据
   batteryStore.initialize() // 初始化时间和电池监听
   themeStore.initTheme()
   apiStore.autoConnect() // 自动连接API并获取模型

@@ -1,6 +1,6 @@
 ﻿<template>
   <div class="app-screen active">
-    <div class="app-header" :class="{ 'no-border': noHeaderBorder }">
+    <div class="app-header" :class="{ 'no-border': noHeaderBorder, 'transparent-header': transparentHeader }">
       <div class="back-btn" @click="handleBack">
         <svg-icon name="back-btn" />
       </div>
@@ -33,6 +33,10 @@ const props = defineProps({
     default: false
   },
   noHeaderBorder: {
+    type: Boolean,
+    default: false
+  },
+  transparentHeader: {
     type: Boolean,
     default: false
   }
@@ -126,6 +130,21 @@ function handleBack() {
 }
 .app-header.no-border {
     border-bottom: none;
+}
+.app-header.transparent-header {
+    background: transparent;
+    border-bottom: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+}
+.app-header.transparent-header .back-btn,
+.app-header.transparent-header .title,
+.app-header.transparent-header .action-btn {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
 }
 /* .app-header .action-btn svg 样式已移除，使用全局 .svg-icon 样式 */
 

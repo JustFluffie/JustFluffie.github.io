@@ -4,11 +4,11 @@ import { useApiStore } from '@/stores/apiStore';
 import { useSingleStore } from '@/stores/chat/singleStore';
 
 const groupThemeDescriptions = {
-  '校园热线': '关于课程、考试、社团、老师同学的校园生活趣事。',
-  '职场茶水间': '关于办公室日常、吐槽老板同事、加班摸鱼的职场八卦。',
-  '自由吃瓜基地': '关于明星、网红、热门事件的最新娱乐八卦。',
-  '情感树洞': '关于恋爱烦恼、失恋心情、暗恋故事的个人情感困扰。',
-  '深夜食堂': '关于深入、直白露骨地探讨NSFW、R18的话题，围绕性关系、性幻想、个人欲望、情感禁区。这里只有欲望，没有伦理道德的束缚，用词直白无美化。',
+  '同学，我有一个朋友...': '关于课程、考试、社团、老师同学的校园生活趣事和八卦。',
+  '我今天就要离职！(明天再说)': '关于办公室日常、吐槽老板同事、加班摸鱼的职场八卦。',
+  '野生瓜田种植与品鉴': '关于明星、网红、热门事件的最新娱乐八卦。',
+  '恋爱细节放大镜小组': '关于恋爱烦恼、失恋心情、暗恋故事的个人情感困扰和八卦。',
+  '深夜食堂': '关于放纵、直白露骨地探讨NSFW、R18相关的话题和八卦。这里只有欲望，没有伦理道德的束缚，无论多肮脏下流都允许，用词直白无美化。',
 };
 
 function buildDoubanPostPrompt(groupName, character, userPersona, recentMessages) {
@@ -23,7 +23,7 @@ ${recentMessages.map(m => `${m.role === 'user' ? userPersona?.name || '我' : ch
 
   const prompt = `
 严格按照JSON格式返回一个包含5个中文帖子对象的数组，不要包含任何其他文字。
-JSON格式: [{"title": "帖子标题", "summary": "帖子摘要(1-2句话)"}, ...]
+JSON格式: [{"title": "帖子标题", "summary": "帖子摘要(1-2句话)", "fullText": "帖子正文(150-250字)"}, ...]
 
 写作背景:
 你是一个社交用户，正在为“${groupName}”小组写帖子。这个小组的主题是关于“${themeDescription}”。
@@ -47,9 +47,12 @@ JSON格式: [{"title": "帖子标题", "summary": "帖子摘要(1-2句话)"}, ..
     ${messagesDesc}
 
 5.  **内容要求**:
+    - 'summary' 必须是1-2句话的简短摘要。
+    - 'fullText' 必须是150-250字的详细正文。
+    - **格式规范**: 'fullText' 在需要分段时，请使用 '\n' 进行换行。每个段落开头必须空出两个中文字符（即使用 '\u3000\u3000'）。
     - 所有帖子内容必须紧扣小组主题“${themeDescription}”。
     - 语气要口语化、自然，像一个真实用户在分享。
-    - **再次强调：严禁在帖子标题或摘要中使用任何真实姓名。**
+    - **再次强调：严禁在帖子标题、摘要或正文中使用任何真实姓名。**
 `;
   return prompt.trim();
 }
@@ -84,14 +87,19 @@ export const useDoubanStore = defineStore('douban', () => {
 
       const response = await apiStore.getGenericCompletion(messages, {});
       if (response && response.content) {
-        const content = response.content;
+        let jsonString = response.content;
         
-        let jsonString = content;
-        const jsonStartIndex = jsonString.indexOf('[');
-        const jsonEndIndex = jsonString.lastIndexOf(']');
-
-        if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
-          jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+        // 尝试从Markdown代码块中提取JSON
+        const markdownMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+        if (markdownMatch && markdownMatch[1]) {
+          jsonString = markdownMatch[1];
+        } else {
+          // 如果没有找到Markdown块，则回退到查找第一个'['和最后一个']'
+          const jsonStartIndex = jsonString.indexOf('[');
+          const jsonEndIndex = jsonString.lastIndexOf(']');
+          if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
+            jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+          }
         }
         
         const parsedPosts = JSON.parse(jsonString);
@@ -162,10 +170,18 @@ JSON格式: [{"user": "用户名", "text": "评论内容"}, ...]
       const response = await apiStore.getGenericCompletion(messages, {});
       if (response && response.content) {
         let jsonString = response.content;
-        const jsonStartIndex = jsonString.indexOf('[');
-        const jsonEndIndex = jsonString.lastIndexOf(']');
-        if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
-          jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+        
+        // 尝试从Markdown代码块中提取JSON
+        const markdownMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+        if (markdownMatch && markdownMatch[1]) {
+          jsonString = markdownMatch[1];
+        } else {
+          // 如果没有找到Markdown块，则回退到查找第一个'['和最后一个']'
+          const jsonStartIndex = jsonString.indexOf('[');
+          const jsonEndIndex = jsonString.lastIndexOf(']');
+          if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
+            jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+          }
         }
         
         const parsedComments = JSON.parse(jsonString);
@@ -174,6 +190,7 @@ JSON格式: [{"user": "用户名", "text": "评论内容"}, ...]
         const newComments = parsedComments.map((comment, index) => ({
           ...comment,
           id: Date.now() + index,
+          avatarColor: ['#A8DBFA', '#FFDD8C', '#f36b6b', '#EEA2A4', '#ccc', '#bada55'][Math.floor(Math.random() * 6)],
           time: `${Math.floor(Math.random() * 50) + 1}分钟前`,
           likes: Math.floor(Math.random() * 500),
         }));
