@@ -99,7 +99,7 @@ onMounted(async () => {
 .post-body p { font-size: 16px; line-height: 1.7; color: #333; white-space: pre-wrap; }
 
 .comments-section { padding: 16px; }
-.comments-header { margin-bottom: 16px; font-size: 16px; color: #333; border-bottom: 1px solid #e8e8e8; padding-bottom: 10px; }
+.comments-header { margin-bottom: 16px; font-size: 15px; color: #333; border-bottom: 1px solid #e8e8e8; padding-bottom: 10px; }
 .comments-list .comment-item { padding: 12px 0; border-bottom: 1px solid #f6f6f6; }
 .comment-meta { display: flex; align-items: center; margin-bottom: 8px; }
 .comment-avatar { width: 28px; height: 28px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; }

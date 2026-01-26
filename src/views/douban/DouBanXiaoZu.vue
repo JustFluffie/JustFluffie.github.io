@@ -146,10 +146,11 @@ const goToGroup = (groupName) => {
   justify-content: space-evenly; /* 使三行文字间距相等 */
   min-width: 0; /* 允许 flex item 收缩 */
   height: 60px; /* 与头像高度一致 */
+  gap: 5px;
 }
 
 .group-name {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   color: #1f1f1f;
   margin: 0;
@@ -158,7 +159,7 @@ const goToGroup = (groupName) => {
 
 .group-description,
 .group-members {
-  font-size: 13px; /* 缩小字体 */
+  font-size: 12px; /* 缩小字体 */
   color: #8a8a8a;
   margin: 0;
   white-space: nowrap;

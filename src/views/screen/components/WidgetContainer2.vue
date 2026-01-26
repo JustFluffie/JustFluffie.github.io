@@ -135,7 +135,7 @@ const closeSocialPortal = () => {
   top: 55%; /* 放在 Music Player 下方 */
   left: 50%;
   transform: translateX(-50%);
-  width: 90%;
+  width: 98%;
   height: 25%; /* 调整高度以适应单行应用 */
 }
 </style>
