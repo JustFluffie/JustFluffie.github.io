@@ -52,32 +52,32 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDoubanStore } from '@/stores/doubanStore';
 import AppLayout from '@/components/common/AppLayout.vue';
 
 const route = useRoute();
 const doubanStore = useDoubanStore();
-const post = ref(null);
+const postId = parseInt(route.params.postId, 10);
+
+// 从 store 中响应式地获取帖子
+const post = computed(() => doubanStore.getPostById(postId));
+
 const areCommentsLoading = ref(false);
 
 onMounted(async () => {
-  const postId = parseInt(route.params.postId, 10);
-  const fetchedPost = doubanStore.getPostById(postId);
-
-  if (fetchedPost) {
-    post.value = { ...fetchedPost, commentsList: [] };
-    areCommentsLoading.value = true;
-    try {
-      const comments = await doubanStore.fetchCommentsForPost(fetchedPost);
-      if (post.value) {
-        post.value.commentsList = comments;
+  // 确保 post.value 存在后再执行
+  if (post.value) {
+    if (post.value.commentsList && post.value.commentsList.length === 0) {
+      areCommentsLoading.value = true;
+      try {
+        await doubanStore.fetchCommentsForPost(postId);
+      } catch (error) {
+        console.error("Failed to load comments:", error);
+      } finally {
+        areCommentsLoading.value = false;
       }
-    } catch (error) {
-      console.error("Failed to load comments:", error);
-    } finally {
-      areCommentsLoading.value = false;
     }
   }
 });

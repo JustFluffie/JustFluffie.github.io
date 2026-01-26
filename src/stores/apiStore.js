@@ -22,10 +22,14 @@ export const useApiStore = defineStore('api', () => {
       apiKey: '',
       apiUrl: '',
       model: '',
+      masterPrompt: '',
     }
   ];
 
   initialPresets.forEach(preset => {
+    if (preset.masterPrompt === undefined) {
+      preset.masterPrompt = '';
+    }
   });
 
   const presets = reactive(initialPresets);
@@ -139,7 +143,10 @@ export const useApiStore = defineStore('api', () => {
     }
 
     const formattedMessages = singleStore.getFormattedRecentMessages(charId, finalMemoryCount);
-    const apiMessages = [{ role: 'system', content: systemPrompt.trim() }, ...formattedMessages];
+    
+    const finalSystemPrompt = (activePreset.masterPrompt ? activePreset.masterPrompt.trim() + '\n' : '') + systemPrompt.trim();
+
+    const apiMessages = [{ role: 'system', content: finalSystemPrompt }, ...formattedMessages];
     if (formattedMessages.length === 0) {
       apiMessages.push({ role: 'user', content: '（用户刚刚上线）' });
     }
@@ -211,7 +218,10 @@ export const useApiStore = defineStore('api', () => {
     let systemPrompt = buildSystemPrompt(character) + buildProactiveInstruction();
     const memoryCount = character.memoryCount || 10;
     const formattedMessages = singleStore.getFormattedRecentMessages(charId, memoryCount);
-    const apiMessages = [{ role: 'system', content: systemPrompt.trim() }, ...formattedMessages];
+
+    const finalSystemPrompt = (activePreset.masterPrompt ? activePreset.masterPrompt.trim() + '\n' : '') + systemPrompt.trim();
+
+    const apiMessages = [{ role: 'system', content: finalSystemPrompt }, ...formattedMessages];
     if (formattedMessages.length === 0) {
       apiMessages.push({ role: 'user', content: '（用户刚刚上线，请根据指令主动发起话题）' });
     }

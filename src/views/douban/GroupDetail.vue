@@ -9,7 +9,7 @@
       <div class="controls-bar">
         <div class="post-controls">
           <div class="control-group">
-            <select id="character-select" v-model="selectedCharacterId">
+            <select id="character-select" v-model="doubanStore.selectedCharacterId">
               <option :value="null" disabled>角色</option>
               <option v-for="char in characters" :key="char.id" :value="char.id">
                 {{ char.name }}
@@ -17,7 +17,7 @@
             </select>
           </div>
           <div class="control-group">
-            <select id="persona-select" v-model="selectedUserPersonaId">
+            <select id="persona-select" v-model="doubanStore.selectedUserPersonaId">
               <option :value="null" disabled>用户</option>
               <option v-for="persona in userPersonas" :key="persona.id" :value="persona.id">
                 {{ persona.name }}
@@ -81,9 +81,6 @@ const router = useRouter();
 const doubanStore = useDoubanStore();
 const singleStore = useSingleStore();
 
-const selectedCharacterId = ref(null);
-const selectedUserPersonaId = ref(null);
-
 const characters = computed(() => singleStore.characters);
 const userPersonas = computed(() => singleStore.userPersonas);
 
@@ -105,14 +102,16 @@ const groupData = computed(() => {
 });
 
 const refreshPosts = () => {
-  if (!selectedCharacterId.value || !selectedUserPersonaId.value) {
+  if (!doubanStore.selectedCharacterId || !doubanStore.selectedUserPersonaId) {
     console.log("Waiting for character and persona selection...");
     return;
   }
+  // 刷新时先清空旧帖子
+  doubanStore.setPosts([]);
   doubanStore.fetchAndSetPosts(
     groupData.value.title,
-    selectedCharacterId.value,
-    selectedUserPersonaId.value
+    doubanStore.selectedCharacterId,
+    doubanStore.selectedUserPersonaId
   );
 };
 
@@ -121,12 +120,7 @@ const goToPost = (postId) => {
 };
 
 onMounted(() => {
-  // 清空旧数据
-  doubanStore.setPosts([]);
-
-  // 初始化选择器数据，但不自动选择
-  selectedCharacterId.value = null;
-  selectedUserPersonaId.value = null;
+  // onMounted is now empty as we persist state in the store
 });
 
 </script>

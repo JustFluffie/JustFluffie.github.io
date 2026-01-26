@@ -53,6 +53,12 @@
                     <button class="btn btn-secondary btn-sm" @click="fetchModels" style="white-space: nowrap;">{{ t('api.fetch') }}</button>
                  </div>
             </div>
+
+            <!-- 第五行：最高指令 -->
+            <div class="api-item-col">
+                <label class="form-label" for="master-prompt">{{ t('api.masterPrompt') }}</label>
+                <textarea id="master-prompt" class="base-input" v-model="currentMasterPrompt" :placeholder="t('api.masterPromptPlaceholder')" rows="3" style="resize: vertical;"></textarea>
+            </div>
         </div>
       </div>
 
@@ -361,6 +367,7 @@ const notificationStore = useNotificationStore();
 const currentApiKey = ref('');
 const currentApiUrl = ref('');
 const currentModel = ref('');
+const currentMasterPrompt = ref('');
 
 // Settings
 const localGlobalBackgroundActivity = ref(false);
@@ -418,18 +425,22 @@ watch(activePreset, (newPreset) => {
     currentApiKey.value = newPreset.apiKey;
     currentApiUrl.value = newPreset.apiUrl;
     currentModel.value = newPreset.model;
+    currentMasterPrompt.value = newPreset.masterPrompt || '';
   }
 }, { immediate: true, deep: true });
 
 // --- 自动保存逻辑 ---
 
 // 监视 API 相关设置的变化并自动保存
-watch([currentApiKey, currentApiUrl, currentModel], () => {
+watch([currentApiKey, currentApiUrl, currentModel, currentMasterPrompt], () => {
   if (apiStore.activePresetName) {
+    const activePreset = apiStore.getActivePreset();
     apiStore.addPreset(apiStore.activePresetName, {
+      ...activePreset, // 保留现有其他设置
       apiKey: currentApiKey.value,
       apiUrl: currentApiUrl.value,
       model: currentModel.value,
+      masterPrompt: currentMasterPrompt.value,
     });
   }
 });
@@ -486,6 +497,7 @@ function saveAsNewPreset() {
           apiKey: currentApiKey.value,
           apiUrl: currentApiUrl.value,
           model: currentModel.value,
+          masterPrompt: currentMasterPrompt.value,
         });
         themeStore.showToast(t('api.toast.presetSaved', { name }));
       }

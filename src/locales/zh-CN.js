@@ -147,6 +147,8 @@ export default {
     apiKeyPlaceholder: 'sk-',
     model: '模型：',
     modelPlaceholder: '请先拉取模型',
+    masterPrompt: '最高指令',
+    masterPromptPlaceholder: '该指令会附加在主提示词的最前方，作为最高优先级提示词。',
     fetch: '拉取',
     backgroundActivity: '全局后台活动',
     backgroundActivityWarning: '此功能开启后会持续消耗 API 额度',
