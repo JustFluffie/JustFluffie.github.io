@@ -122,13 +122,13 @@ const router = createRouter({
     {
       path: '/douban/group/:groupName',
       name: 'group-detail',
-      component: () => import('../views/douban/GroupDetail.vue'),
+      component: () => import('../views/douban/DBGroupPostList.vue'),
       props: true
     },
     {
       path: '/douban/post/:postId',
       name: 'douban-post-detail',
-      component: () => import('../views/douban/DoubanPostDetail.vue'),
+      component: () => import('../views/douban/DBPostDetail.vue'),
       props: true
     },
     {

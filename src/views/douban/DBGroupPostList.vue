@@ -183,6 +183,7 @@ onMounted(() => {
     background-color: var(--bg-light);
     height: 100%;
     overflow-y: auto;
+    position: relative;
 }
 
 /* --- 小组头部 --- */
@@ -246,7 +247,7 @@ onMounted(() => {
 }
 
 .controls-bar {
-  position: absolute;
+  position: fixed;
   top: 75px; /* 位于顶部栏下方 */
   left: 0;
   width: 100%;

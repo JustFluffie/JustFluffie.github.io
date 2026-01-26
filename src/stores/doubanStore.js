@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useApiStore } from '@/stores/apiStore';
 import { useSingleStore } from '@/stores/chat/singleStore';
 
@@ -65,6 +65,48 @@ export const useDoubanStore = defineStore('douban', () => {
   const selectedUserPersonaId = ref(null);
   const apiStore = useApiStore();
   const singleStore = useSingleStore();
+
+  // 本地存储配置
+  const STORAGE_KEY = 'douban_store_data';
+  const EXPIRATION_TIME = 72 * 60 * 60 * 1000; // 72小时
+
+  // 从本地存储加载数据
+  const loadFromStorage = () => {
+    const json = localStorage.getItem(STORAGE_KEY);
+    if (!json) return;
+    try {
+      const data = JSON.parse(json);
+      // 检查是否过期
+      if (Date.now() - data.timestamp > EXPIRATION_TIME) {
+        localStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+      posts.value = data.posts || [];
+      selectedCharacterId.value = data.selectedCharacterId || null;
+      selectedUserPersonaId.value = data.selectedUserPersonaId || null;
+    } catch (e) {
+      console.error("Failed to load douban data", e);
+    }
+  };
+
+  // 保存数据到本地存储
+  const saveToStorage = () => {
+    const data = {
+      posts: posts.value,
+      selectedCharacterId: selectedCharacterId.value,
+      selectedUserPersonaId: selectedUserPersonaId.value,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  };
+
+  // 初始化时加载
+  loadFromStorage();
+
+  // 监听数据变化自动保存
+  watch([posts, selectedCharacterId, selectedUserPersonaId], () => {
+    saveToStorage();
+  }, { deep: true });
 
   function setPosts(newPosts) {
     posts.value = newPosts;

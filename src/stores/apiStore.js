@@ -201,8 +201,10 @@ export const useApiStore = defineStore('api', () => {
       }
       return response; // 返回完整的响应对象
     } catch (error) {
-      themeStore.showToast(`获取AI回复失败: ${error.message}`, 'error');
-      return { content: null, usage: null };
+      if (!options.silent) {
+        themeStore.showToast(`获取AI回复失败: ${error.message}`, 'error');
+      }
+      return { content: null, usage: null, error }; // 返回 error 对象以便调用者检查
     }
   }
 
