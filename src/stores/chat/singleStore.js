@@ -47,6 +47,11 @@ export const useSingleStore = defineStore('singleChat', {
           data = decompressed ? JSON.parse(decompressed) : JSON.parse(dataToLoad);
           
           this.characters = data.characters || [];
+          // 确保新字段存在 (迁移逻辑)
+          this.characters.forEach(char => {
+            if (char.worldbookOffline === undefined) char.worldbookOffline = '';
+          });
+
           this.messages = data.messages || {};
           this.unreadCounts = data.unreadCounts || {};
           // 迁移 emojis -> stickers
@@ -134,6 +139,7 @@ export const useSingleStore = defineStore('singleChat', {
         charPersona: '',
         isOnline: true,
         worldbook: '',
+        worldbookOffline: '', // 新增：线下模式世界书
         preset: [],
         api: 'default',
         memoryCount: 10,

@@ -132,15 +132,9 @@ export const useApiStore = defineStore('api', () => {
     debugStore.addLog(`--- System Prompt for ${character.name} ---\n${systemPrompt}\n--------------------`);
 
     // --- 动态上下文长度调整 ---
-    // 目标：为线下模式的长回复腾出token空间
-    const baseMemoryCount = character.memoryCount || 15; // 获取用户设置的上下文长度, 默认为15
-    const isOnline = options.isOnline !== false; // 从 useAiHandler 传入，默认为线上
-    
-    let finalMemoryCount = baseMemoryCount;
-    if (!isOnline) {
-      // 如果是线下模式，将上下文消息数量减半，但最少保留4条，以防上下文丢失
-      finalMemoryCount = Math.max(4, Math.floor(baseMemoryCount / 2));
-    }
+    const baseMemoryCount = character.memoryCount || 20; // 获取用户设置的上下文长度, 默认为20
+    // 移除线下模式减半逻辑，避免短期记忆丢失
+    const finalMemoryCount = baseMemoryCount;
 
     const formattedMessages = singleStore.getFormattedRecentMessages(charId, finalMemoryCount);
     
@@ -188,12 +182,33 @@ export const useApiStore = defineStore('api', () => {
     
     const maxTokens = options.max_tokens;
 
+    // 处理 Master Prompt
+    let finalMessages = [...messages]; // 创建浅拷贝以免修改原数组
+    if (activePreset.masterPrompt) {
+      const masterPrompt = activePreset.masterPrompt.trim();
+      const systemIndex = finalMessages.findIndex(m => m.role === 'system');
+      
+      if (systemIndex !== -1) {
+        // 如果已有 system prompt，拼接到前面
+        finalMessages[systemIndex] = {
+          ...finalMessages[systemIndex],
+          content: masterPrompt + '\n' + finalMessages[systemIndex].content
+        };
+      } else {
+        // 如果没有，添加一个新的 system prompt
+        finalMessages.unshift({
+          role: 'system',
+          content: masterPrompt
+        });
+      }
+    }
+
     try {
       const response = await apiService.fetchChatCompletion(
         activePreset.apiUrl,
         activePreset.apiKey,
         modelToUse,
-        messages,
+        finalMessages,
         maxTokens
       );
       if (response.content) {

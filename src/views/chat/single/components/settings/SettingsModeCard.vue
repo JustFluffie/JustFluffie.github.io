@@ -20,9 +20,13 @@
             <div class="settings-pure-label">{{ t('chat.singleChat.settings.linkPreset') }}</div>
             <MultiSelect v-model="formState.preset" :options="sortedPresets" labelKey="title" valueKey="id" childrenKey="entries" textAlign="right" selectorWidth="auto" dropdownWidth="200px" />
           </div>
-          <div class="settings-pure-item">
-            <div class="settings-pure-label">{{ t('chat.singleChat.settings.linkWorldbook') }}</div>
+          <div class="settings-pure-item" v-if="formState.isOnline">
+            <div class="settings-pure-label">{{ t('chat.singleChat.settings.linkWorldbook') }} (线上)</div>
             <MultiSelect v-model="formState.worldbook" :options="sortedWorldBooks" label-key="title" value-key="id" children-key="entries" textAlign="right" selectorWidth="auto" dropdownWidth="200px" />
+          </div>
+          <div class="settings-pure-item" v-if="!formState.isOnline">
+            <div class="settings-pure-label">{{ t('chat.singleChat.settings.linkWorldbook') }} (线下)</div>
+            <MultiSelect v-model="formState.worldbookOffline" :options="sortedWorldBooks" label-key="title" value-key="id" children-key="entries" textAlign="right" selectorWidth="auto" dropdownWidth="200px" />
           </div>
           <div class="settings-item-input">
             <div class="label-col"><div class="label-main">{{ t('chat.singleChat.settings.replyLength') }}</div><div class="label-sub">{{ t('chat.singleChat.settings.replyLengthDesc') }}</div></div>

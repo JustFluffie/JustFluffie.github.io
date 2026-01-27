@@ -284,7 +284,9 @@ const doRefine = async () => {
   ];
 
   try {
-    const summaryResult = await apiStore.getGenericCompletion(messages);
+    const response = await apiStore.getGenericCompletion(messages);
+    const summaryResult = response?.content;
+
     if (summaryResult && summaryResult.trim()) {
       if (!char.memories) char.memories = [];
       char.memories.unshift({ 

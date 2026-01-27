@@ -75,6 +75,7 @@ export function useSingleSettings(props) {
     isOnline: true,
     preset: [],
     worldbook: [],
+    worldbookOffline: [], // 新增
     replyLengthMin: '',
     replyLengthMax: '',
     
@@ -506,6 +507,7 @@ export function useSingleSettings(props) {
     formState.isOnline = char.isOnline !== false
     formState.preset = Array.isArray(char.preset) ? char.preset : (char.preset ? [char.preset] : [])
     formState.worldbook = char.worldbook || []
+    formState.worldbookOffline = char.worldbookOffline || [] // 新增
     const [min, max] = (char.replyLength || (formState.isOnline ? '20-80' : '150-300')).split('-')
     formState.replyLengthMin = min || ''
     formState.replyLengthMax = max || ''
@@ -595,6 +597,7 @@ export function useSingleSettings(props) {
       isOnline: formState.isOnline,
       preset: formState.preset,
       worldbook: formState.worldbook,
+      worldbookOffline: formState.worldbookOffline, // 新增
       replyLength: `${formState.replyLengthMin}-${formState.replyLengthMax}`,
       realtimeSettings: {
         timeEnabled: formState.realtimeTimeEnabled,
