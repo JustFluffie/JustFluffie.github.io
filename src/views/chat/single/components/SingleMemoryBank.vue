@@ -264,8 +264,16 @@ const doRefine = async () => {
   themeStore.showToast('正在提炼记忆...', 'info');
   closeRefineModal();
 
-  // Slice memories based on 1-based index from user
-  const memoriesToRefine = memories.value.slice(start - 1, end);
+  // Slice memories based on user's perspective: 1 is oldest, max is newest
+  // Array is stored as [Newest, ..., Oldest]
+  const total = memories.value.length;
+  const sliceStart = Math.max(0, total - end);
+  const sliceEnd = Math.min(total, total - start + 1);
+
+  let memoriesToRefine = memories.value.slice(sliceStart, sliceEnd);
+  
+  // Reverse to provide chronological order (Oldest -> Newest) for AI
+  memoriesToRefine.reverse();
   
   if (memoriesToRefine.length === 0) {
     themeStore.showToast('选定范围内没有记忆可供提炼', 'warn');
