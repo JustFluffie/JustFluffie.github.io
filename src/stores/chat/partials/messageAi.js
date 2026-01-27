@@ -256,8 +256,16 @@ export const messageAiActions = {
 
     const currentMessageCount = this.messages[charId]?.length || 0;
     // 修复：直接从 character 读取 lastSummaryCount 和 summaryRange
-    const lastSummaryCount = character.lastSummaryCount || 0;
+    let lastSummaryCount = character.lastSummaryCount || 0;
     const range = character.summaryRange || 20;
+
+    // 异常处理：如果当前消息数小于上次总结数（说明可能清空过聊天记录但没重置计数）
+    if (currentMessageCount < lastSummaryCount) {
+        console.log(`[AutoSummary] Detected message count reset for ${character.name}. Resetting lastSummaryCount from ${lastSummaryCount} to 0.`);
+        lastSummaryCount = 0;
+        character.lastSummaryCount = 0;
+        this.saveData();
+    }
 
     if (currentMessageCount - lastSummaryCount >= range) {
       console.log(`[AutoSummary] Triggered for ${character.name}. Current: ${currentMessageCount}, Last: ${lastSummaryCount}, Range: ${range}`);

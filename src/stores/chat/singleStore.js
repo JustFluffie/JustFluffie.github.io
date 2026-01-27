@@ -258,6 +258,13 @@ export const useSingleStore = defineStore('singleChat', {
           this.innerVoices[charId] = [];
           this.currentInnerVoice[charId] = null;
         }
+        
+        // 重置自动总结计数
+        const character = this.getCharacter(charId);
+        if (character) {
+            character.lastSummaryCount = 0;
+        }
+
         this.saveData();
       }
     },
