@@ -69,7 +69,7 @@
         <label>条</label>
       </div>
       <p class="summary-tip">将对选定范围内的长期记忆进行再总结。</p>
-      <textarea class="base-input modal-textarea" v-model="summaryPrompt" placeholder="输入总结提示词..." style="height: 100px;"></textarea>
+      <textarea class="base-input modal-textarea" v-model="summaryPrompt" placeholder="输入总结提示词...（留空将使用默认提示词）" style="height: 100px;"></textarea>
       <template #footer>
         <button class="modal-btn cancel" @click="closeRefineModal">取消</button>
         <button class="modal-btn confirm" @click="doRefine">开始提炼</button>
@@ -267,9 +267,8 @@ const toggleFavorite = (mem) => {
   }
 }
 
-const showRefineModal = () => {
-  // 如果角色没有自定义提示词,使用默认的专业提示词(与对话总结风格一致)
-  const defaultPrompt = `# 任务
+// 默认提示词常量
+const DEFAULT_REFINE_PROMPT = `# 任务
 你是一个记忆提炼助手,请对以下已有的长期记忆进行二次总结,生成一段更精炼的核心记忆。
 
 这份记忆要**客观、直白**:
@@ -285,7 +284,10 @@ const showRefineModal = () => {
 
 直接输出提炼后的记忆内容,不要加任何其他东西。`;
 
-  summaryPrompt.value = character.value.memorySummaryPrompt || defaultPrompt;
+const showRefineModal = () => {
+  // 文本框默认留空，除非用户之前保存过自定义提示词
+  // 如果之前保存的是旧的默认提示词，用户可能需要手动清空一次
+  summaryPrompt.value = character.value.memorySummaryPrompt || '';
   refineStart.value = 1;
   refineEnd.value = memories.value.length;
   showRefineSettingsModal.value = true;
@@ -305,6 +307,7 @@ const doRefine = async () => {
     return;
   }
 
+  // 保存用户的自定义提示词（如果是空的，也保存为空，以便下次打开时也是空的）
   char.memorySummaryPrompt = summaryPrompt.value;
   themeStore.showToast('正在提炼记忆...', 'info');
   closeRefineModal();
@@ -330,7 +333,8 @@ const doRefine = async () => {
     return `[${idx + 1}] ${timeStr ? `(${timeStr}) ` : ''}${mem.content}`;
   }).join('\n\n');
   
-  const prompt = summaryPrompt.value.trim();
+  // 如果用户没填提示词，使用默认提示词
+  const prompt = summaryPrompt.value.trim() || DEFAULT_REFINE_PROMPT;
   
   const messages = [
     { role: 'user', content: `${prompt}\n\n现有记忆如下：\n\n${existingMemories}` }
