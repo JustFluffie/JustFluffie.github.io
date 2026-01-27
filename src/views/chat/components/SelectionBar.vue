@@ -1,5 +1,12 @@
 <template>
     <div class="chat-action-row">
+        <!-- 全选 -->
+        <div class="action-btn" @click="$emit('action', 'select_all')">
+            <div class="action-btn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path><path d="M20 12l-3.5 3.5M16 6l-3.5 3.5"></path></svg>
+            </div>
+            <span>{{ t('selectAll') }}</span>
+        </div>
         <!-- 收藏 -->
         <div class="action-btn" @click="$emit('action', 'favorite')">
             <div class="action-btn-icon">

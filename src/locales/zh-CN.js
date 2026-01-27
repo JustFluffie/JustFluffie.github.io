@@ -24,6 +24,7 @@ export default {
   favorite: '收藏',
   revoke: '撤回',
   select: '多选',
+  selectAll: '全选',
   quote: '引用',
   retry: '重试',
   forward: '转发',

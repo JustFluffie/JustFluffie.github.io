@@ -76,9 +76,15 @@ export function useMessageSelection(charId) {
    */
   const handleBatchAction = (action) => {
     console.log(`[useMessageSelection] handleBatchAction: ${action}`);
-    if (selectedMessageIds.value.size === 0) return;
+    
+    const msgs = singleStore.messages[charId.value] || [];
 
-    const msgs = singleStore.messages[charId.value];
+    if (action === 'select_all') {
+      msgs.forEach(msg => selectedMessageIds.value.add(msg.id));
+      return;
+    }
+
+    if (selectedMessageIds.value.size === 0) return;
 
     if (action === 'forward') {
       isForwarding.value = true;
