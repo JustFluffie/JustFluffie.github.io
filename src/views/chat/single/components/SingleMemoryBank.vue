@@ -75,6 +75,14 @@
         <button class="modal-btn confirm" @click="doRefine">开始提炼</button>
       </template>
     </Modal>
+    <Modal v-model:visible="showRefineConfirmModal" title="确认提炼结果" class="nested">
+      <p class="summary-tip">请确认提炼后的记忆内容。点击确定将保存此内容并删除原有的 {{ memoriesToReplace.length }} 条记忆。</p>
+      <textarea class="base-input modal-textarea" v-model="refinedContent" placeholder="提炼结果..." style="height: 150px;"></textarea>
+      <template #footer>
+        <button class="modal-btn cancel" @click="closeRefineConfirmModal">取消</button>
+        <button class="modal-btn confirm" @click="confirmRefineResult">确定并替换</button>
+      </template>
+    </Modal>
   </AppLayout>
 </template>
 
@@ -119,6 +127,10 @@ const showRefineSettingsModal = ref(false)
 const summaryPrompt = ref('')
 const refineStart = ref(1)
 const refineEnd = ref(0)
+// 提炼确认弹窗
+const showRefineConfirmModal = ref(false)
+const refinedContent = ref('')
+const memoriesToReplace = ref([])
 
 // ================================================================================================
 // 计算属性
@@ -141,6 +153,7 @@ const displayMemories = computed(() => {
 const closeInputModal = () => { showInputModal.value = false; inputText.value = ''; }
 const closeDeleteModal = () => { showDeleteModal.value = false; deletingIndex.value = -1; }
 const closeRefineModal = () => { showRefineSettingsModal.value = false; }
+const closeRefineConfirmModal = () => { showRefineConfirmModal.value = false; refinedContent.value = ''; memoriesToReplace.value = []; }
 
 // ================================================================================================
 // 方法 - 格式化与辅助
@@ -160,8 +173,22 @@ const addMemory = () => {
   showInputModal.value = true
 }
 
+const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
+
+const findMemoryIndex = (mem) => {
+  let index = -1
+  if (mem.id) {
+    index = memories.value.findIndex(m => m.id === mem.id)
+  }
+  // 如果通过ID没找到（或者没有ID），尝试通过对象引用查找
+  if (index === -1) {
+    index = memories.value.indexOf(mem)
+  }
+  return index
+}
+
 const editMemory = (mem) => {
-  const index = memories.value.findIndex(m => m.id === mem.id);
+  const index = findMemoryIndex(mem)
   if (index === -1) return;
   editingIndex.value = index
   inputText.value = mem.content
@@ -176,12 +203,28 @@ const saveMemory = () => {
   if (editingIndex.value >= 0) {
     const oldMem = char.memories[editingIndex.value]
     if (typeof oldMem === 'string') {
-       char.memories[editingIndex.value] = { content: inputText.value, time: Date.now(), charName: char.name, isFavorite: false }
+       char.memories[editingIndex.value] = { 
+         id: generateId(),
+         content: inputText.value, 
+         time: Date.now(), 
+         charName: char.name, 
+         isFavorite: false 
+       }
     } else {
       oldMem.content = inputText.value
+      // 确保有 ID
+      if (!oldMem.id) {
+        oldMem.id = generateId()
+      }
     }
   } else {
-    char.memories.unshift({ content: inputText.value, time: Date.now(), charName: char.name, isFavorite: false })
+    char.memories.unshift({ 
+      id: generateId(),
+      content: inputText.value, 
+      time: Date.now(), 
+      charName: char.name, 
+      isFavorite: false 
+    })
   }
   
   singleStore.saveData()
@@ -189,7 +232,7 @@ const saveMemory = () => {
 }
 
 const confirmDelete = (mem) => {
-  const index = memories.value.findIndex(m => m.id === mem.id);
+  const index = findMemoryIndex(mem)
   if (index === -1) return;
   deletingIndex.value = index
   showDeleteModal.value = true
@@ -207,8 +250,9 @@ const deleteMemory = () => {
 // 方法 - 收藏、总结
 // ================================================================================================
 const toggleFavorite = (mem) => {
-  const memory = memories.value.find(m => m.id === mem.id);
-  if (!memory) return;
+  const index = findMemoryIndex(mem)
+  if (index === -1) return
+  const memory = memories.value[index]
 
   if (typeof memory === 'string') {
     // 兼容旧数据：如果是字符串，先转换为对象
@@ -228,15 +272,16 @@ const showRefineModal = () => {
   const defaultPrompt = `# 任务
 你是一个记忆提炼助手,请对以下已有的长期记忆进行二次总结,生成一段更精炼的核心记忆。
 
-这份记忆要**客观又自然**:
+这份记忆要**客观、直白**:
 
 ## 要求
-- **字数限制**:总结控制在 200-300 字以内,只记录最核心的内容
+- **白描风格**:使用最朴素、直白的语言记录事实，非必要不使用形容词和副词进行修饰或渲染
 - **我是叙述者,不是分析师**。只用我的口吻描述发生了什么,不作总结评价
 - **保留时间线索**:尊重原记忆中的时间信息,不要将不同时间的事件混淆或合并
 - **抓重点**:从已有记忆中提取最关键的事件、情感和关系变化
 - **保持真实**:不要添加原记忆中没有的信息,只提炼已有内容
 - **说人话**:务必避免"交互"、"需求"、"成功解决"这类报告式词汇
+- **字数限制**:总结控制在 200-300 字以内,只记录最核心的内容
 
 直接输出提炼后的记忆内容,不要加任何其他东西。`;
 
@@ -296,15 +341,11 @@ const doRefine = async () => {
     const summaryResult = response?.content;
 
     if (summaryResult && summaryResult.trim()) {
-      if (!char.memories) char.memories = [];
-      char.memories.unshift({ 
-        content: `[记忆提炼 ${start}-${end}] ${summaryResult.trim()}`, 
-        time: Date.now(), 
-        charName: char.name, 
-        isFavorite: false 
-      });
-      singleStore.saveData();
-      themeStore.showToast('记忆提炼已完成', 'success');
+      // 暂存结果和待替换的记忆
+      refinedContent.value = `[记忆提炼 ${start}-${end}] ${summaryResult.trim()}`;
+      memoriesToReplace.value = memoriesToRefine;
+      // 打开确认弹窗
+      showRefineConfirmModal.value = true;
     } else {
       themeStore.showToast('提炼失败，未收到有效回复', 'error');
     }
@@ -312,6 +353,44 @@ const doRefine = async () => {
     console.error('记忆提炼失败:', error);
     themeStore.showToast(`提炼失败: ${error.message}`, 'error');
   }
+}
+
+const confirmRefineResult = () => {
+  const char = character.value;
+  if (!char) return;
+  if (!char.memories) char.memories = [];
+
+  // 1. 删除被提炼的旧记忆
+  // 使用对象引用过滤，确保准确删除
+  if (memoriesToReplace.value && memoriesToReplace.value.length > 0) {
+    char.memories = char.memories.filter(m => !memoriesToReplace.value.includes(m));
+  }
+
+  // 2. 添加新的提炼记忆
+  // 使用被替换记忆中最新的时间戳，以保持时间线相对位置，如果找不到则用当前时间
+  let newTime = Date.now();
+  if (memoriesToReplace.value.length > 0) {
+    // 假设 memoriesToReplace 也是按时间倒序的（在 doRefine 中被 reverse 之前是 slice 出来的，slice 是从原数组切的）
+    // 原数组 memories 是 [Newest, ..., Oldest]
+    // doRefine 中: memoriesToRefine = memories.value.slice(sliceStart, sliceEnd)
+    // 所以 memoriesToRefine[0] 应该是这批里最新的
+    const newestMem = memoriesToReplace.value[0];
+    if (newestMem && newestMem.time) {
+      newTime = newestMem.time;
+    }
+  }
+
+  char.memories.unshift({ 
+    id: generateId(),
+    content: refinedContent.value, 
+    time: newTime, 
+    charName: char.name, 
+    isFavorite: false 
+  });
+
+  singleStore.saveData();
+  themeStore.showToast('记忆提炼已保存并替换旧记忆', 'success');
+  closeRefineConfirmModal();
 }
 </script>
 
