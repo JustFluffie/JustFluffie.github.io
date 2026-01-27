@@ -1,5 +1,11 @@
 <template>
   <AppLayout :title="'Archive of Our Own'" no-padding class="ao3-layout">
+    <template #back-btn>
+      <div class="ao3-logo-btn">
+        <img src="https://i.ibb.co/Kj4DKhHd/ao3-Photo-Grid-1-1-1.png" alt="AO3" />
+      </div>
+    </template>
+
     <template #action>
       <SvgIcon name="refresh" @click="showGenerateModal = true" class="icon-refresh"/>
     </template>
@@ -466,6 +472,7 @@ onMounted(() => {
 .ao3-layout .app-header {
   background-color: #990000;
   border-bottom: none;
+  padding-left: 2px;
 }
 
 .ao3-layout .app-header .back-btn,
@@ -477,12 +484,35 @@ onMounted(() => {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 20px;
   font-weight: normal;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   color: white;
   text-align: left;
-  left: 50px;
+  left: 59px;
   transform: none;
   width: auto;
+}
+
+/* 覆盖 AppLayout 默认样式，允许返回按钮变宽以适应长方形Logo */
+.ao3-layout .app-header .back-btn {
+  width: auto !important;
+  margin-right: 8px;
+}
+
+.ao3-logo-btn {
+  height: 44px;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-shadow: none;
+}
+
+.ao3-logo-btn img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
 }
 </style>
 

@@ -2,7 +2,9 @@
   <div class="app-screen active">
     <div class="app-header" :class="{ 'no-border': noHeaderBorder, 'transparent-header': transparentHeader }">
       <div class="back-btn" @click="handleBack">
-        <svg-icon name="back-btn" />
+        <slot name="back-btn">
+          <svg-icon name="back-btn" />
+        </slot>
       </div>
       <div class="title">{{ title }}</div>
       <div class="action-btn">
